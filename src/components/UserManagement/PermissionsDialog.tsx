@@ -79,7 +79,7 @@ const PermissionsDialog = ({
                   >
                     {label}
                   </Label>
-                  {selectedUser && ROLE_PERMISSIONS[selectedUser.role].includes(key) && (
+                  {selectedUser && ROLE_PERMISSIONS[selectedUser.role]?.includes(key) && (
                     <Badge variant="secondary" className="text-xs">
                       По умолчанию для роли
                     </Badge>

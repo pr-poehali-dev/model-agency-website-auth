@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { hasPermission, PERMISSIONS, MOCK_USERS } from '@/lib/permissions';
+import { PERMISSIONS, ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import { addAuditLog } from '@/lib/auditLog';
@@ -87,15 +87,36 @@ const modelPerformance = [
   { name: 'Victoria', earnings: 245000 },
 ];
 
+const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [userEmail, setUserEmail] = useState('');
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
+    if (email) {
+      loadUserPermissions(email);
+    }
   }, []);
+
+  const loadUserPermissions = async (email: string) => {
+    try {
+      const response = await fetch(API_URL, { method: 'GET' });
+      const users = await response.json();
+      const currentUser = users.find((u: any) => u.email === email);
+      if (currentUser) {
+        setUserRole(currentUser.role);
+        setUserPermissions(currentUser.permissions || []);
+      }
+    } catch (err) {
+      console.error('Failed to load user permissions', err);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -132,7 +153,7 @@ const Dashboard = () => {
     { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
   ];
 
-  const visibleItems = navigationItems.filter(item => hasPermission(userEmail, item.permission));
+  const visibleItems = navigationItems.filter(item => userPermissions.includes(item.permission));
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,7 +166,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm text-foreground font-medium">{userEmail}</p>
-              <p className="text-xs text-muted-foreground">{MOCK_USERS[userEmail]?.role || 'viewer'}</p>
+              <p className="text-xs text-muted-foreground">{userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
             </div>
             <Button 
               onClick={handleLogout} 

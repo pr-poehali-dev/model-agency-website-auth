@@ -239,7 +239,8 @@ const UserManagement = () => {
 
   const openPermissionsDialog = (user: User) => {
     setSelectedUser(user);
-    setUserPermissions(user.permissions || ROLE_PERMISSIONS[user.role]);
+    const defaultPerms = ROLE_PERMISSIONS[user.role] || [];
+    setUserPermissions(user.permissions || defaultPerms);
     setIsPermissionsDialogOpen(true);
   };
 
