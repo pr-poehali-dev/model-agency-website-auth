@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const models = [
   {
@@ -63,6 +64,23 @@ const transactions = [
   { id: 3, date: '2025-10-20', model: 'Maria Petrova', project: 'Commercial Campaign', amount: 32000, status: 'Pending' },
   { id: 4, date: '2025-10-18', model: 'Victoria Romanova', project: 'Brand Ambassador', amount: 120000, status: 'Paid' },
   { id: 5, date: '2025-10-15', model: 'Anastasia Ivanova', project: 'Magazine Cover', amount: 55000, status: 'Paid' },
+];
+
+const monthlyRevenue = [
+  { month: 'Apr', revenue: 280000, bookings: 18 },
+  { month: 'May', revenue: 320000, bookings: 22 },
+  { month: 'Jun', revenue: 295000, bookings: 19 },
+  { month: 'Jul', revenue: 380000, bookings: 26 },
+  { month: 'Aug', revenue: 420000, bookings: 28 },
+  { month: 'Sep', revenue: 365000, bookings: 24 },
+  { month: 'Oct', revenue: 337000, bookings: 21 },
+];
+
+const modelPerformance = [
+  { name: 'Anastasia', earnings: 125000 },
+  { name: 'Ekaterina', earnings: 185000 },
+  { name: 'Maria', earnings: 98000 },
+  { name: 'Victoria', earnings: 245000 },
 ];
 
 const Dashboard = () => {
@@ -285,6 +303,60 @@ const Dashboard = () => {
                   </div>
                   <p className="text-3xl font-bold text-foreground">₽67,400</p>
                   <p className="text-xs text-muted-foreground mt-1">Per project</p>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <Card className="bg-card border-border p-6">
+                  <h3 className="text-xl font-serif font-bold text-foreground mb-6">Revenue Trend</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={monthlyRevenue}>
+                      <defs>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
+                        }} 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        fill="url(#revenueGradient)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Card>
+
+                <Card className="bg-card border-border p-6">
+                  <h3 className="text-xl font-serif font-bold text-foreground mb-6">Model Performance</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={modelPerformance}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
+                        }} 
+                      />
+                      <Bar dataKey="earnings" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </Card>
               </div>
 
