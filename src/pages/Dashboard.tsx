@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { hasPermission, PERMISSIONS, MOCK_USERS } from '@/lib/permissions';
 import UserManagement from './UserManagement';
+import AuditLog from './AuditLog';
+import { addAuditLog } from '@/lib/auditLog';
 
 const models = [
   {
@@ -101,6 +103,23 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    const tabLabels: Record<string, string> = {
+      home: 'Главная',
+      models: 'Модели',
+      finances: 'Финансы',
+      checks: 'Чеки',
+      schedule: 'Расписание',
+      dashboard: 'Dashboard',
+      files: 'Файлы',
+      users: 'Пользователи',
+      audit: 'История действий'
+    };
+    const category = ['models', 'finances'].includes(tabId) ? tabId as any : 'system';
+    addAuditLog(userEmail, `Просмотр раздела`, `Открыт раздел "${tabLabels[tabId] || tabId}"`, category);
+  };
+
   const navigationItems = [
     { id: 'home', label: 'Главная', icon: 'Home', permission: PERMISSIONS.VIEW_HOME },
     { id: 'models', label: 'Модели', icon: 'Users', permission: PERMISSIONS.VIEW_MODELS },
@@ -109,7 +128,8 @@ const Dashboard = () => {
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
-    { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS }
+    { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
+    { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
   ];
 
   const visibleItems = navigationItems.filter(item => hasPermission(userEmail, item.permission));
@@ -145,7 +165,7 @@ const Dashboard = () => {
             {visibleItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   activeTab === item.id
                     ? 'bg-primary text-primary-foreground shadow-lg'
@@ -449,6 +469,8 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'users' && <UserManagement />}
+
+          {activeTab === 'audit' && <AuditLog />}
         </main>
       </div>
     </div>

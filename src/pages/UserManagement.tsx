@@ -35,6 +35,7 @@ import {
   type UserRole,
 } from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
+import { addAuditLog } from '@/lib/auditLog';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -54,6 +55,7 @@ const UserManagement = () => {
   };
 
   const handleAddUser = () => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
     if (!newUserEmail.includes('@')) {
       toast({
         title: 'Ошибка',
@@ -64,6 +66,12 @@ const UserManagement = () => {
     }
 
     addUser(newUserEmail, newUserRole);
+    addAuditLog(
+      currentUserEmail,
+      'Добавление пользователя',
+      `Добавлен пользователь ${newUserEmail} с ролью ${newUserRole}`,
+      'users'
+    );
     loadUsers();
     setNewUserEmail('');
     setNewUserRole('viewer');
@@ -75,7 +83,7 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = (email: string) => {
-    const currentUserEmail = localStorage.getItem('userEmail');
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
     if (email === currentUserEmail) {
       toast({
         title: 'Ошибка',
@@ -86,6 +94,12 @@ const UserManagement = () => {
     }
 
     deleteUser(email);
+    addAuditLog(
+      currentUserEmail,
+      'Удаление пользователя',
+      `Удален пользователь ${email}`,
+      'users'
+    );
     loadUsers();
     toast({
       title: 'Успешно',
@@ -94,7 +108,14 @@ const UserManagement = () => {
   };
 
   const handleRoleChange = (email: string, newRole: UserRole) => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
     updateUserRole(email, newRole);
+    addAuditLog(
+      currentUserEmail,
+      'Изменение роли',
+      `Роль пользователя ${email} изменена на ${newRole}`,
+      'users'
+    );
     loadUsers();
     toast({
       title: 'Успешно',
@@ -116,6 +137,15 @@ const UserManagement = () => {
   };
 
   const handleSavePermissions = () => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
+    if (selectedUser) {
+      addAuditLog(
+        currentUserEmail,
+        'Изменение прав',
+        `Обновлены права доступа для ${selectedUser.email}`,
+        'users'
+      );
+    }
     setIsEditDialogOpen(false);
     toast({
       title: 'Успешно',

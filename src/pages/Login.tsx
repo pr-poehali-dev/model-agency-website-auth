@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { addAuditLog } from '@/lib/auditLog';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const Login = () => {
     e.preventDefault();
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userEmail', email);
+    addAuditLog(email, 'Вход в систему', 'Успешная авторизация', 'auth');
     navigate('/dashboard');
   };
 
