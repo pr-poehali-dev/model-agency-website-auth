@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { hasPermission, PERMISSIONS, MOCK_USERS } from '@/lib/permissions';
 
 const models = [
   {
@@ -84,13 +85,32 @@ const modelPerformance = [
 ];
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('models');
+  const [activeTab, setActiveTab] = useState('home');
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail') || '';
+    setUserEmail(email);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userEmail');
     navigate('/');
   };
+
+  const navigationItems = [
+    { id: 'home', label: 'Главная', icon: 'Home', permission: PERMISSIONS.VIEW_HOME },
+    { id: 'models', label: 'Модели', icon: 'Users', permission: PERMISSIONS.VIEW_MODELS },
+    { id: 'finances', label: 'Финансы', icon: 'DollarSign', permission: PERMISSIONS.VIEW_FINANCES },
+    { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
+    { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
+    { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
+    { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES }
+  ];
+
+  const visibleItems = navigationItems.filter(item => hasPermission(userEmail, item.permission));
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,29 +120,27 @@ const Dashboard = () => {
             <h1 className="text-3xl font-serif font-bold text-foreground">MBA Corp.</h1>
             <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Professional Models Agency</p>
           </div>
-          <Button 
-            onClick={handleLogout} 
-            variant="outline" 
-            className="border-border hover:bg-secondary"
-          >
-            <Icon name="LogOut" size={18} className="mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-foreground font-medium">{userEmail}</p>
+              <p className="text-xs text-muted-foreground">{MOCK_USERS[userEmail]?.role || 'viewer'}</p>
+            </div>
+            <Button 
+              onClick={handleLogout} 
+              variant="outline" 
+              className="border-border hover:bg-secondary"
+            >
+              <Icon name="LogOut" size={18} className="mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="flex">
         <aside className="w-64 min-h-screen bg-card border-r border-border">
           <nav className="p-4 space-y-2">
-            {[
-              { id: 'home', label: 'Главная', icon: 'Home' },
-              { id: 'models', label: 'Модели', icon: 'Users' },
-              { id: 'finances', label: 'Финансы', icon: 'DollarSign' },
-              { id: 'checks', label: 'Чеки', icon: 'Receipt' },
-              { id: 'schedule', label: 'Расписание', icon: 'Calendar' },
-              { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
-              { id: 'files', label: 'Файлы', icon: 'FolderOpen' }
-            ].map((item) => (
+            {visibleItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}

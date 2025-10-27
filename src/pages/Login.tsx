@@ -13,6 +13,7 @@ const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userEmail', email);
     navigate('/dashboard');
   };
 
@@ -65,10 +66,16 @@ const Login = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <button className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
             Forgot password?
           </button>
+          <div className="text-xs text-muted-foreground border-t border-border pt-4 mt-4">
+            <p className="mb-2">Test accounts:</p>
+            <p>Admin: admin@mba-corp.com</p>
+            <p>Manager: manager@mba-corp.com</p>
+            <p>Viewer: viewer@mba-corp.com</p>
+          </div>
         </div>
       </Card>
     </div>
