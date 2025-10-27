@@ -29,6 +29,7 @@ const UserManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole | null>(null);
   
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -46,7 +47,22 @@ const UserManagement = () => {
 
   useEffect(() => {
     loadUsers();
+    loadCurrentUser();
   }, []);
+
+  const loadCurrentUser = async () => {
+    const email = localStorage.getItem('userEmail') || '';
+    try {
+      const response = await fetch(API_URL, { method: 'GET' });
+      const allUsers = await response.json();
+      const current = allUsers.find((u: User) => u.email === email);
+      if (current) {
+        setCurrentUserRole(current.role);
+      }
+    } catch (err) {
+      console.error('Failed to load current user', err);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -261,7 +277,10 @@ const UserManagement = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail
+        },
         body: JSON.stringify({
           id: selectedUser.id,
           permissions: userPermissions,
@@ -269,7 +288,8 @@ const UserManagement = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка обновления прав доступа');
+        const data = await response.json();
+        throw new Error(data.error || 'Ошибка обновления прав доступа');
       }
 
       addAuditLog(
@@ -358,6 +378,7 @@ const UserManagement = () => {
         onPermissionToggle={handlePermissionToggle}
         onSubmit={handleSavePermissions}
         loading={loading}
+        currentUserRole={currentUserRole}
       />
     </div>
   );

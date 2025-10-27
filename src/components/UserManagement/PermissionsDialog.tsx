@@ -34,6 +34,7 @@ interface PermissionsDialogProps {
   onPermissionToggle: (permission: string) => void;
   onSubmit: () => void;
   loading: boolean;
+  currentUserRole: UserRole | null;
 }
 
 const PermissionsDialog = ({
@@ -44,7 +45,9 @@ const PermissionsDialog = ({
   onPermissionToggle,
   onSubmit,
   loading,
+  currentUserRole,
 }: PermissionsDialogProps) => {
+  const isDirector = currentUserRole === 'director';
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-2xl">
@@ -62,17 +65,24 @@ const PermissionsDialog = ({
               </p>
             </div>
             <div className="grid gap-3">
-              {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
-                <div
-                  key={key}
-                  className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                >
-                  <Checkbox
-                    id={key}
-                    checked={userPermissions?.includes(key) || false}
-                    onCheckedChange={() => onPermissionToggle(key)}
-                    className="border-border"
-                  />
+              {Object.entries(PERMISSION_LABELS).map(([key, label]) => {
+                const isManageUsers = key === 'manage_users';
+                const isDisabled = isManageUsers && !isDirector;
+                
+                return (
+                  <div
+                    key={key}
+                    className={`flex items-center space-x-3 p-3 rounded-lg border border-border transition-colors ${
+                      isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent/50'
+                    }`}
+                  >
+                    <Checkbox
+                      id={key}
+                      checked={userPermissions?.includes(key) || false}
+                      onCheckedChange={() => !isDisabled && onPermissionToggle(key)}
+                      disabled={isDisabled}
+                      className="border-border"
+                    />
                   <Label
                     htmlFor={key}
                     className="flex-1 cursor-pointer text-foreground font-medium"
@@ -84,8 +94,14 @@ const PermissionsDialog = ({
                       По умолчанию для роли
                     </Badge>
                   )}
+                  {isDisabled && (
+                    <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                      Только для директора
+                    </Badge>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

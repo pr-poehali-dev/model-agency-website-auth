@@ -171,8 +171,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 params.append(body_data['isActive'])
             
             if 'permissions' in body_data:
+                new_permissions = body_data['permissions']
+                if 'manage_users' in new_permissions:
+                    cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+                    target_user = cur.fetchone()
+                    requesting_email = event.get('headers', {}).get('x-user-email', '')
+                    
+                    cur.execute("SELECT role FROM users WHERE email = %s", (requesting_email,))
+                    requesting_user = cur.fetchone()
+                    
+                    if not requesting_user or requesting_user['role'] != 'director':
+                        return {
+                            'statusCode': 403,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'Только директор может выдавать права на управление пользователями'})
+                        }
+                
                 updates.append("permissions = %s")
-                params.append(json.dumps(body_data['permissions']))
+                params.append(json.dumps(new_permissions))
             
             if updates:
                 params.append(user_id)
