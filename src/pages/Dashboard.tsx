@@ -57,6 +57,14 @@ const models = [
   }
 ];
 
+const transactions = [
+  { id: 1, date: '2025-10-25', model: 'Anastasia Ivanova', project: 'Vogue Editorial', amount: 45000, status: 'Paid' },
+  { id: 2, date: '2025-10-23', model: 'Ekaterina Sokolova', project: 'Fashion Week Runway', amount: 85000, status: 'Paid' },
+  { id: 3, date: '2025-10-20', model: 'Maria Petrova', project: 'Commercial Campaign', amount: 32000, status: 'Pending' },
+  { id: 4, date: '2025-10-18', model: 'Victoria Romanova', project: 'Brand Ambassador', amount: 120000, status: 'Paid' },
+  { id: 5, date: '2025-10-15', model: 'Anastasia Ivanova', project: 'Magazine Cover', amount: 55000, status: 'Paid' },
+];
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('models');
   const navigate = useNavigate();
@@ -91,6 +99,7 @@ const Dashboard = () => {
             {[
               { id: 'home', label: 'Главная', icon: 'Home' },
               { id: 'models', label: 'Модели', icon: 'Users' },
+              { id: 'finances', label: 'Финансы', icon: 'DollarSign' },
               { id: 'checks', label: 'Чеки', icon: 'Receipt' },
               { id: 'schedule', label: 'Расписание', icon: 'Calendar' },
               { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
@@ -223,6 +232,99 @@ const Dashboard = () => {
                   </Card>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'finances' && (
+            <div className="animate-fade-in">
+              <div className="mb-8">
+                <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Финансы</h2>
+                <p className="text-muted-foreground">Financial overview and transactions</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <Card className="p-6 bg-card border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Icon name="TrendingUp" size={20} className="text-green-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">₽337,000</p>
+                  <p className="text-xs text-green-500 mt-1">+12.5% from last month</p>
+                </Card>
+
+                <Card className="p-6 bg-card border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Icon name="Clock" size={20} className="text-blue-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Pending</p>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">₽32,000</p>
+                  <p className="text-xs text-muted-foreground mt-1">1 transaction</p>
+                </Card>
+
+                <Card className="p-6 bg-card border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon name="CheckCircle2" size={20} className="text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Paid</p>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">₽305,000</p>
+                  <p className="text-xs text-muted-foreground mt-1">4 transactions</p>
+                </Card>
+
+                <Card className="p-6 bg-card border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <Icon name="BarChart3" size={20} className="text-orange-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Avg. Deal</p>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">₽67,400</p>
+                  <p className="text-xs text-muted-foreground mt-1">Per project</p>
+                </Card>
+              </div>
+
+              <Card className="bg-card border-border">
+                <div className="p-6 border-b border-border">
+                  <h3 className="text-xl font-serif font-bold text-foreground">Recent Transactions</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-secondary/50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Date</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Model</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Project</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Amount</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((transaction) => (
+                        <tr key={transaction.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{transaction.date}</td>
+                          <td className="px-6 py-4 text-sm text-foreground font-medium">{transaction.model}</td>
+                          <td className="px-6 py-4 text-sm text-foreground">{transaction.project}</td>
+                          <td className="px-6 py-4 text-sm text-foreground font-semibold">₽{transaction.amount.toLocaleString()}</td>
+                          <td className="px-6 py-4">
+                            <Badge 
+                              className={transaction.status === 'Paid' 
+                                ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' 
+                                : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'}
+                            >
+                              {transaction.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
             </div>
           )}
 
