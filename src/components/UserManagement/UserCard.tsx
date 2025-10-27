@@ -47,32 +47,41 @@ const UserCard = ({ user, onOpenPermissions, onOpenEdit, onDelete }: UserCardPro
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenPermissions(user)}
-            className="border-border hover:border-primary"
-          >
-            <Icon name="Shield" size={16} className="mr-2" />
-            Права доступа
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenEdit(user)}
-            className="border-border hover:border-primary"
-          >
-            <Icon name="Settings" size={16} className="mr-2" />
-            Настроить
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(user.id, user.email)}
-            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          >
-            <Icon name="Trash2" size={16} />
-          </Button>
+          {user.role !== 'director' ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenPermissions(user)}
+                className="border-border hover:border-primary"
+              >
+                <Icon name="Shield" size={16} className="mr-2" />
+                Права доступа
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenEdit(user)}
+                className="border-border hover:border-primary"
+              >
+                <Icon name="Settings" size={16} className="mr-2" />
+                Настроить
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(user.id, user.email)}
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Icon name="Trash2" size={16} />
+              </Button>
+            </>
+          ) : (
+            <Badge variant="secondary" className="text-xs px-4 py-2">
+              <Icon name="Lock" size={14} className="mr-2" />
+              Защищенная учетная запись
+            </Badge>
+          )}
         </div>
       </div>
     </Card>

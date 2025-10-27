@@ -142,6 +142,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             user_id = body_data.get('id')
             
+            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            if user and user['role'] == 'director':
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Нельзя изменять права директора'})
+                }
+            
             updates = []
             params = []
             
@@ -188,6 +197,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'DELETE':
             query_params = event.get('queryStringParameters', {})
             user_id = query_params.get('id')
+            
+            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            if user and user['role'] == 'director':
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Нельзя удалить директора'})
+                }
             
             cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
             conn.commit()
