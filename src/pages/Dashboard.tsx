@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { hasPermission, PERMISSIONS, MOCK_USERS } from '@/lib/permissions';
+import UserManagement from './UserManagement';
 
 const models = [
   {
@@ -107,7 +108,8 @@ const Dashboard = () => {
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
-    { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES }
+    { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
+    { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS }
   ];
 
   const visibleItems = navigationItems.filter(item => hasPermission(userEmail, item.permission));
@@ -445,6 +447,8 @@ const Dashboard = () => {
               <p className="text-muted-foreground">Section coming soon...</p>
             </div>
           )}
+
+          {activeTab === 'users' && <UserManagement />}
         </main>
       </div>
     </div>
