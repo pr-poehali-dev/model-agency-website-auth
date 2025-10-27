@@ -54,7 +54,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 password = body_data.get('password', '')
                 
                 cur.execute(
-                    "SELECT id, email, role, full_name, is_active FROM users WHERE email = %s AND password_hash = %s",
+                    "SELECT id, email, role, full_name, is_active, permissions FROM users WHERE email = %s AND password_hash = %s",
                     (email, hash_password(password))
                 )
                 user = cur.fetchone()
@@ -74,6 +74,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 token = generate_token()
+                permissions = json.loads(user['permissions']) if user['permissions'] else []
                 
                 return {
                     'statusCode': 200,
@@ -83,7 +84,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             'id': user['id'],
                             'email': user['email'],
                             'role': user['role'],
-                            'fullName': user['full_name']
+                            'fullName': user['full_name'],
+                            'permissions': permissions
                         },
                         'token': token
                     })
@@ -95,9 +97,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 role = body_data.get('role', 'content')
                 full_name = body_data.get('fullName', '')
                 
+                permissions = body_data.get('permissions', [])
+                permissions_json = json.dumps(permissions)
+                
                 cur.execute(
-                    "INSERT INTO users (email, password_hash, role, full_name) VALUES (%s, %s, %s, %s) RETURNING id, email, role, full_name, is_active",
-                    (email, hash_password(password), role, full_name)
+                    "INSERT INTO users (email, password_hash, role, full_name, permissions) VALUES (%s, %s, %s, %s, %s) RETURNING id, email, role, full_name, is_active, permissions",
+                    (email, hash_password(password), role, full_name, permissions_json)
                 )
                 new_user = cur.fetchone()
                 conn.commit()
@@ -110,12 +115,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'email': new_user['email'],
                         'role': new_user['role'],
                         'fullName': new_user['full_name'],
-                        'isActive': new_user['is_active']
+                        'isActive': new_user['is_active'],
+                        'permissions': json.loads(new_user['permissions']) if new_user['permissions'] else []
                     })
                 }
         
         elif method == 'GET':
-            cur.execute("SELECT id, email, role, full_name, is_active, created_at FROM users ORDER BY created_at DESC")
+            cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at FROM users ORDER BY created_at DESC")
             users = cur.fetchall()
             
             return {
@@ -127,6 +133,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'role': u['role'],
                     'fullName': u['full_name'],
                     'isActive': u['is_active'],
+                    'permissions': json.loads(u['permissions']) if u['permissions'] else [],
                     'createdAt': u['created_at'].isoformat()
                 } for u in users])
             }
@@ -154,9 +161,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 updates.append("is_active = %s")
                 params.append(body_data['isActive'])
             
+            if 'permissions' in body_data:
+                updates.append("permissions = %s")
+                params.append(json.dumps(body_data['permissions']))
+            
             if updates:
                 params.append(user_id)
-                query = f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = %s RETURNING id, email, role, full_name, is_active"
+                query = f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = %s RETURNING id, email, role, full_name, is_active, permissions"
                 cur.execute(query, params)
                 updated_user = cur.fetchone()
                 conn.commit()
@@ -169,7 +180,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'email': updated_user['email'],
                         'role': updated_user['role'],
                         'fullName': updated_user['full_name'],
-                        'isActive': updated_user['is_active']
+                        'isActive': updated_user['is_active'],
+                        'permissions': json.loads(updated_user['permissions']) if updated_user['permissions'] else []
                     })
                 }
         
