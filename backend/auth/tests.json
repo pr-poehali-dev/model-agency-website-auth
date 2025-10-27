@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Login with valid credentials",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "login",
+        "email": "director@mba-corp.com",
+        "password": "password123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "user": {
+          "email": "string",
+          "role": "string"
+        },
+        "token": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all users",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
