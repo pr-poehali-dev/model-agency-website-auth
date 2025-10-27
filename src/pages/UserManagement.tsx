@@ -20,185 +20,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  getAllUsers,
+  updateUserRole,
+  updateUserPermissions,
+  addUser,
+  deleteUser,
+  PERMISSIONS,
+  PERMISSION_LABELS,
+  ROLE_LABELS,
+  ROLE_PERMISSIONS,
+  type User,
+  type UserRole,
+} from '@/lib/permissions';
 import { useToast } from '@/hooks/use-toast';
 import { addAuditLog } from '@/lib/auditLog';
 
-const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-
-type UserRole = 'director' | 'producer' | 'operator' | 'content';
-
-interface User {
-  id: number;
-  email: string;
-  role: UserRole;
-  fullName: string;
-  isActive: boolean;
-  createdAt?: string;
-}
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  director: 'Директор',
-  producer: 'Продюссер',
-  operator: 'Оператор',
-  content: 'Контент-мейкер',
-};
-
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('content_maker');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserFullName, setNewUserFullName] = useState('');
-  const [newUserRole, setNewUserRole] = useState<UserRole>('content');
-  
-  const [editPassword, setEditPassword] = useState('');
-  const [editFullName, setEditFullName] = useState('');
-  const [editRole, setEditRole] = useState<UserRole>('content');
-  const [editIsActive, setEditIsActive] = useState(true);
-
   const { toast } = useToast();
 
   useEffect(() => {
     loadUsers();
   }, []);
 
-  const loadUsers = async () => {
-    try {
-      const response = await fetch(API_URL, { method: 'GET' });
-      const data = await response.json();
-      setUsers(data);
-    } catch (err) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить пользователей',
-        variant: 'destructive',
-      });
-    }
+  const loadUsers = () => {
+    setUsers(getAllUsers());
   };
 
-  const handleAddUser = async () => {
+  const handleAddUser = () => {
     const currentUserEmail = localStorage.getItem('userEmail') || '';
-    
-    if (!newUserEmail.includes('@') || !newUserPassword || !newUserFullName) {
+    if (!newUserEmail.includes('@')) {
       toast({
         title: 'Ошибка',
-        description: 'Заполните все поля',
+        description: 'Введите корректный email',
         variant: 'destructive',
       });
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'create_user',
-          email: newUserEmail,
-          password: newUserPassword,
-          role: newUserRole,
-          fullName: newUserFullName,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Ошибка создания пользователя');
-      }
-
-      addAuditLog(
-        currentUserEmail,
-        'Добавление пользователя',
-        `Добавлен пользователь ${newUserEmail} с ролью ${newUserRole}`,
-        'users'
-      );
-      
-      await loadUsers();
-      setNewUserEmail('');
-      setNewUserPassword('');
-      setNewUserFullName('');
-      setNewUserRole('content');
-      setIsAddDialogOpen(false);
-      
-      toast({
-        title: 'Успешно',
-        description: 'Пользователь добавлен',
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Ошибка',
-        description: err.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+    addUser(newUserEmail, newUserRole);
+    addAuditLog(
+      currentUserEmail,
+      'Добавление пользователя',
+      `Добавлен пользователь ${newUserEmail} с ролью ${newUserRole}`,
+      'users'
+    );
+    loadUsers();
+    setNewUserEmail('');
+    setNewUserRole('viewer');
+    setIsAddDialogOpen(false);
+    toast({
+      title: 'Успешно',
+      description: 'Пользователь добавлен',
+    });
   };
 
-  const handleEditUser = async () => {
-    if (!selectedUser) return;
-    
+  const handleDeleteUser = (email: string) => {
     const currentUserEmail = localStorage.getItem('userEmail') || '';
-    setLoading(true);
-
-    try {
-      const updateData: any = {
-        id: selectedUser.id,
-        role: editRole,
-        fullName: editFullName,
-        isActive: editIsActive,
-      };
-
-      if (editPassword) {
-        updateData.password = editPassword;
-      }
-
-      const response = await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Ошибка обновления пользователя');
-      }
-
-      addAuditLog(
-        currentUserEmail,
-        'Изменение данных пользователя',
-        `Обновлены данные для ${selectedUser.email}`,
-        'users'
-      );
-
-      await loadUsers();
-      setIsEditDialogOpen(false);
-      setSelectedUser(null);
-      setEditPassword('');
-      
-      toast({
-        title: 'Успешно',
-        description: 'Данные обновлены',
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Ошибка',
-        description: err.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (userId: number, email: string) => {
-    const currentUserEmail = localStorage.getItem('userEmail') || '';
-    
     if (email === currentUserEmail) {
       toast({
         title: 'Ошибка',
@@ -208,48 +93,64 @@ const UserManagement = () => {
       return;
     }
 
-    if (!confirm(`Удалить пользователя ${email}?`)) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}?id=${userId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка удаления пользователя');
-      }
-
-      addAuditLog(
-        currentUserEmail,
-        'Удаление пользователя',
-        `Удален пользователь ${email}`,
-        'users'
-      );
-
-      await loadUsers();
-      toast({
-        title: 'Успешно',
-        description: 'Пользователь удален',
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Ошибка',
-        description: err.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+    deleteUser(email);
+    addAuditLog(
+      currentUserEmail,
+      'Удаление пользователя',
+      `Удален пользователь ${email}`,
+      'users'
+    );
+    loadUsers();
+    toast({
+      title: 'Успешно',
+      description: 'Пользователь удален',
+    });
   };
 
-  const openEditDialog = (user: User) => {
-    setSelectedUser(user);
-    setEditFullName(user.fullName);
-    setEditRole(user.role);
-    setEditIsActive(user.isActive);
-    setEditPassword('');
-    setIsEditDialogOpen(true);
+  const handleRoleChange = (email: string, newRole: UserRole) => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
+    updateUserRole(email, newRole);
+    addAuditLog(
+      currentUserEmail,
+      'Изменение роли',
+      `Роль пользователя ${email} изменена на ${newRole}`,
+      'users'
+    );
+    loadUsers();
+    toast({
+      title: 'Успешно',
+      description: 'Роль изменена',
+    });
+  };
+
+  const handlePermissionToggle = (permission: string) => {
+    if (!selectedUser) return;
+
+    const currentPermissions = selectedUser.permissions;
+    const newPermissions = currentPermissions.includes(permission)
+      ? currentPermissions.filter(p => p !== permission)
+      : [...currentPermissions, permission];
+
+    updateUserPermissions(selectedUser.email, newPermissions);
+    setSelectedUser({ ...selectedUser, permissions: newPermissions });
+    loadUsers();
+  };
+
+  const handleSavePermissions = () => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
+    if (selectedUser) {
+      addAuditLog(
+        currentUserEmail,
+        'Изменение прав',
+        `Обновлены права доступа для ${selectedUser.email}`,
+        'users'
+      );
+    }
+    setIsEditDialogOpen(false);
+    toast({
+      title: 'Успешно',
+      description: 'Права доступа обновлены',
+    });
   };
 
   return (
@@ -257,9 +158,8 @@ const UserManagement = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Управление пользователями</h2>
-          <p className="text-muted-foreground">Создавайте учетные записи и управляйте доступом</p>
+          <p className="text-muted-foreground">Настройте роли и права доступа</p>
         </div>
-        
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -271,39 +171,18 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle className="text-foreground font-serif">Новый пользователь</DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Создайте учетную запись с логином и паролем
+                Добавьте нового пользователя в систему
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Полное имя</Label>
-                <Input
-                  id="fullName"
-                  value={newUserFullName}
-                  onChange={(e) => setNewUserFullName(e.target.value)}
-                  placeholder="Иван Иванов"
-                  className="bg-input border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email (логин)</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   placeholder="user@mba-corp.com"
-                  className="bg-input border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  placeholder="Минимум 6 символов"
                   className="bg-input border-border"
                 />
               </div>
@@ -317,7 +196,7 @@ const UserManagement = () => {
                     <SelectItem value="director">Директор</SelectItem>
                     <SelectItem value="producer">Продюссер</SelectItem>
                     <SelectItem value="operator">Оператор</SelectItem>
-                    <SelectItem value="content">Контент-мейкер</SelectItem>
+                    <SelectItem value="content_maker">Контент-мейкер</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -326,8 +205,8 @@ const UserManagement = () => {
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Отмена
               </Button>
-              <Button onClick={handleAddUser} disabled={loading} className="bg-primary hover:bg-primary/90">
-                {loading ? 'Создание...' : 'Создать'}
+              <Button onClick={handleAddUser} className="bg-primary hover:bg-primary/90">
+                Добавить
               </Button>
             </div>
           </DialogContent>
@@ -336,116 +215,114 @@ const UserManagement = () => {
 
       <div className="grid gap-4">
         {users.map((user) => (
-          <Card key={user.id} className="p-6 bg-card border-border hover:border-primary/50 transition-all">
+          <Card key={user.email} className="p-6 bg-card border-border hover:border-primary/50 transition-all">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Icon name="User" size={24} className="text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground">{user.fullName}</h3>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <h3 className="text-lg font-semibold text-foreground">{user.email}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge className="bg-primary/20 text-primary hover:bg-primary/30">
                       {ROLE_LABELS[user.role]}
                     </Badge>
-                    {!user.isActive && (
-                      <Badge variant="destructive">Деактивирован</Badge>
-                    )}
+                    <span className="text-sm text-muted-foreground">
+                      {user.permissions.length} прав доступа
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
+                <Select
+                  value={user.role}
+                  onValueChange={(value) => handleRoleChange(user.email, value as UserRole)}
+                >
+                  <SelectTrigger className="w-[200px] bg-input border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="director">Директор</SelectItem>
+                    <SelectItem value="producer">Продюссер</SelectItem>
+                    <SelectItem value="operator">Оператор</SelectItem>
+                    <SelectItem value="content_maker">Контент-мейкер</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Dialog open={isEditDialogOpen && selectedUser?.email === user.email} onOpenChange={setIsEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setSelectedUser(user)}
+                      className="border-border hover:bg-secondary"
+                    >
+                      <Icon name="Settings" size={18} />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-card border-border max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground font-serif">Настройка прав доступа</DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
+                        {user.email}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="space-y-4">
+                        {Object.entries(PERMISSIONS).map(([key, permission]) => (
+                          <div key={permission} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={permission}
+                              checked={selectedUser?.permissions.includes(permission)}
+                              onCheckedChange={() => handlePermissionToggle(permission)}
+                              className="border-border data-[state=checked]:bg-primary"
+                            />
+                            <Label
+                              htmlFor={permission}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {PERMISSION_LABELS[permission]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                        Отмена
+                      </Button>
+                      <Button onClick={handleSavePermissions} className="bg-primary hover:bg-primary/90">
+                        Сохранить
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => openEditDialog(user)}
-                  className="border-border hover:border-primary"
+                  size="icon"
+                  onClick={() => handleDeleteUser(user.email)}
+                  className="border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <Icon name="Settings" size={16} className="mr-2" />
-                  Настроить
+                  <Icon name="Trash2" size={18} />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteUser(user.id, user.email)}
-                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Icon name="Trash2" size={16} />
-                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-2">Активные права доступа:</p>
+              <div className="flex flex-wrap gap-2">
+                {user.permissions.map((permission) => (
+                  <Badge key={permission} variant="outline" className="text-xs">
+                    {PERMISSION_LABELS[permission]}
+                  </Badge>
+                ))}
               </div>
             </div>
           </Card>
         ))}
       </div>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground font-serif">Редактировать пользователя</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="editFullName">Полное имя</Label>
-              <Input
-                id="editFullName"
-                value={editFullName}
-                onChange={(e) => setEditFullName(e.target.value)}
-                className="bg-input border-border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editPassword">Новый пароль (оставьте пустым, чтобы не менять)</Label>
-              <Input
-                id="editPassword"
-                type="password"
-                value={editPassword}
-                onChange={(e) => setEditPassword(e.target.value)}
-                placeholder="Введите новый пароль"
-                className="bg-input border-border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editRole">Роль</Label>
-              <Select value={editRole} onValueChange={(value) => setEditRole(value as UserRole)}>
-                <SelectTrigger className="bg-input border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="director">Директор</SelectItem>
-                  <SelectItem value="producer">Продюссер</SelectItem>
-                  <SelectItem value="operator">Оператор</SelectItem>
-                  <SelectItem value="content">Контент-мейкер</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="editIsActive"
-                checked={editIsActive}
-                onChange={(e) => setEditIsActive(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="editIsActive" className="cursor-pointer">
-                Активный аккаунт
-              </Label>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Отмена
-            </Button>
-            <Button onClick={handleEditUser} disabled={loading} className="bg-primary hover:bg-primary/90">
-              {loading ? 'Сохранение...' : 'Сохранить'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
