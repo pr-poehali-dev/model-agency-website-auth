@@ -73,10 +73,11 @@ const Login = () => {
             Forgot password?
           </button>
           <div className="text-xs text-muted-foreground border-t border-border pt-4 mt-4">
-            <p className="mb-2">Test accounts:</p>
-            <p>Admin: admin@mba-corp.com</p>
-            <p>Manager: manager@mba-corp.com</p>
-            <p>Viewer: viewer@mba-corp.com</p>
+            <p className="mb-2">Тестовые аккаунты:</p>
+            <p>Директор: director@mba-corp.com</p>
+            <p>Продюссер: producer@mba-corp.com</p>
+            <p>Оператор: operator@mba-corp.com</p>
+            <p>Контент-мейкер: content@mba-corp.com</p>
           </div>
         </div>
       </Card>

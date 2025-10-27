@@ -41,7 +41,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState<UserRole>('viewer');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('content_maker');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -193,9 +193,10 @@ const UserManagement = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="admin">Администратор</SelectItem>
-                    <SelectItem value="manager">Менеджер</SelectItem>
-                    <SelectItem value="viewer">Наблюдатель</SelectItem>
+                    <SelectItem value="director">Директор</SelectItem>
+                    <SelectItem value="producer">Продюссер</SelectItem>
+                    <SelectItem value="operator">Оператор</SelectItem>
+                    <SelectItem value="content_maker">Контент-мейкер</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -238,13 +239,14 @@ const UserManagement = () => {
                   value={user.role}
                   onValueChange={(value) => handleRoleChange(user.email, value as UserRole)}
                 >
-                  <SelectTrigger className="w-[180px] bg-input border-border">
+                  <SelectTrigger className="w-[200px] bg-input border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="admin">Администратор</SelectItem>
-                    <SelectItem value="manager">Менеджер</SelectItem>
-                    <SelectItem value="viewer">Наблюдатель</SelectItem>
+                    <SelectItem value="director">Директор</SelectItem>
+                    <SelectItem value="producer">Продюссер</SelectItem>
+                    <SelectItem value="operator">Оператор</SelectItem>
+                    <SelectItem value="content_maker">Контент-мейкер</SelectItem>
                   </SelectContent>
                 </Select>
 

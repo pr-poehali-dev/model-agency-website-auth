@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'manager' | 'viewer';
+export type UserRole = 'director' | 'producer' | 'operator' | 'content_maker';
 
 export interface User {
   email: string;
@@ -29,7 +29,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
 };
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  admin: [
+  director: [
     PERMISSIONS.VIEW_HOME,
     PERMISSIONS.VIEW_MODELS,
     PERMISSIONS.VIEW_FINANCES,
@@ -39,45 +39,59 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.VIEW_FILES,
     PERMISSIONS.MANAGE_USERS,
   ],
-  manager: [
+  producer: [
+    PERMISSIONS.VIEW_HOME,
+    PERMISSIONS.VIEW_MODELS,
+    PERMISSIONS.VIEW_FINANCES,
+    PERMISSIONS.VIEW_SCHEDULE,
+    PERMISSIONS.VIEW_FILES,
+  ],
+  operator: [
     PERMISSIONS.VIEW_HOME,
     PERMISSIONS.VIEW_MODELS,
     PERMISSIONS.VIEW_SCHEDULE,
     PERMISSIONS.VIEW_FILES,
   ],
-  viewer: [
+  content_maker: [
     PERMISSIONS.VIEW_HOME,
     PERMISSIONS.VIEW_MODELS,
+    PERMISSIONS.VIEW_FILES,
   ],
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Администратор',
-  manager: 'Менеджер',
-  viewer: 'Наблюдатель',
+  director: 'Директор',
+  producer: 'Продюссер',
+  operator: 'Оператор',
+  content_maker: 'Контент-мейкер',
 };
 
 export const MOCK_USERS: Record<string, User> = {
-  'admin@mba-corp.com': {
-    email: 'admin@mba-corp.com',
-    role: 'admin',
-    permissions: ROLE_PERMISSIONS.admin,
+  'director@mba-corp.com': {
+    email: 'director@mba-corp.com',
+    role: 'director',
+    permissions: ROLE_PERMISSIONS.director,
   },
-  'manager@mba-corp.com': {
-    email: 'manager@mba-corp.com',
-    role: 'manager',
-    permissions: ROLE_PERMISSIONS.manager,
+  'producer@mba-corp.com': {
+    email: 'producer@mba-corp.com',
+    role: 'producer',
+    permissions: ROLE_PERMISSIONS.producer,
   },
-  'viewer@mba-corp.com': {
-    email: 'viewer@mba-corp.com',
-    role: 'viewer',
-    permissions: ROLE_PERMISSIONS.viewer,
+  'operator@mba-corp.com': {
+    email: 'operator@mba-corp.com',
+    role: 'operator',
+    permissions: ROLE_PERMISSIONS.operator,
+  },
+  'content@mba-corp.com': {
+    email: 'content@mba-corp.com',
+    role: 'content_maker',
+    permissions: ROLE_PERMISSIONS.content_maker,
   },
 };
 
 export const getUserPermissions = (email: string): string[] => {
   const user = MOCK_USERS[email];
-  return user ? user.permissions : ROLE_PERMISSIONS.viewer;
+  return user ? user.permissions : ROLE_PERMISSIONS.content_maker;
 };
 
 export const hasPermission = (email: string, permission: string): boolean => {

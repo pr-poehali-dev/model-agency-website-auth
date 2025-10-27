@@ -11,7 +11,7 @@ let auditLogs: AuditLogEntry[] = [
   {
     id: '1',
     timestamp: new Date('2025-10-27T10:30:00'),
-    userEmail: 'admin@mba-corp.com',
+    userEmail: 'director@mba-corp.com',
     action: 'Вход в систему',
     details: 'Успешная авторизация',
     category: 'auth'
@@ -19,15 +19,15 @@ let auditLogs: AuditLogEntry[] = [
   {
     id: '2',
     timestamp: new Date('2025-10-27T10:35:00'),
-    userEmail: 'admin@mba-corp.com',
+    userEmail: 'director@mba-corp.com',
     action: 'Добавление пользователя',
-    details: 'Добавлен пользователь manager@mba-corp.com с ролью manager',
+    details: 'Добавлен пользователь producer@mba-corp.com с ролью producer',
     category: 'users'
   },
   {
     id: '3',
     timestamp: new Date('2025-10-27T10:40:00'),
-    userEmail: 'manager@mba-corp.com',
+    userEmail: 'producer@mba-corp.com',
     action: 'Вход в систему',
     details: 'Успешная авторизация',
     category: 'auth'
@@ -35,15 +35,15 @@ let auditLogs: AuditLogEntry[] = [
   {
     id: '4',
     timestamp: new Date('2025-10-27T11:15:00'),
-    userEmail: 'admin@mba-corp.com',
+    userEmail: 'director@mba-corp.com',
     action: 'Изменение роли',
-    details: 'Роль пользователя viewer@mba-corp.com изменена на manager',
+    details: 'Роль пользователя content@mba-corp.com изменена на operator',
     category: 'users'
   },
   {
     id: '5',
     timestamp: new Date('2025-10-27T11:20:00'),
-    userEmail: 'manager@mba-corp.com',
+    userEmail: 'operator@mba-corp.com',
     action: 'Просмотр моделей',
     details: 'Открыт раздел "Модели"',
     category: 'models'
@@ -51,7 +51,7 @@ let auditLogs: AuditLogEntry[] = [
   {
     id: '6',
     timestamp: new Date('2025-10-27T11:45:00'),
-    userEmail: 'admin@mba-corp.com',
+    userEmail: 'director@mba-corp.com',
     action: 'Просмотр финансов',
     details: 'Открыт раздел "Финансы"',
     category: 'finances'
@@ -59,9 +59,9 @@ let auditLogs: AuditLogEntry[] = [
   {
     id: '7',
     timestamp: new Date('2025-10-27T12:00:00'),
-    userEmail: 'admin@mba-corp.com',
+    userEmail: 'director@mba-corp.com',
     action: 'Изменение прав',
-    details: 'Обновлены права доступа для manager@mba-corp.com',
+    details: 'Обновлены права доступа для producer@mba-corp.com',
     category: 'users'
   },
 ];
