@@ -69,7 +69,7 @@ const PermissionsDialog = ({
                 >
                   <Checkbox
                     id={key}
-                    checked={userPermissions.includes(key)}
+                    checked={userPermissions?.includes(key) || false}
                     onCheckedChange={() => onPermissionToggle(key)}
                     className="border-border"
                   />
