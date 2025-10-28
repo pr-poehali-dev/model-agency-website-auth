@@ -11,6 +11,7 @@ import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
+import FinancesTab from '@/components/FinancesTab';
 import { addAuditLog } from '@/lib/auditLog';
 
 const models = [
@@ -367,7 +368,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'finances' && (
+          {activeTab === 'finances' && <FinancesTab />}
+
+          {activeTab === 'finances_old' && (
             <div className="animate-fade-in">
               <div className="mb-8">
                 <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Финансы</h2>
