@@ -142,8 +142,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             user_id = body_data.get('id')
             
-            requesting_email = event.get('headers', {}).get('x-user-email', '').lower()
+            headers = event.get('headers', {})
+            print(f"All headers: {headers}")
+            requesting_email = headers.get('x-user-email', headers.get('X-User-Email', '')).lower()
             print(f"PUT request from email: {requesting_email}")
+            
+            if not requesting_email:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Отсутствует заголовок x-user-email'})
+                }
+            
             cur.execute("SELECT role, permissions FROM users WHERE LOWER(email) = %s", (requesting_email,))
             requesting_user = cur.fetchone()
             
