@@ -166,6 +166,35 @@ const FinancesTab = () => {
                 <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.00</td>
               </tr>
 
+              {/* Cam4 */}
+              <tr className="border-b border-border bg-orange-50 dark:bg-orange-900/10">
+                <td className="p-3 font-medium text-foreground">Cam4</td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground">0.2</td>
+                <td className="p-3 text-center text-muted-foreground">0.4</td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground">0</td>
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0.6</td>
+              </tr>
+
+              {/* Income on Cam4 */}
+              <tr className="border-b border-border">
+                <td className="p-3 font-medium text-foreground">Income on Cam4</td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-3 text-center text-muted-foreground">
+                    ${d.cam4Income.toFixed(2)}
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.36</td>
+              </tr>
+
               {/* Переводы */}
               <tr className="border-b border-border bg-teal-50 dark:bg-teal-900/10">
                 <td className="p-3 font-medium text-foreground">Переводы</td>
@@ -209,35 +238,6 @@ const FinancesTab = () => {
                 <td className="p-3 text-center"></td>
                 <td className="p-3 text-center"></td>
                 <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">10</td>
-              </tr>
-
-              {/* Cam4 */}
-              <tr className="border-b border-border bg-orange-50 dark:bg-orange-900/10">
-                <td className="p-3 font-medium text-foreground">Cam4</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">0.2</td>
-                <td className="p-3 text-center text-muted-foreground">0.4</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">0</td>
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0.6</td>
-              </tr>
-
-              {/* Income on Cam4 */}
-              <tr className="border-b border-border">
-                <td className="p-3 font-medium text-foreground">Income on Cam4</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    ${d.cam4Income.toFixed(2)}
-                  </td>
-                ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.36</td>
               </tr>
 
               {/* Total Income */}
