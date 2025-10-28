@@ -84,17 +84,6 @@ const FinancesTab = () => {
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">669</td>
               </tr>
 
-              {/* Income on CB */}
-              <tr className="border-b border-border">
-                <td className="p-3 font-medium text-foreground">Income on CB</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    ${d.cbIncome.toFixed(2)}
-                  </td>
-                ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$200.07</td>
-              </tr>
-
               {/* Online SP */}
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Online SP</td>
@@ -124,17 +113,6 @@ const FinancesTab = () => {
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">37937</td>
               </tr>
 
-              {/* Income on SP */}
-              <tr className="border-b border-border">
-                <td className="p-3 font-medium text-foreground">Income on SP</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    ${d.spIncome.toFixed(2)}
-                  </td>
-                ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$1,138.11</td>
-              </tr>
-
               {/* Online Soda */}
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Online Soda</td>
@@ -155,17 +133,6 @@ const FinancesTab = () => {
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
               </tr>
 
-              {/* Income on Soda */}
-              <tr className="border-b border-border">
-                <td className="p-3 font-medium text-foreground">Income on Soda</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    ${d.sodaIncome.toFixed(2)}
-                  </td>
-                ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$0.00</td>
-              </tr>
-
               {/* Cam4 */}
               <tr className="border-b border-border dark:bg-orange-900/20 bg-orange-900/30">
                 <td className="p-3 font-medium text-foreground">Cam4</td>
@@ -182,17 +149,6 @@ const FinancesTab = () => {
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground">0</td>
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0.6</td>
-              </tr>
-
-              {/* Income on Cam4 */}
-              <tr className="border-b border-border">
-                <td className="p-3 font-medium text-foreground">Income on Cam4</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    ${d.cam4Income.toFixed(2)}
-                  </td>
-                ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$0.36</td>
               </tr>
 
               {/* Переводы */}
