@@ -74,14 +74,14 @@ const FinancesTab = () => {
               </tr>
 
               {/* Chaturbate */}
-              <tr className="border-b border-border bg-orange-50 dark:bg-orange-900/10">
+              <tr className="border-b border-border dark:bg-orange-900/20 bg-orange-900/30">
                 <td className="p-3 font-medium text-foreground">Chaturbate</td>
                 {onlineData.map((d) => (
                   <td key={d.date} className="p-3 text-center text-muted-foreground">
                     {d.cb || ''}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">669</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">669</td>
               </tr>
 
               {/* Income on CB */}
@@ -92,7 +92,7 @@ const FinancesTab = () => {
                     ${d.cbIncome.toFixed(2)}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$200.07</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$200.07</td>
               </tr>
 
               {/* Online SP */}
@@ -103,11 +103,11 @@ const FinancesTab = () => {
                     {d.sp || ''}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">Tokens</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">Tokens</td>
               </tr>
 
               {/* Stripchat */}
-              <tr className="border-b border-border bg-red-50 dark:bg-red-900/10">
+              <tr className="border-b border-border dark:bg-red-900/20 bg-red-900/30">
                 <td className="p-3 font-medium text-foreground">Stripchat</td>
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground"></td>
@@ -121,7 +121,7 @@ const FinancesTab = () => {
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground">3251</td>
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">37937</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">37937</td>
               </tr>
 
               {/* Income on SP */}
@@ -132,7 +132,7 @@ const FinancesTab = () => {
                     ${d.spIncome.toFixed(2)}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$1,138.11</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$1,138.11</td>
               </tr>
 
               {/* Online Soda */}
@@ -143,16 +143,16 @@ const FinancesTab = () => {
                     {d.soda || ''}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">Tokens</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">Tokens</td>
               </tr>
 
               {/* CamSoda */}
-              <tr className="border-b border-border bg-blue-50 dark:bg-blue-900/10">
+              <tr className="border-b border-border dark:bg-blue-900/20 bg-blue-900/30">
                 <td className="p-3 font-medium text-foreground">CamSoda</td>
                 {onlineData.map(() => (
                   <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
               </tr>
 
               {/* Income on Soda */}
@@ -163,11 +163,11 @@ const FinancesTab = () => {
                     ${d.sodaIncome.toFixed(2)}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.00</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$0.00</td>
               </tr>
 
               {/* Cam4 */}
-              <tr className="border-b border-border bg-orange-50 dark:bg-orange-900/10">
+              <tr className="border-b border-border dark:bg-orange-900/20 bg-orange-900/30">
                 <td className="p-3 font-medium text-foreground">Cam4</td>
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground"></td>
@@ -181,7 +181,7 @@ const FinancesTab = () => {
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground">0</td>
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0.6</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0.6</td>
               </tr>
 
               {/* Income on Cam4 */}
@@ -192,16 +192,16 @@ const FinancesTab = () => {
                     ${d.cam4Income.toFixed(2)}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.36</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">$0.36</td>
               </tr>
 
               {/* Переводы */}
-              <tr className="border-b border-border bg-teal-50 dark:bg-teal-900/10">
+              <tr className="border-b border-border dark:bg-teal-900/20 bg-teal-900/30">
                 <td className="p-3 font-medium text-foreground">Переводы</td>
                 {onlineData.map(() => (
                   <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
               </tr>
 
               {/* Оператор (Имя) */}
@@ -219,7 +219,7 @@ const FinancesTab = () => {
                 <td className="p-3 text-center text-muted-foreground">Женя</td>
                 <td className="p-3 text-center text-muted-foreground"></td>
                 <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30"></td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50"></td>
               </tr>
 
               {/* Смены (чекбоксы) */}
@@ -237,7 +237,7 @@ const FinancesTab = () => {
                 <td className="p-3 text-center">✓</td>
                 <td className="p-3 text-center"></td>
                 <td className="p-3 text-center"></td>
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">10</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">10</td>
               </tr>
 
               {/* Total Income */}
