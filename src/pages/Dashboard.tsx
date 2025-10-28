@@ -9,6 +9,7 @@ import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, Cartesia
 import { PERMISSIONS, ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
+import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import { addAuditLog } from '@/lib/auditLog';
 
 const models = [
@@ -88,12 +89,14 @@ const modelPerformance = [
 ];
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,9 +115,25 @@ const Dashboard = () => {
       if (currentUser) {
         setUserRole(currentUser.role);
         setUserPermissions(currentUser.permissions || []);
+        
+        // Загрузить назначенные модели для оператора
+        if (currentUser.role === 'operator') {
+          loadOperatorAssignments(email);
+        }
       }
     } catch (err) {
       console.error('Failed to load user permissions', err);
+    }
+  };
+
+  const loadOperatorAssignments = async (email: string) => {
+    try {
+      const response = await fetch(`${ASSIGNMENTS_API_URL}?operator=${encodeURIComponent(email)}`);
+      const assignments = await response.json();
+      const modelIds = assignments.map((a: any) => a.modelId);
+      setOperatorAssignments(modelIds);
+    } catch (err) {
+      console.error('Failed to load operator assignments', err);
     }
   };
 
@@ -149,6 +168,7 @@ const Dashboard = () => {
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
+    { id: 'assignments', label: 'Назначения', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
   ];
@@ -262,7 +282,15 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {models.map((model) => (
+                {models
+                  .filter(model => {
+                    // Оператор видит только назначенные модели
+                    if (userRole === 'operator') {
+                      return operatorAssignments.includes(model.id);
+                    }
+                    return true;
+                  })
+                  .map((model) => (
                   <Card 
                     key={model.id} 
                     className="overflow-hidden bg-card border-border hover:shadow-2xl transition-all duration-300 group cursor-pointer hover:scale-[1.02]"
@@ -311,7 +339,7 @@ const Dashboard = () => {
                       </Button>
                     </div>
                   </Card>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -490,6 +518,8 @@ const Dashboard = () => {
               <p className="text-muted-foreground">Section coming soon...</p>
             </div>
           )}
+
+          {activeTab === 'assignments' && userRole && <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
 
           {activeTab === 'users' && <UserManagement />}
 
