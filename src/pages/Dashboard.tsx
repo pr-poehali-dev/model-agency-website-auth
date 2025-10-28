@@ -12,6 +12,7 @@ import AuditLog from './AuditLog';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
+import ScheduleTab from '@/components/ScheduleTab';
 import { addAuditLog } from '@/lib/auditLog';
 
 const models = [
@@ -524,12 +525,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'schedule' && (
-            <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Расписание</h2>
-              <p className="text-muted-foreground">Section coming soon...</p>
-            </div>
-          )}
+          {activeTab === 'schedule' && <ScheduleTab />}
 
           {activeTab === 'dashboard' && (
             <div className="animate-fade-in">
