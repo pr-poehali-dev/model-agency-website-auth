@@ -161,7 +161,10 @@ const UserManagement = () => {
 
       const response = await fetch(API_URL, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': currentUserEmail,
+        },
         body: JSON.stringify(updateData),
       });
 
