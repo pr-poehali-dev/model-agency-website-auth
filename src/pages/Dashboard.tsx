@@ -476,7 +476,7 @@ const Dashboard = () => {
 
               <Card className="bg-card border-border">
                 <div className="p-6 border-b border-border">
-                  <h3 className="text-xl font-serif font-bold text-foreground">Recent Transactions</h3>
+                  <h3 className="text-xl font-serif font-bold text-foreground"></h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
