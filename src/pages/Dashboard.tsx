@@ -559,7 +559,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'schedule' && <ScheduleTab />}
+          {activeTab === 'schedule' && <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />}
 
           {activeTab === 'dashboard' && (
             <div className="animate-fade-in">
