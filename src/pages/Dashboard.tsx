@@ -167,7 +167,10 @@ const Dashboard = () => {
       const assignments = await response.json();
       const assignment = assignments.find((a: any) => a.operatorEmail === operatorEmail);
       if (assignment) {
-        setAssignedProducer(assignment.producerEmail);
+        const usersResponse = await fetch(API_URL, { method: 'GET' });
+        const users = await usersResponse.json();
+        const producer = users.find((u: any) => u.email === assignment.producerEmail);
+        setAssignedProducer(producer?.fullName || assignment.producerEmail);
       }
     } catch (err) {
       console.error('Failed to load assigned producer', err);
