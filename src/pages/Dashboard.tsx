@@ -98,10 +98,12 @@ const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
+  const [assignedProducer, setAssignedProducer] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,11 +121,13 @@ const Dashboard = () => {
       const currentUser = users.find((u: any) => u.email === email);
       if (currentUser) {
         setUserRole(currentUser.role);
+        setUserName(currentUser.name || '');
         setUserPermissions(currentUser.permissions || []);
         
         // Загрузить назначенные модели для оператора
         if (currentUser.role === 'operator') {
           loadOperatorAssignments(email);
+          loadAssignedProducer(email);
         }
         // Загрузить назначенные модели для продюсера
         if (currentUser.role === 'producer') {
@@ -154,6 +158,19 @@ const Dashboard = () => {
       setProducerAssignments(modelIds);
     } catch (err) {
       console.error('Failed to load producer assignments', err);
+    }
+  };
+
+  const loadAssignedProducer = async (operatorEmail: string) => {
+    try {
+      const response = await fetch(`${PRODUCER_API_URL}?type=operator`);
+      const assignments = await response.json();
+      const assignment = assignments.find((a: any) => a.operatorEmail === operatorEmail);
+      if (assignment) {
+        setAssignedProducer(assignment.producerEmail);
+      }
+    } catch (err) {
+      console.error('Failed to load assigned producer', err);
     }
   };
 
@@ -244,8 +261,12 @@ const Dashboard = () => {
         <main className="flex-1 p-8">
           {activeTab === 'home' && (
             <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Welcome to MBA Corp.</h2>
-              <p className="text-lg text-muted-foreground mb-8">Manage your elite model portfolio with precision and style.</p>
+              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Welcome to MBA</h2>
+              <div className="text-lg text-muted-foreground mb-8 space-y-1">
+                <p><span className="font-semibold">Роль:</span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
+                <p><span className="font-semibold">Имя:</span> {userName || userEmail}</p>
+                {assignedProducer && <p><span className="font-semibold">Продюсер:</span> {assignedProducer}</p>}
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="p-6 bg-card border-border hover:border-primary transition-all duration-300 cursor-pointer group">
