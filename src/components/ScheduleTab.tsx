@@ -378,12 +378,12 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Команда (оператор/мейкер)</label>
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+              <Select value={selectedTeam || 'empty'} onValueChange={(val) => setSelectedTeam(val === 'empty' ? '' : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите команду" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Пусто</SelectItem>
+                  <SelectItem value="empty">Пусто</SelectItem>
                   {teamMembers.map((member) => (
                     <SelectItem key={member.id} value={member.fullName}>
                       {member.fullName}
