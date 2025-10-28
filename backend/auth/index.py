@@ -142,15 +142,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             user_id = body_data.get('id')
             
-            requesting_email = event.get('headers', {}).get('x-user-email', '')
-            cur.execute("SELECT role, permissions FROM users WHERE email = %s", (requesting_email,))
+            requesting_email = event.get('headers', {}).get('x-user-email', '').lower()
+            print(f"PUT request from email: {requesting_email}")
+            cur.execute("SELECT role, permissions FROM users WHERE LOWER(email) = %s", (requesting_email,))
             requesting_user = cur.fetchone()
             
             if not requesting_user:
+                print(f"User not found: {requesting_email}")
                 return {
                     'statusCode': 403,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Пользователь не найден'})
+                    'body': json.dumps({'error': f'Пользователь не найден: {requesting_email}'})
                 }
             
             requesting_permissions = json.loads(requesting_user['permissions']) if requesting_user['permissions'] else []
