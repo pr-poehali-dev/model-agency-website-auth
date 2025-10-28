@@ -1,0 +1,50 @@
+{
+  "tests": [
+    {
+      "name": "Get schedule - empty database",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create schedule entry",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "apartment_name": "Test Apartment",
+        "apartment_address": "1",
+        "week_number": "1",
+        "date": "01.01.2025",
+        "day_name": "Понедельник",
+        "time_10": "Team A",
+        "time_17": "Team B",
+        "time_00": "Team C"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update schedule entry",
+      "method": "PUT",
+      "path": "/",
+      "body": {
+        "apartment_name": "Test Apartment",
+        "apartment_address": "1",
+        "week_number": "1",
+        "date": "01.01.2025",
+        "time_slot": "10:00",
+        "value": "Updated Team"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
