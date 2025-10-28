@@ -271,7 +271,7 @@ const Dashboard = () => {
                 <div>
                   <h2 className="text-4xl font-serif font-bold mb-3 text-foreground">Welcome to MBA</h2>
                   <div className="text-lg text-muted-foreground space-y-1">
-                    <p><span className="font-semibold">Роль:</span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
+                    <p><span className="font-semibold"></span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
                     <p><span className="font-semibold">Имя:</span> {userName || userEmail}</p>
                     {assignedProducer && <p><span className="font-semibold">Продюсер:</span> {assignedProducer}</p>}
                   </div>
