@@ -56,7 +56,7 @@ const FinancesTab = () => {
                     {d.date}
                   </th>
                 ))}
-                <th className="p-3 text-center font-semibold text-foreground bg-yellow-100 dark:bg-yellow-900/30">
+                <th className="p-3 text-center font-semibold text-foreground dark:bg-yellow-900/30 bg-slate-700">
                   Tokens
                 </th>
               </tr>
@@ -70,7 +70,7 @@ const FinancesTab = () => {
                     {d.cb || ''}
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">1467</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/30 bg-slate-800">1467</td>
               </tr>
 
               {/* Chaturbate */}
