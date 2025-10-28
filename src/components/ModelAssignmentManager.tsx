@@ -40,24 +40,27 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole }: { current
   const { toast } = useToast();
 
   useEffect(() => {
-    if (currentUserRole === 'producer') {
-      loadProducerAssignments().then(() => {
-        loadOperators();
-      });
-    } else {
-      loadOperators();
-    }
-    loadAssignments();
+    const init = async () => {
+      if (currentUserRole === 'producer') {
+        const assignments = await loadProducerAssignments();
+        await loadOperators(assignments);
+      } else {
+        await loadOperators();
+      }
+      await loadAssignments();
+    };
+    init();
   }, [currentUserRole]);
 
-  const loadOperators = async () => {
+  const loadOperators = async (assignments?: any[]) => {
     try {
       const response = await fetch(API_URL);
       const users = await response.json();
       let ops = users.filter((u: User) => u.role === 'operator');
       
       if (currentUserRole === 'producer') {
-        const assignedOperatorEmails = producerAssignments
+        const assignmentsToUse = assignments || producerAssignments;
+        const assignedOperatorEmails = assignmentsToUse
           .filter(a => a.assignmentType === 'operator')
           .map(a => a.operatorEmail);
         ops = ops.filter((op: User) => assignedOperatorEmails.includes(op.email));

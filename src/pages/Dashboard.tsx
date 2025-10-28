@@ -91,6 +91,7 @@ const modelPerformance = [
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -98,6 +99,7 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
+  const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -121,6 +123,10 @@ const Dashboard = () => {
         if (currentUser.role === 'operator') {
           loadOperatorAssignments(email);
         }
+        // Загрузить назначенные модели для продюсера
+        if (currentUser.role === 'producer') {
+          loadProducerAssignments(email);
+        }
       }
     } catch (err) {
       console.error('Failed to load user permissions', err);
@@ -135,6 +141,17 @@ const Dashboard = () => {
       setOperatorAssignments(modelIds);
     } catch (err) {
       console.error('Failed to load operator assignments', err);
+    }
+  };
+
+  const loadProducerAssignments = async (email: string) => {
+    try {
+      const response = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
+      const assignments = await response.json();
+      const modelIds = assignments.map((a: any) => a.modelId);
+      setProducerAssignments(modelIds);
+    } catch (err) {
+      console.error('Failed to load producer assignments', err);
     }
   };
 
@@ -289,6 +306,10 @@ const Dashboard = () => {
                     // Оператор видит только назначенные модели
                     if (userRole === 'operator') {
                       return operatorAssignments.includes(model.id);
+                    }
+                    // Продюсер видит только назначенные ему модели
+                    if (userRole === 'producer') {
+                      return producerAssignments.includes(model.id);
                     }
                     return true;
                   })
