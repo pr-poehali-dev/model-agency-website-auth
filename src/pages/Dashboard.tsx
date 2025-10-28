@@ -261,11 +261,21 @@ const Dashboard = () => {
         <main className="flex-1 p-8">
           {activeTab === 'home' && (
             <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Welcome to MBA</h2>
-              <div className="text-lg text-muted-foreground mb-8 space-y-1">
-                <p><span className="font-semibold">Роль:</span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
-                <p><span className="font-semibold">Имя:</span> {userName || userEmail}</p>
-                {assignedProducer && <p><span className="font-semibold">Продюсер:</span> {assignedProducer}</p>}
+              <div className="flex items-start gap-6 mb-8">
+                <Avatar className="w-24 h-24 border-4 border-primary/20">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName || userEmail)}`} />
+                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                    {(userName || userEmail).charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-4xl font-serif font-bold mb-3 text-foreground">Welcome to MBA</h2>
+                  <div className="text-lg text-muted-foreground space-y-1">
+                    <p><span className="font-semibold">Роль:</span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
+                    <p><span className="font-semibold">Имя:</span> {userName || userEmail}</p>
+                    {assignedProducer && <p><span className="font-semibold">Продюсер:</span> {assignedProducer}</p>}
+                  </div>
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
