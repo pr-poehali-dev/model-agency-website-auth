@@ -142,6 +142,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             user_id = body_data.get('id')
             
+            requesting_email = event.get('headers', {}).get('x-user-email', '')
+            cur.execute("SELECT role, permissions FROM users WHERE email = %s", (requesting_email,))
+            requesting_user = cur.fetchone()
+            
+            if not requesting_user:
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Пользователь не найден'})
+                }
+            
+            requesting_permissions = json.loads(requesting_user['permissions']) if requesting_user['permissions'] else []
+            is_director = requesting_user['role'] == 'director'
+            has_manage_users = 'manage_users' in requesting_permissions or is_director
+            
+            if not has_manage_users:
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно прав для управления пользователями'})
+                }
+            
             cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
             user = cur.fetchone()
             if user and user['role'] == 'director':
@@ -172,20 +194,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if 'permissions' in body_data:
                 new_permissions = body_data['permissions']
-                if 'manage_users' in new_permissions:
-                    cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
-                    target_user = cur.fetchone()
-                    requesting_email = event.get('headers', {}).get('x-user-email', '')
-                    
-                    cur.execute("SELECT role FROM users WHERE email = %s", (requesting_email,))
-                    requesting_user = cur.fetchone()
-                    
-                    if not requesting_user or requesting_user['role'] != 'director':
-                        return {
-                            'statusCode': 403,
-                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                            'body': json.dumps({'error': 'Только директор может выдавать права на управление пользователями'})
-                        }
+                if 'manage_users' in new_permissions and not is_director:
+                    return {
+                        'statusCode': 403,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Только директор может выдавать права на управление пользователями'})
+                    }
                 
                 updates.append("permissions = %s")
                 params.append(json.dumps(new_permissions))
