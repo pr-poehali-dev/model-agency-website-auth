@@ -15,6 +15,8 @@ export const PERMISSIONS = {
   VIEW_DASHBOARD: 'view_dashboard',
   VIEW_FILES: 'view_files',
   MANAGE_USERS: 'manage_users',
+  MANAGE_PRODUCER_ASSIGNMENTS: 'manage_producer_assignments',
+  MANAGE_OPERATOR_ASSIGNMENTS: 'manage_operator_assignments',
 } as const;
 
 export const PERMISSION_LABELS: Record<string, string> = {
@@ -26,6 +28,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
   view_dashboard: 'Dashboard',
   view_files: 'Файлы',
   manage_users: 'Управление пользователями',
+  manage_producer_assignments: 'Назначения продюсерам',
+  manage_operator_assignments: 'Назначения операторам',
 };
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
@@ -38,6 +42,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_FILES,
     PERMISSIONS.MANAGE_USERS,
+    PERMISSIONS.MANAGE_PRODUCER_ASSIGNMENTS,
+    PERMISSIONS.MANAGE_OPERATOR_ASSIGNMENTS,
   ],
   producer: [
     PERMISSIONS.VIEW_HOME,
@@ -45,6 +51,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.VIEW_FINANCES,
     PERMISSIONS.VIEW_SCHEDULE,
     PERMISSIONS.VIEW_FILES,
+    PERMISSIONS.MANAGE_OPERATOR_ASSIGNMENTS,
   ],
   operator: [
     PERMISSIONS.VIEW_HOME,

@@ -169,8 +169,8 @@ const Dashboard = () => {
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
-    { id: 'producer-assignments', label: 'Назначения продюсерам', icon: 'Users', permission: PERMISSIONS.MANAGE_USERS },
-    { id: 'operator-assignments', label: 'Назначения операторам', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_USERS },
+    { id: 'producer-assignments', label: 'Назначения продюсерам', icon: 'Users', permission: PERMISSIONS.MANAGE_PRODUCER_ASSIGNMENTS },
+    { id: 'operator-assignments', label: 'Назначения операторам', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_OPERATOR_ASSIGNMENTS },
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
   ];
