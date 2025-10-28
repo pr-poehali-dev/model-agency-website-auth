@@ -35,7 +35,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+                'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-User-Email',
                 'Access-Control-Max-Age': '86400'
             },
             'body': ''
