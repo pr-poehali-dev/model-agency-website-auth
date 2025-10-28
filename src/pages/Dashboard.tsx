@@ -121,7 +121,7 @@ const Dashboard = () => {
       const currentUser = users.find((u: any) => u.email === email);
       if (currentUser) {
         setUserRole(currentUser.role);
-        setUserName(currentUser.name || '');
+        setUserName(currentUser.fullName || '');
         setUserPermissions(currentUser.permissions || []);
         
         // Загрузить назначенные модели для оператора
