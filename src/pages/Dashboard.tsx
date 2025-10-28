@@ -10,6 +10,7 @@ import { PERMISSIONS, ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
+import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import { addAuditLog } from '@/lib/auditLog';
 
 const models = [
@@ -168,7 +169,8 @@ const Dashboard = () => {
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
-    { id: 'assignments', label: 'Назначения', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_USERS },
+    { id: 'producer-assignments', label: 'Назначения продюсерам', icon: 'Users', permission: PERMISSIONS.MANAGE_USERS },
+    { id: 'operator-assignments', label: 'Назначения операторам', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
   ];
@@ -519,7 +521,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === 'assignments' && userRole && <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
+          {activeTab === 'producer-assignments' && userRole && <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
+
+          {activeTab === 'operator-assignments' && userRole && <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
 
           {activeTab === 'users' && <UserManagement />}
 
