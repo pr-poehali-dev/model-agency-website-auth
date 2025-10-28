@@ -10,23 +10,6 @@ import { PERMISSIONS, ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import { addAuditLog } from '@/lib/auditLog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
 
 const models = [
   {
@@ -105,49 +88,19 @@ const modelPerformance = [
 ];
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-const MODELS_API_URL = 'https://functions.poehali.dev/41dffced-c9d4-4e85-b52f-b5462be730e2';
-
-interface Model {
-  id: number;
-  name: string;
-  image: string;
-  height: string;
-  bust: string;
-  waist: string;
-  hips: string;
-  experience: string;
-  specialty: string;
-  status: string;
-}
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
-  const [modelsData, setModelsData] = useState<Model[]>([]);
-  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [newModel, setNewModel] = useState({
-    name: '',
-    image: '',
-    height: '',
-    bust: '',
-    waist: '',
-    hips: '',
-    experience: '',
-    specialty: '',
-    status: 'Available'
-  });
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     if (email) {
       loadUserPermissions(email);
-      loadModels();
     }
   }, []);
 
@@ -162,80 +115,6 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error('Failed to load user permissions', err);
-    }
-  };
-
-  const loadModels = async () => {
-    try {
-      const response = await fetch(MODELS_API_URL, { method: 'GET' });
-      if (response.ok) {
-        const data = await response.json();
-        setModelsData(data);
-      }
-    } catch (err) {
-      console.error('Failed to load models', err);
-    }
-  };
-
-  const handleAddModel = async () => {
-    if (!newModel.name.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Введите имя модели',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(MODELS_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Email': userEmail
-        },
-        body: JSON.stringify(newModel)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Ошибка при добавлении модели');
-      }
-
-      await loadModels();
-      setIsAddModelOpen(false);
-      setNewModel({
-        name: '',
-        image: '',
-        height: '',
-        bust: '',
-        waist: '',
-        hips: '',
-        experience: '',
-        specialty: '',
-        status: 'Available'
-      });
-      
-      addAuditLog(
-        userEmail,
-        'Добавление модели',
-        `Добавлена модель ${newModel.name}`,
-        'models'
-      );
-
-      toast({
-        title: 'Успешно',
-        description: 'Модель добавлена'
-      });
-    } catch (err: any) {
-      toast({
-        title: 'Ошибка',
-        description: err.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -375,10 +254,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Elite talent portfolio</p>
                 </div>
                 {userRole === 'director' && (
-                  <Button 
-                    onClick={() => setIsAddModelOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Icon name="Plus" size={18} className="mr-2" />
                     Add New Model
                   </Button>
@@ -386,7 +262,7 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {(modelsData.length > 0 ? modelsData : models).map((model) => (
+                {models.map((model) => (
                   <Card 
                     key={model.id} 
                     className="overflow-hidden bg-card border-border hover:shadow-2xl transition-all duration-300 group cursor-pointer hover:scale-[1.02]"
@@ -620,132 +496,6 @@ const Dashboard = () => {
           {activeTab === 'audit' && <AuditLog />}
         </main>
       </div>
-
-      <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Добавить новую модель</DialogTitle>
-            <DialogDescription>
-              Заполните информацию о модели
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Имя *</Label>
-              <Input
-                id="name"
-                value={newModel.name}
-                onChange={(e) => setNewModel({...newModel, name: e.target.value})}
-                placeholder="Anna Ivanova"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="image">Фото (URL)</Label>
-              <Input
-                id="image"
-                value={newModel.image}
-                onChange={(e) => setNewModel({...newModel, image: e.target.value})}
-                placeholder="https://example.com/photo.jpg"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="height">Рост</Label>
-                <Input
-                  id="height"
-                  value={newModel.height}
-                  onChange={(e) => setNewModel({...newModel, height: e.target.value})}
-                  placeholder="175 cm"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="experience">Опыт</Label>
-                <Input
-                  id="experience"
-                  value={newModel.experience}
-                  onChange={(e) => setNewModel({...newModel, experience: e.target.value})}
-                  placeholder="5+ years"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="bust">Грудь</Label>
-                <Input
-                  id="bust"
-                  value={newModel.bust}
-                  onChange={(e) => setNewModel({...newModel, bust: e.target.value})}
-                  placeholder="86 cm"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="waist">Талия</Label>
-                <Input
-                  id="waist"
-                  value={newModel.waist}
-                  onChange={(e) => setNewModel({...newModel, waist: e.target.value})}
-                  placeholder="61 cm"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="hips">Бёдра</Label>
-                <Input
-                  id="hips"
-                  value={newModel.hips}
-                  onChange={(e) => setNewModel({...newModel, hips: e.target.value})}
-                  placeholder="89 cm"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="specialty">Специализация</Label>
-              <Input
-                id="specialty"
-                value={newModel.specialty}
-                onChange={(e) => setNewModel({...newModel, specialty: e.target.value})}
-                placeholder="Fashion & Editorial"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="status">Статус</Label>
-              <Select 
-                value={newModel.status} 
-                onValueChange={(value) => setNewModel({...newModel, status: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Available">Available</SelectItem>
-                  <SelectItem value="Booked">Booked</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsAddModelOpen(false)}
-              disabled={loading}
-            >
-              Отмена
-            </Button>
-            <Button onClick={handleAddModel} disabled={loading}>
-              {loading ? 'Добавление...' : 'Добавить модель'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
