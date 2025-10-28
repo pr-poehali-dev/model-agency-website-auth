@@ -2,18 +2,18 @@ import { Card } from '@/components/ui/card';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const onlineData = [
-  { date: '16.10', cb: 41, sp: 106, cbIncome: 44.01, spIncome: 0 },
-  { date: '17.10', cb: 38, sp: 79, cbIncome: 1.62, spIncome: 0 },
-  { date: '18.10', cb: 49, sp: 108, cbIncome: 67.59, spIncome: 0 },
-  { date: '19.10', cb: 46, sp: 119, cbIncome: 38.61, spIncome: 525 },
-  { date: '20.10', cb: 39, sp: 103, cbIncome: 2.67, spIncome: 0 },
-  { date: '21.10', cb: 26, sp: 98, cbIncome: 0.06, spIncome: 0 },
-  { date: '22.10', cb: 31, sp: 69, cbIncome: 3.00, spIncome: 0 },
-  { date: '23.10', cb: 100, sp: 81, cbIncome: 18.84, spIncome: 0 },
-  { date: '24.10', cb: 30, sp: 78, cbIncome: 8.37, spIncome: 515.58 },
-  { date: '25.10', cb: 0, sp: 0, cbIncome: 0, spIncome: 0 },
-  { date: '26.10', cb: 0, sp: 0, cbIncome: 0, spIncome: 0 },
-  { date: '27.10', cb: 34, sp: 77, cbIncome: 15.30, spIncome: 97.53 },
+  { date: '16.10', cb: 41, sp: 106, soda: 0, cam4: 0, cbIncome: 44.01, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '17.10', cb: 38, sp: 79, soda: 0, cam4: 0, cbIncome: 1.62, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '18.10', cb: 49, sp: 108, soda: 0, cam4: 0, cbIncome: 67.59, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '19.10', cb: 46, sp: 119, soda: 0, cam4: 0, cbIncome: 38.61, spIncome: 525, sodaIncome: 0, cam4Income: 0 },
+  { date: '20.10', cb: 39, sp: 103, soda: 0, cam4: 0, cbIncome: 2.67, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '21.10', cb: 26, sp: 98, soda: 0, cam4: 0, cbIncome: 0.06, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '22.10', cb: 31, sp: 69, soda: 0, cam4: 0, cbIncome: 3.00, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '23.10', cb: 100, sp: 81, soda: 0, cam4: 0.2, cbIncome: 18.84, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 },
+  { date: '24.10', cb: 30, sp: 78, soda: 0, cam4: 0.4, cbIncome: 8.37, spIncome: 515.58, sodaIncome: 0, cam4Income: 0.24 },
+  { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '27.10', cb: 34, sp: 77, soda: 0, cam4: 0, cbIncome: 15.30, spIncome: 97.53, sodaIncome: 0, cam4Income: 0 },
 ];
 
 const platformSummary = [
@@ -135,21 +135,122 @@ const FinancesTab = () => {
                 <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$1,138.11</td>
               </tr>
 
+              {/* Online Soda */}
+              <tr className="border-b border-border hover:bg-muted/30">
+                <td className="p-3 font-medium text-foreground">Online Soda</td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-3 text-center text-muted-foreground">
+                    {d.soda || ''}
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">Tokens</td>
+              </tr>
+
+              {/* CamSoda */}
+              <tr className="border-b border-border bg-blue-50 dark:bg-blue-900/10">
+                <td className="p-3 font-medium text-foreground">CamSoda</td>
+                {onlineData.map(() => (
+                  <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0</td>
+              </tr>
+
+              {/* Income on Soda */}
+              <tr className="border-b border-border">
+                <td className="p-3 font-medium text-foreground">Income on Soda</td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-3 text-center text-muted-foreground">
+                    ${d.sodaIncome.toFixed(2)}
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.00</td>
+              </tr>
+
+              {/* Переводы */}
+              <tr className="border-b border-border bg-teal-50 dark:bg-teal-900/10">
+                <td className="p-3 font-medium text-foreground">Переводы</td>
+                {onlineData.map(() => (
+                  <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0</td>
+              </tr>
+
+              {/* Оператор (Имя) */}
+              <tr className="border-b border-border hover:bg-muted/30">
+                <td className="p-3 font-medium text-foreground">Оператор (Имя)</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground">Женя</td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30"></td>
+              </tr>
+
+              {/* Смены (чекбоксы) */}
+              <tr className="border-b border-border hover:bg-muted/30">
+                <td className="p-3 font-medium text-foreground">Смены</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center">✓</td>
+                <td className="p-3 text-center"></td>
+                <td className="p-3 text-center"></td>
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">10</td>
+              </tr>
+
+              {/* Cam4 */}
+              <tr className="border-b border-border bg-orange-50 dark:bg-orange-900/10">
+                <td className="p-3 font-medium text-foreground">Cam4</td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground">0.2</td>
+                <td className="p-3 text-center text-muted-foreground">0.4</td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground"></td>
+                <td className="p-3 text-center text-muted-foreground">0</td>
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">0.6</td>
+              </tr>
+
+              {/* Income on Cam4 */}
+              <tr className="border-b border-border">
+                <td className="p-3 font-medium text-foreground">Income on Cam4</td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-3 text-center text-muted-foreground">
+                    ${d.cam4Income.toFixed(2)}
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold bg-yellow-100 dark:bg-yellow-900/30">$0.36</td>
+              </tr>
+
               {/* Total Income */}
               <tr className="border-b-2 border-border bg-muted/50 font-semibold">
                 <td className="p-3 text-foreground">Income</td>
-                <td className="p-3 text-center text-foreground">$44.01</td>
-                <td className="p-3 text-center text-foreground">$1.62</td>
-                <td className="p-3 text-center text-foreground">$67.59</td>
-                <td className="p-3 text-center text-foreground">$563.61</td>
-                <td className="p-3 text-center text-foreground">$2.67</td>
-                <td className="p-3 text-center text-foreground">$0.06</td>
-                <td className="p-3 text-center text-foreground">$3.00</td>
-                <td className="p-3 text-center text-foreground">$18.96</td>
-                <td className="p-3 text-center text-foreground">$524.19</td>
-                <td className="p-3 text-center text-foreground">$0.00</td>
-                <td className="p-3 text-center text-foreground">$0.00</td>
-                <td className="p-3 text-center text-foreground">$112.83</td>
+                {onlineData.map((d) => {
+                  const total = d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income;
+                  return (
+                    <td key={d.date} className="p-3 text-center text-foreground">
+                      ${total.toFixed(2)}
+                    </td>
+                  );
+                })}
                 <td className="p-3 text-center font-bold text-green-600 dark:text-green-400 bg-yellow-100 dark:bg-yellow-900/30">
                   $1,338.54
                 </td>
