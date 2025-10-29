@@ -97,9 +97,10 @@ export const getDatesInPeriod = (period: Period): string[] => {
   const current = new Date(period.startDate);
   
   while (current <= period.endDate) {
-    const day = String(current.getDate()).padStart(2, '0');
+    const year = current.getFullYear();
     const month = String(current.getMonth() + 1).padStart(2, '0');
-    dates.push(`${day}.${month}`);
+    const day = String(current.getDate()).padStart(2, '0');
+    dates.push(`${year}-${month}-${day}`);
     current.setDate(current.getDate() + 1);
   }
   
