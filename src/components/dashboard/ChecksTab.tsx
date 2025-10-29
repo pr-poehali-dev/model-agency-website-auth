@@ -7,6 +7,7 @@ import Icon from '@/components/ui/icon';
 interface Employee {
   name: string;
   week: number;
+  shifts?: number;
   model: string;
   sumDollars: number;
   rate: number;
@@ -87,6 +88,7 @@ const ChecksTab = () => {
       {
         name: 'Женя',
         week: 11,
+        shifts: 11,
         model: 'Марго',
         sumDollars: 463.155,
         rate: 72.47,
@@ -98,6 +100,7 @@ const ChecksTab = () => {
       {
         name: 'Руслан',
         week: 12,
+        shifts: 12,
         model: 'Лера',
         sumDollars: 509.205,
         rate: 72.47,
@@ -109,6 +112,7 @@ const ChecksTab = () => {
       {
         name: 'Равиг',
         week: 10,
+        shifts: 10,
         model: 'Лиза',
         sumDollars: 433.865,
         rate: 72.47,
@@ -120,6 +124,7 @@ const ChecksTab = () => {
       {
         name: 'Андрей Пуд.',
         week: 21,
+        shifts: 21,
         model: 'Лера',
         sumDollars: 738.355,
         rate: 72.47,
@@ -333,7 +338,7 @@ const ChecksTab = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Кол-во смен</span>
-                    <span className="font-medium">{employee.week}</span>
+                    <span className="font-medium">{employee.shifts || employee.week}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Модель</span>
