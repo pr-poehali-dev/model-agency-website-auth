@@ -227,50 +227,61 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold text-foreground mb-4">Доход по платформам</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={platformSummary}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="platform" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  color: 'hsl(var(--foreground))',
-                }}
-              />
-              <Legend />
-              <Bar dataKey="income" fill="hsl(var(--primary))" name="Доход ($)" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold text-foreground mb-4">График онлайна</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={graphOnlineData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  color: 'hsl(var(--foreground))',
-                }}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="onlineSP" stroke="#ef4444" name="Stripchat" strokeWidth={2} />
-              <Line type="monotone" dataKey="onlineCB" stroke="#f97316" name="Chaturbate" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {platformSummary.map((platform) => (
+          <Card key={platform.platform} className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{platform.platform}</h3>
+              <Badge variant="outline">{platform.tokens.toFixed(platform.platform === 'Cam4' ? 1 : 0)} токенов</Badge>
+            </div>
+            <div className="text-3xl font-bold text-primary">
+              ${platform.income.toFixed(2)}
+            </div>
+          </Card>
+        ))}
       </div>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Онлайн по платформам</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={graphOnlineData}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis dataKey="date" className="text-xs" />
+            <YAxis className="text-xs" />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="onlineSP" stroke="#ef4444" name="Stripchat" strokeWidth={2} />
+            <Line type="monotone" dataKey="onlineCB" stroke="#f97316" name="Chaturbate" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Доходы по дням</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={onlineData.map(d => ({ date: d.date, CB: d.cbIncome, SP: d.spIncome }))}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis dataKey="date" className="text-xs" />
+            <YAxis className="text-xs" />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Legend />
+            <Bar dataKey="CB" fill="#f97316" name="Chaturbate ($)" />
+            <Bar dataKey="SP" fill="#ef4444" name="Stripchat ($)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
     </div>
   );
 };
