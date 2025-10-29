@@ -287,7 +287,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">{totalCbTokens}</td>
+                <td className="p-2 text-center"></td>
               </tr>
 
               <tr className="border-b bg-red-500/5">
@@ -326,7 +326,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+                <td className="p-2 text-center"></td>
               </tr>
 
               <tr className="border-b bg-purple-500/5">
@@ -365,7 +365,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+                <td className="p-2 text-center"></td>
               </tr>
 
               <tr className="border-b bg-blue-500/5">
