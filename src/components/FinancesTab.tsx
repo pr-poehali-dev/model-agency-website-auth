@@ -168,6 +168,56 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
         </Card>
       </div>
 
+      {/* Дополнительные аналитические графики */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Icon name="Activity" size={20} className="text-primary" />
+            Динамика количества бронирований
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyRevenue}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Line type="monotone" dataKey="bookings" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ fill: 'hsl(var(--accent))', r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Icon name="PieChart" size={20} className="text-primary" />
+            Средняя стоимость проекта
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyRevenue.map(m => ({ 
+              month: m.month, 
+              avgPrice: Math.round(m.revenue / m.bookings) 
+            }))}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar dataKey="avgPrice" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+
       {/* Таблица транзакций */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
