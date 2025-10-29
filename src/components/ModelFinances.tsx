@@ -209,11 +209,16 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
     onlineCB: d.cb,
   }));
 
+  const totalCbIncomeTokens = onlineData.reduce((sum, d) => sum + d.cbIncome, 0);
+  const totalSpIncomeTokens = onlineData.reduce((sum, d) => sum + d.spIncome, 0);
+  const totalSodaIncomeTokens = onlineData.reduce((sum, d) => sum + d.sodaIncome, 0);
+  const totalCam4 = onlineData.reduce((sum, d) => sum + d.cam4, 0);
+  
   const platformSummary = [
-    { platform: 'Chaturbate', tokens: totalCbTokens, income: onlineData.reduce((sum, d) => sum + d.cbIncome, 0) },
-    { platform: 'Stripchat', tokens: totalSpTokens, income: onlineData.reduce((sum, d) => sum + d.spIncome, 0) },
-    { platform: 'CamSoda', tokens: 0, income: 0 },
-    { platform: 'Cam4', tokens: onlineData.reduce((sum, d) => sum + d.cam4, 0), income: onlineData.reduce((sum, d) => sum + d.cam4Income, 0) },
+    { platform: 'Chaturbate', tokens: totalCbIncomeTokens, income: totalCbIncomeTokens * 0.05 * 0.6 },
+    { platform: 'Stripchat', tokens: totalSpIncomeTokens, income: totalSpIncomeTokens * 0.05 * 0.6 },
+    { platform: 'CamSoda', tokens: totalSodaIncomeTokens, income: totalSodaIncomeTokens * 0.05 * 0.6 },
+    { platform: 'Cam4', tokens: totalCam4, income: totalCam4 * 0.6 },
   ];
 
   if (isLoading) {
