@@ -30,22 +30,20 @@ interface DayData {
   shift: boolean;
 }
 
-const generateInitialData = (modelId: number): DayData[] => {
-  const baseMultiplier = modelId * 0.8;
-  
+const generateInitialData = (): DayData[] => {
   return [
-    { date: '16.10', cb: Math.floor(41 * baseMultiplier), sp: Math.floor(106 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 44.01 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '17.10', cb: Math.floor(38 * baseMultiplier), sp: Math.floor(79 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 1.62 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '18.10', cb: Math.floor(49 * baseMultiplier), sp: Math.floor(108 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 67.59 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '19.10', cb: Math.floor(46 * baseMultiplier), sp: Math.floor(119 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 38.61 * baseMultiplier, spIncome: 525 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(17500 * baseMultiplier), transfers: 0, operator: 'Женя', shift: true },
-    { date: '20.10', cb: Math.floor(39 * baseMultiplier), sp: Math.floor(103 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 2.67 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '21.10', cb: Math.floor(26 * baseMultiplier), sp: Math.floor(98 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 0.06 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '22.10', cb: Math.floor(31 * baseMultiplier), sp: Math.floor(69 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 3.00 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '23.10', cb: Math.floor(100 * baseMultiplier), sp: Math.floor(81 * baseMultiplier), soda: 0, cam4: 0.2 * baseMultiplier, cbIncome: 18.84 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 * baseMultiplier, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
-    { date: '24.10', cb: Math.floor(30 * baseMultiplier), sp: Math.floor(78 * baseMultiplier), soda: 0, cam4: 0.4 * baseMultiplier, cbIncome: 8.37 * baseMultiplier, spIncome: 515.58 * baseMultiplier, sodaIncome: 0, cam4Income: 0.24 * baseMultiplier, stripchatTokens: Math.floor(17186 * baseMultiplier), transfers: 0, operator: 'Женя', shift: true },
-    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: false },
+    { date: '16.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '17.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '18.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '19.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '20.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '21.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '22.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '23.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '24.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
     { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
-    { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(3251 * baseMultiplier), transfers: 0, operator: '', shift: false },
+    { date: '27.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
     { date: '28.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
     { date: '29.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
     { date: '30.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
@@ -56,7 +54,7 @@ const generateInitialData = (modelId: number): DayData[] => {
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
 
 const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
-  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(modelId));
+  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData());
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
