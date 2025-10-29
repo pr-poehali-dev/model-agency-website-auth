@@ -197,7 +197,10 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
   const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
   const totalSpTokens = onlineData.reduce((sum, d) => sum + d.stripchatTokens, 0);
   const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
-  const totalIncome = onlineData.reduce((sum, d) => sum + d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income, 0);
+  const totalIncome = onlineData.reduce((sum, d) => {
+    const dailyIncome = ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4 + d.transfers) * 0.6;
+    return sum + dailyIncome;
+  }, 0);
   const totalShifts = onlineData.filter(d => d.shift).length;
 
   const graphOnlineData = onlineData.map(d => ({
@@ -459,10 +462,10 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
               <tr className="border-b bg-green-500/10">
                 <td className="p-2 font-bold sticky left-0 bg-green-500/10">Income</td>
                 {onlineData.map((d) => {
-                  const total = d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income;
+                  const dailyIncome = ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4 + d.transfers) * 0.6;
                   return (
                     <td key={d.date} className="p-2 text-center font-semibold text-green-600">
-                      ${total.toFixed(2)}
+                      ${dailyIncome.toFixed(2)}
                     </td>
                   );
                 })}
