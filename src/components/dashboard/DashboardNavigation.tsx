@@ -48,9 +48,7 @@ const DashboardNavigation = ({
       } lg:translate-x-0 w-64 flex flex-col`}>
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-serif font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Agency Pro
-            </h1>
+            <h1 className="text-2xl font-serif font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MBA</h1>
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={onToggleMobileMenu}>
               <Icon name="X" size={20} />
             </Button>
