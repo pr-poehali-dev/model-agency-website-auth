@@ -239,107 +239,51 @@ const ChecksTab = () => {
         </Card>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="p-3 text-center bg-red-500/20 font-semibold text-lg" colSpan={9}>
-                  {producerData.name}
-                </th>
-              </tr>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="p-2 text-left">Период</th>
-                <th className="p-2 text-right">{producerData.period}</th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-                <th className="p-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-2 font-medium">Сумма $</td>
-                <td className="p-2 text-right">${producerData.sumDollars.toFixed(2)}</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-2 font-medium">Курс</td>
-                <td className="p-2 text-right">{producerData.rate}</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b bg-green-500/10">
-                <td className="p-2 font-medium">Сумма ₽</td>
-                <td className="p-2 text-right font-bold">{producerData.sumRubles.toLocaleString()}₽</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b bg-yellow-500/10">
-                <td className="p-2 font-medium">Затраты</td>
-                <td className="p-2 text-right font-bold">{producerData.expenses.toLocaleString()}₽</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b bg-yellow-500/10">
-                <td className="p-2 font-medium">Аванс</td>
-                <td className="p-2 text-right font-bold">{producerData.advance.toLocaleString()}₽</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b bg-red-500/10">
-                <td className="p-2 font-medium">Штраф</td>
-                <td className="p-2 text-right font-bold">{producerData.penalty.toLocaleString()}₽</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-              <tr className="border-b bg-green-500/20">
-                <td className="p-2 font-bold">Итог</td>
-                <td className="p-2 text-right font-bold text-lg">{producerData.total.toLocaleString()}₽</td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-                <td className="p-2"></td>
-              </tr>
-            </tbody>
-          </table>
+      <Card className="overflow-hidden max-w-2xl mx-auto border-2 border-red-500/30 shadow-lg">
+        <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 p-4 text-center border-b-2 border-red-500/30">
+          <div className="flex items-center justify-center gap-3">
+            <Icon name="Crown" size={28} className="text-red-500" />
+            <h3 className="text-2xl font-serif font-bold">{producerData.name}</h3>
+            <Icon name="Crown" size={28} className="text-red-500" />
+          </div>
+          <div className="text-sm text-muted-foreground mt-1">Период: {producerData.period}</div>
+        </div>
+        
+        <div className="p-6 space-y-3">
+          <div className="flex justify-between items-center py-2 border-b">
+            <span className="text-muted-foreground">Сумма $</span>
+            <span className="font-semibold text-lg">${producerData.sumDollars.toFixed(2)}</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b">
+            <span className="text-muted-foreground">Курс</span>
+            <span className="font-semibold text-lg">{producerData.rate}</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-3 px-4 bg-green-500/10 rounded-lg border border-green-500/20">
+            <span className="font-medium">Сумма ₽</span>
+            <span className="font-bold text-xl">{producerData.sumRubles.toLocaleString()}₽</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-3 px-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <span className="font-medium">Затраты</span>
+            <span className="font-bold text-xl text-yellow-600 dark:text-yellow-400">{producerData.expenses.toLocaleString()}₽</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-3 px-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <span className="font-medium">Аванс</span>
+            <span className="font-bold text-xl text-yellow-600 dark:text-yellow-400">{producerData.advance.toLocaleString()}₽</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/20">
+            <span className="font-medium">Штраф</span>
+            <span className="font-bold text-xl text-red-600 dark:text-red-400">{producerData.penalty.toLocaleString()}₽</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border-2 border-green-500/40 mt-4">
+            <span className="font-bold text-lg">Итог</span>
+            <span className="font-bold text-2xl text-green-600 dark:text-green-400">{producerData.total.toLocaleString()}₽</span>
+          </div>
         </div>
       </Card>
 
