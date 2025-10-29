@@ -13,6 +13,7 @@ import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
+import ModelFinances from '@/components/ModelFinances';
 import { addAuditLog } from '@/lib/auditLog';
 import { useTheme } from '@/hooks/useTheme';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -99,6 +100,7 @@ const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -383,6 +385,10 @@ const Dashboard = () => {
                   <Card 
                     key={model.id} 
                     className="overflow-hidden bg-card border-border hover:shadow-2xl transition-all duration-300 group cursor-pointer hover:scale-[1.02]"
+                    onClick={() => {
+                      setSelectedModelId(model.id);
+                      setActiveTab('model-finances');
+                    }}
                   >
                     <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10"></div>
@@ -607,11 +613,28 @@ const Dashboard = () => {
 
           {activeTab === 'producer-assignments' && userRole && <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
 
-          {activeTab === 'operator-assignments' && userRole && <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
+          {activeTab === 'operator-assignments' && userRole && (
+            <ModelAssignmentManager 
+              currentUserEmail={userEmail} 
+              currentUserRole={userRole}
+              onModelAssigned={(modelId) => {
+                setSelectedModelId(modelId);
+                setActiveTab('model-finances');
+              }}
+            />
+          )}
 
           {activeTab === 'users' && <UserManagement />}
 
           {activeTab === 'audit' && <AuditLog />}
+
+          {activeTab === 'model-finances' && selectedModelId && (
+            <ModelFinances 
+              modelId={selectedModelId} 
+              modelName={models.find(m => m.id === selectedModelId)?.name || ''}
+              onBack={() => setActiveTab('models')}
+            />
+          )}
         </main>
       </div>
     </div>
