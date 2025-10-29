@@ -46,6 +46,10 @@ const generateInitialData = (modelId: number): DayData[] => {
     { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: false },
     { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
     { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(3251 * baseMultiplier), transfers: 0, operator: '', shift: false },
+    { date: '28.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '29.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '30.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '31.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
   ];
 };
 
