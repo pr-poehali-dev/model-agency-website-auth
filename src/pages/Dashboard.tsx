@@ -260,7 +260,7 @@ const Dashboard = () => {
 
   const renderTabContent = () => {
     if (activeTab === 'model-finances' && selectedModelId) {
-      const model = models.find(m => m.id === selectedModelId);
+      const model = modelsData.find(m => m.id === selectedModelId);
       return (
         <ModelFinances 
           modelId={selectedModelId} 
