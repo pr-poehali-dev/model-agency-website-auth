@@ -248,7 +248,7 @@ const ChecksTab = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card className="p-4 relative">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <div className="text-sm text-muted-foreground">Курс USD</div>
             <Button 
               size="sm" 
@@ -260,11 +260,8 @@ const ChecksTab = () => {
               <Icon name={isLoadingRate ? "Loader2" : "RefreshCw"} size={14} className={isLoadingRate ? "animate-spin" : ""} />
             </Button>
           </div>
-          <div className="font-semibold text-3xl text-primary mb-1">
+          <div className="font-bold text-4xl text-primary">
             {exchangeRate.toFixed(2)}₽
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Курс ЦБ: {cbrRate.toFixed(2)}₽
           </div>
         </Card>
       </div>
