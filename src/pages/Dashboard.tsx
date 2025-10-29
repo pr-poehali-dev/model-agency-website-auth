@@ -265,6 +265,7 @@ const Dashboard = () => {
         <ModelFinances 
           modelId={selectedModelId} 
           modelName={model?.name || ''} 
+          currentUserEmail={userEmail}
           onBack={() => setActiveTab('models')}
         />
       );

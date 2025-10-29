@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import Icon from '@/components/ui/icon';
@@ -12,6 +13,7 @@ import { getCurrentPeriod, getDatesInPeriod } from '@/utils/periodUtils';
 interface ModelFinancesProps {
   modelId: number;
   modelName: string;
+  currentUserEmail?: string;
   onBack?: () => void;
 }
 
@@ -60,16 +62,47 @@ const generateInitialData = (): DayData[] => {
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
+const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 
-const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
+const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFinancesProps) => {
   const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData());
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [operators, setOperators] = useState<Array<{email: string, name: string}>>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     loadFinancialData();
+    loadOperators();
   }, [modelId]);
+
+  const loadOperators = async () => {
+    try {
+      // Load all users
+      const usersResponse = await fetch(USERS_API_URL);
+      const users = await usersResponse.json();
+      
+      // Load assignments for this model
+      const assignmentsResponse = await fetch(`${ASSIGNMENTS_API_URL}?modelId=${modelId}`);
+      const assignments = await assignmentsResponse.json();
+      
+      // Get operator emails from assignments
+      const operatorEmails = assignments.map((a: any) => a.operatorEmail);
+      
+      // Filter users to get only assigned operators
+      const assignedOperators = users
+        .filter((u: any) => operatorEmails.includes(u.email))
+        .map((u: any) => ({
+          email: u.email,
+          name: u.fullName || u.email
+        }));
+      
+      setOperators(assignedOperators);
+    } catch (error) {
+      console.error('Failed to load operators:', error);
+    }
+  };
 
   const loadFinancialData = async () => {
     setIsLoading(true);
@@ -389,8 +422,22 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
               <tr className="border-b hover:bg-muted/30">
                 <td className="p-2 font-medium sticky left-0 bg-background">Оператор (Имя)</td>
                 {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center text-xs text-muted-foreground">
-                    Имя
+                  <td key={d.date} className="p-2 text-center">
+                    <Select 
+                      value={d.operator} 
+                      onValueChange={(value) => handleCellChange(idx, 'operator', value)}
+                    >
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue placeholder="Выбрать" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {operators.map((op) => (
+                          <SelectItem key={op.email} value={op.name}>
+                            {op.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </td>
                 ))}
                 <td className="p-2 text-center"></td>
