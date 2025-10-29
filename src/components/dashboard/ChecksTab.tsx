@@ -34,12 +34,29 @@ const ChecksTab = () => {
   const [exchangeRate, setExchangeRate] = useState(72.47);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
+  const [isLoadingRate, setIsLoadingRate] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     loadUserRole(email);
+    loadExchangeRate();
   }, []);
+
+  const loadExchangeRate = async () => {
+    setIsLoadingRate(true);
+    try {
+      const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      const data = await response.json();
+      if (data.rate) {
+        setExchangeRate(data.rate);
+      }
+    } catch (err) {
+      console.error('Failed to load exchange rate from CBR', err);
+    } finally {
+      setIsLoadingRate(false);
+    }
+  };
 
   const loadUserRole = async (email: string) => {
     try {
@@ -229,7 +246,18 @@ const ChecksTab = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Курс</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-muted-foreground">Курс USD (ЦБ РФ)</div>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={loadExchangeRate}
+              disabled={isLoadingRate}
+              className="h-7 px-2"
+            >
+              <Icon name={isLoadingRate ? "Loader2" : "RefreshCw"} size={14} className={isLoadingRate ? "animate-spin" : ""} />
+            </Button>
+          </div>
           <Input 
             type="number" 
             value={exchangeRate} 

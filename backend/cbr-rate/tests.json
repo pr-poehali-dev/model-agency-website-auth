@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get USD rate from CBR",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Handle OPTIONS for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
