@@ -1,12 +1,14 @@
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
+import { Period } from '@/utils/periodUtils';
 
 interface ContentMakersSectionProps {
   contentMakers: Employee[];
+  period: Period;
 }
 
-const ContentMakersSection = ({ contentMakers }: ContentMakersSectionProps) => {
+const ContentMakersSection = ({ contentMakers, period }: ContentMakersSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">

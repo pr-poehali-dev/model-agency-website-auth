@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import ExchangeRateCard from './checks/ExchangeRateCard';
 import ProducerSalaryCard from './checks/ProducerSalaryCard';
 import OperatorsSection from './checks/OperatorsSection';
 import ContentMakersSection from './checks/ContentMakersSection';
 import { producerData } from './checks/mockData';
+import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 
 const ChecksTab = () => {
-  const [currentPeriod, setCurrentPeriod] = useState('16.10 - 02.11');
+  const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
   const [exchangeRate, setExchangeRate] = useState(72.47);
   const [cbrRate, setCbrRate] = useState(79.47);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -97,11 +98,25 @@ const ChecksTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground mb-1">Текущий период</div>
-          <Input 
-            value={currentPeriod} 
-            onChange={(e) => setCurrentPeriod(e.target.value)}
-            className="font-semibold"
-          />
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
+            >
+              <Icon name="ChevronLeft" size={16} />
+            </Button>
+            <div className="font-semibold text-lg flex-1 text-center">
+              {currentPeriod.label}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
+            >
+              <Icon name="ChevronRight" size={16} />
+            </Button>
+          </div>
         </Card>
         
         <Card className="p-4 bg-green-500/10 border-green-500/20">
@@ -123,11 +138,11 @@ const ChecksTab = () => {
         />
       </div>
 
-      <ProducerSalaryCard producerData={producerData} />
+      <ProducerSalaryCard producerData={producerData} period={currentPeriod} />
 
       <div className="space-y-8">
-        <OperatorsSection operators={operators} />
-        <ContentMakersSection contentMakers={contentMakers} />
+        <OperatorsSection operators={operators} period={currentPeriod} />
+        <ContentMakersSection contentMakers={contentMakers} period={currentPeriod} />
       </div>
     </div>
   );

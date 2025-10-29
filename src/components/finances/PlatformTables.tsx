@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Period, getDatesInPeriod } from '@/utils/periodUtils';
 
 const onlineData = [
   { date: '16.10', cb: 41, sp: 106, soda: 0, cam4: 0, cbIncome: 44.01, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
@@ -37,7 +38,11 @@ const graphOnlineData = [
   { date: '27.10', onlineSP: 77, onlineCB: 34 },
 ];
 
-const PlatformTables = () => {
+interface PlatformTablesProps {
+  period?: Period;
+}
+
+const PlatformTables = ({ period }: PlatformTablesProps) => {
   return (
     <div className="space-y-6">
       {/* График онлайна */}

@@ -1,12 +1,14 @@
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { ProducerData } from './types';
+import { Period } from '@/utils/periodUtils';
 
 interface ProducerSalaryCardProps {
   producerData: ProducerData;
+  period: Period;
 }
 
-const ProducerSalaryCard = ({ producerData }: ProducerSalaryCardProps) => {
+const ProducerSalaryCard = ({ producerData, period }: ProducerSalaryCardProps) => {
   return (
     <Card className="overflow-hidden max-w-2xl mx-auto border-2 border-red-500/30 shadow-lg">
       <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 p-4 text-center border-b-2 border-red-500/30">
@@ -15,7 +17,7 @@ const ProducerSalaryCard = ({ producerData }: ProducerSalaryCardProps) => {
           <h3 className="text-2xl font-serif font-bold">{producerData.name}</h3>
           <Icon name="Crown" size={28} className="text-red-500" />
         </div>
-        <div className="text-sm text-muted-foreground mt-1">Период: {producerData.period}</div>
+        <div className="text-sm text-muted-foreground mt-1">Период: {period.label}</div>
       </div>
       
       <div className="p-6 space-y-3">

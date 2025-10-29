@@ -1,12 +1,14 @@
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
+import { Period } from '@/utils/periodUtils';
 
 interface OperatorsSectionProps {
   operators: Employee[];
+  period: Period;
 }
 
-const OperatorsSection = ({ operators }: OperatorsSectionProps) => {
+const OperatorsSection = ({ operators, period }: OperatorsSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">

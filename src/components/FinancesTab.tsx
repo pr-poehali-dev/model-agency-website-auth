@@ -3,6 +3,7 @@ import FinancesHeader from './finances/FinancesHeader';
 import StatsCards from './finances/StatsCards';
 import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
+import { getCurrentPeriod, Period } from '@/utils/periodUtils';
 
 interface Transaction {
   id: number;
@@ -33,6 +34,7 @@ interface FinancesTabProps {
 const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: FinancesTabProps) => {
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [currentPeriod] = useState<Period>(getCurrentPeriod());
 
   const filteredTransactions = transactions.filter(t => {
     if (statusFilter === 'paid') return t.status === 'Paid';
@@ -64,7 +66,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
         modelPerformance={modelPerformance}
       />
 
-      <PlatformTables />
+      <PlatformTables period={currentPeriod} />
     </div>
   );
 };
