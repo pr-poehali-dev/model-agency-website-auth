@@ -242,12 +242,7 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardHome 
-          models={models} 
-          transactions={transactions} 
-          monthlyRevenue={monthlyRevenue} 
-          modelPerformance={modelPerformance}
-        />;
+        return <DashboardHome models={models} />;
       case 'models':
         return <ModelsTab 
           models={models} 
@@ -258,7 +253,7 @@ const Dashboard = () => {
           userRole={userRole || undefined}
         />;
       case 'finances':
-        return <FinancesTab />;
+        return <FinancesTab transactions={transactions} monthlyRevenue={monthlyRevenue} modelPerformance={modelPerformance} />;
       case 'checks':
         return <ChecksTab />;
       case 'schedule':
