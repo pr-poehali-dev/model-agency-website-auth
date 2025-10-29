@@ -204,7 +204,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
   const totalShifts = onlineData.filter(d => d.shift).length;
 
   const graphOnlineData = onlineData.map(d => ({
-    date: d.date,
+    date: formatDate(d.date),
     onlineSP: d.sp,
     onlineCB: d.cb,
     onlineSoda: d.soda,
@@ -524,7 +524,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
         <h3 className="text-lg font-semibold mb-4">Доходы по дням</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={onlineData.map(d => ({ 
-            date: d.date, 
+            date: formatDate(d.date), 
             CB: d.cbIncome * 0.05 * 0.6, 
             SP: d.spIncome * 0.05 * 0.6, 
             Soda: d.sodaIncome * 0.05 * 0.6,
