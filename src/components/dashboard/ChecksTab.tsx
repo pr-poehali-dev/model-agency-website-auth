@@ -249,7 +249,7 @@ const ChecksTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card className="p-4 relative">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-muted-foreground">Курс USD (ЦБ РФ - 7₽)</div>
+            <div className="text-sm text-muted-foreground">Курс USD</div>
             <Button 
               size="sm" 
               variant="outline"
