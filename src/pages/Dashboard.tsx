@@ -96,6 +96,7 @@ const modelPerformance = [
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+const MODELS_API_URL = 'https://functions.poehali.dev/41dffced-c9d4-4e85-b52f-b5462be730e2';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -108,6 +109,7 @@ const Dashboard = () => {
   const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
   const [assignedProducer, setAssignedProducer] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modelsData, setModelsData] = useState(models);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
@@ -117,7 +119,20 @@ const Dashboard = () => {
     if (email) {
       loadUserPermissions(email);
     }
+    loadModels();
   }, []);
+
+  const loadModels = async () => {
+    try {
+      const response = await fetch(MODELS_API_URL);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        setModelsData(data);
+      }
+    } catch (err) {
+      console.error('Failed to load models', err);
+    }
+  };
 
   const loadUserPermissions = async (email: string) => {
     try {
@@ -242,10 +257,10 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardHome models={models} />;
+        return <DashboardHome models={modelsData} />;
       case 'models':
         return <ModelsTab 
-          models={models} 
+          models={modelsData} 
           operatorAssignments={operatorAssignments}
           producerAssignments={producerAssignments}
           assignedProducer={assignedProducer}
