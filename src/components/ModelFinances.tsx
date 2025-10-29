@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import Icon from '@/components/ui/icon';
 
@@ -49,11 +50,35 @@ const generateInitialData = (modelId: number): DayData[] => {
 
 const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
   const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(modelId));
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
   
   const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
     const newData = [...onlineData];
     newData[index] = { ...newData[index], [field]: value };
     setOnlineData(newData);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Здесь будет API-запрос для сохранения данных
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: 'Данные сохранены',
+        description: `Финансовые данные для ${modelName} успешно обновлены`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка сохранения',
+        description: 'Не удалось сохранить данные. Попробуйте снова.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
@@ -91,6 +116,10 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
             <p className="text-muted-foreground">Статистика доходов по платформам</p>
           </div>
         </div>
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
+          {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+        </Button>
       </div>
 
       <Card className="overflow-hidden">
