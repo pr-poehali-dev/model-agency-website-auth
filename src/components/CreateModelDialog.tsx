@@ -46,7 +46,7 @@ const CreateModelDialog = ({ open, onOpenChange, onModelCreated }: CreateModelDi
           email,
           password,
           fullName,
-          role: 'content_maker',
+          role: 'content',
           permissions: []
         }),
       });
@@ -86,7 +86,7 @@ const CreateModelDialog = ({ open, onOpenChange, onModelCreated }: CreateModelDi
         <DialogHeader>
           <DialogTitle>Создать новую модель</DialogTitle>
           <DialogDescription>
-            Добавьте новую модель в систему с ролью контент-мейкер
+            Добавьте новую модель в систему
           </DialogDescription>
         </DialogHeader>
         
