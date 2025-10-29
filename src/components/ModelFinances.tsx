@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import Icon from '@/components/ui/icon';
 
@@ -10,31 +13,54 @@ interface ModelFinancesProps {
   onBack?: () => void;
 }
 
-const generateModelData = (modelId: number) => {
+interface DayData {
+  date: string;
+  cb: number;
+  sp: number;
+  soda: number;
+  cam4: number;
+  cbIncome: number;
+  spIncome: number;
+  sodaIncome: number;
+  cam4Income: number;
+  stripchatTokens: number;
+  operator: string;
+  shift: boolean;
+}
+
+const generateInitialData = (modelId: number): DayData[] => {
   const baseMultiplier = modelId * 0.8;
   
   return [
-    { date: '16.10', cb: Math.floor(41 * baseMultiplier), sp: Math.floor(106 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 44.01 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '17.10', cb: Math.floor(38 * baseMultiplier), sp: Math.floor(79 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 1.62 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '18.10', cb: Math.floor(49 * baseMultiplier), sp: Math.floor(108 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 67.59 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '19.10', cb: Math.floor(46 * baseMultiplier), sp: Math.floor(119 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 38.61 * baseMultiplier, spIncome: 525 * baseMultiplier, sodaIncome: 0, cam4Income: 0 },
-    { date: '20.10', cb: Math.floor(39 * baseMultiplier), sp: Math.floor(103 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 2.67 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '21.10', cb: Math.floor(26 * baseMultiplier), sp: Math.floor(98 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 0.06 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '22.10', cb: Math.floor(31 * baseMultiplier), sp: Math.floor(69 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 3.00 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '23.10', cb: Math.floor(100 * baseMultiplier), sp: Math.floor(81 * baseMultiplier), soda: 0, cam4: 0.2 * baseMultiplier, cbIncome: 18.84 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 * baseMultiplier },
-    { date: '24.10', cb: Math.floor(30 * baseMultiplier), sp: Math.floor(78 * baseMultiplier), soda: 0, cam4: 0.4 * baseMultiplier, cbIncome: 8.37 * baseMultiplier, spIncome: 515.58 * baseMultiplier, sodaIncome: 0, cam4Income: 0.24 * baseMultiplier },
-    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-    { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0 },
+    { date: '16.10', cb: Math.floor(41 * baseMultiplier), sp: Math.floor(106 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 44.01 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '17.10', cb: Math.floor(38 * baseMultiplier), sp: Math.floor(79 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 1.62 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '18.10', cb: Math.floor(49 * baseMultiplier), sp: Math.floor(108 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 67.59 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '19.10', cb: Math.floor(46 * baseMultiplier), sp: Math.floor(119 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 38.61 * baseMultiplier, spIncome: 525 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(17500 * baseMultiplier), operator: 'Женя', shift: true },
+    { date: '20.10', cb: Math.floor(39 * baseMultiplier), sp: Math.floor(103 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 2.67 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '21.10', cb: Math.floor(26 * baseMultiplier), sp: Math.floor(98 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 0.06 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '22.10', cb: Math.floor(31 * baseMultiplier), sp: Math.floor(69 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 3.00 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '23.10', cb: Math.floor(100 * baseMultiplier), sp: Math.floor(81 * baseMultiplier), soda: 0, cam4: 0.2 * baseMultiplier, cbIncome: 18.84 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 * baseMultiplier, stripchatTokens: 0, operator: 'Женя', shift: true },
+    { date: '24.10', cb: Math.floor(30 * baseMultiplier), sp: Math.floor(78 * baseMultiplier), soda: 0, cam4: 0.4 * baseMultiplier, cbIncome: 8.37 * baseMultiplier, spIncome: 515.58 * baseMultiplier, sodaIncome: 0, cam4Income: 0.24 * baseMultiplier, stripchatTokens: Math.floor(17186 * baseMultiplier), operator: 'Женя', shift: true },
+    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: false },
+    { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: '', shift: false },
+    { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(3251 * baseMultiplier), operator: '', shift: false },
   ];
 };
 
 const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
-  const onlineData = generateModelData(modelId);
+  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(modelId));
   
-  const totalCbTokens = Math.floor(1467 * modelId * 0.8);
-  const totalSpTokens = Math.floor(37137 * modelId * 0.8);
+  const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
+    const newData = [...onlineData];
+    newData[index] = { ...newData[index], [field]: value };
+    setOnlineData(newData);
+  };
+
+  const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
+  const totalSpTokens = onlineData.reduce((sum, d) => sum + d.stripchatTokens, 0);
+  const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
   const totalIncome = onlineData.reduce((sum, d) => sum + d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income, 0);
+  const totalShifts = onlineData.filter(d => d.shift).length;
 
   const graphOnlineData = onlineData.map(d => ({
     date: d.date,
@@ -46,7 +72,7 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     { platform: 'Chaturbate', tokens: totalCbTokens, income: onlineData.reduce((sum, d) => sum + d.cbIncome, 0) },
     { platform: 'Stripchat', tokens: totalSpTokens, income: onlineData.reduce((sum, d) => sum + d.spIncome, 0) },
     { platform: 'CamSoda', tokens: 0, income: 0 },
-    { platform: 'Cam4', tokens: 0.6 * modelId * 0.8, income: 0.36 * modelId * 0.8 },
+    { platform: 'Cam4', tokens: onlineData.reduce((sum, d) => sum + d.cam4, 0), income: onlineData.reduce((sum, d) => sum + d.cam4Income, 0) },
   ];
 
   return (
@@ -86,9 +112,14 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
             <tbody>
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Online CB</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    {d.cb || ''}
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.cb || ''}
+                      onChange={(e) => handleCellChange(idx, 'cb', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
                   </td>
                 ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/30 bg-slate-800">{totalCbTokens}</td>
@@ -96,19 +127,29 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
 
               <tr className="border-b border-border dark:bg-orange-900/20 bg-orange-900/30">
                 <td className="p-3 font-medium text-foreground">Chaturbate</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    {d.cb || ''}
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.cb || ''}
+                      onChange={(e) => handleCellChange(idx, 'cb', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
                   </td>
                 ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">{Math.floor(totalCbTokens * 0.456)}</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">{totalChaturbateTokens}</td>
               </tr>
 
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Online SP</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    {d.sp || ''}
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.sp || ''}
+                      onChange={(e) => handleCellChange(idx, 'sp', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
                   </td>
                 ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">Tokens</td>
@@ -116,26 +157,29 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
 
               <tr className="border-b border-border dark:bg-red-900/20 bg-red-900/30">
                 <td className="p-3 font-medium text-foreground">Stripchat</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">{Math.floor(17500 * modelId * 0.8)}</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">{Math.floor(17186 * modelId * 0.8)}</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">{Math.floor(3251 * modelId * 0.8)}</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.stripchatTokens || ''}
+                      onChange={(e) => handleCellChange(idx, 'stripchatTokens', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
+                  </td>
+                ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">{totalSpTokens}</td>
               </tr>
 
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Online Soda</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground">
-                    {d.soda || ''}
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.soda || ''}
+                      onChange={(e) => handleCellChange(idx, 'soda', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
                   </td>
                 ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">Tokens</td>
@@ -143,69 +187,72 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
 
               <tr className="border-b border-border dark:bg-blue-900/20 bg-blue-900/30">
                 <td className="p-3 font-medium text-foreground">CamSoda</td>
-                {onlineData.map(() => (
-                  <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      value={d.sodaIncome || ''}
+                      onChange={(e) => handleCellChange(idx, 'sodaIncome', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
+                  </td>
                 ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
               </tr>
 
               <tr className="border-b border-border dark:bg-orange-900/20 bg-orange-900/30">
                 <td className="p-3 font-medium text-foreground">Cam4</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">{onlineData[7].cam4.toFixed(1)}</td>
-                <td className="p-3 text-center text-muted-foreground">{onlineData[8].cam4.toFixed(1)}</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground">0</td>
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">{(0.6 * modelId * 0.8).toFixed(1)}</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="number"
+                      step="0.1"
+                      value={d.cam4 || ''}
+                      onChange={(e) => handleCellChange(idx, 'cam4', Number(e.target.value))}
+                      className="w-16 h-8 text-center text-xs"
+                    />
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">
+                  {platformSummary[3].tokens.toFixed(1)}
+                </td>
               </tr>
 
               <tr className="border-b border-border dark:bg-teal-900/20 bg-teal-900/30">
                 <td className="p-3 font-medium text-foreground">Переводы</td>
-                {onlineData.map(() => (
-                  <td key={Math.random()} className="p-3 text-center text-muted-foreground"></td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-3 text-center text-muted-foreground"></td>
                 ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
               </tr>
 
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Оператор (Имя)</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground">Женя</td>
-                <td className="p-3 text-center text-muted-foreground"></td>
-                <td className="p-3 text-center text-muted-foreground"></td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      value={d.operator}
+                      onChange={(e) => handleCellChange(idx, 'operator', e.target.value)}
+                      className="w-20 h-8 text-center text-xs"
+                      placeholder="Имя"
+                    />
+                  </td>
+                ))}
                 <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50"></td>
               </tr>
 
               <tr className="border-b border-border hover:bg-muted/30">
                 <td className="p-3 font-medium text-foreground">Смены</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center">✓</td>
-                <td className="p-3 text-center"></td>
-                <td className="p-3 text-center"></td>
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">10</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-3 text-center">
+                    <Checkbox 
+                      checked={d.shift}
+                      onCheckedChange={(checked) => handleCellChange(idx, 'shift', checked === true)}
+                    />
+                  </td>
+                ))}
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">{totalShifts}</td>
               </tr>
 
               <tr className="border-b-2 border-border bg-muted/50 font-semibold">
