@@ -290,6 +290,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                 <td className="p-2 text-center"></td>
               </tr>
 
+              <tr className="border-b bg-muted/20">
+                <td className="p-2 font-medium sticky left-0 bg-muted/20">Tokens</td>
+                {onlineData.map((d) => (
+                  <td key={d.date} className="p-2 text-center"></td>
+                ))}
+                <td className="p-2 text-center font-bold bg-accent/10">Tokens</td>
+              </tr>
+
               <tr className="border-b bg-red-500/5">
                 <td className="p-2 font-medium sticky left-0 bg-red-500/5">Chaturbate</td>
                 {onlineData.map((d, idx) => (
