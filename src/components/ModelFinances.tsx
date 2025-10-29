@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getDatesInPeriod } from '@/utils/periodUtils';
 
@@ -16,13 +18,14 @@ interface ModelFinancesProps {
 interface DayData {
   date: string;
   cb: number;
-  cbIncome: number;
   sp: number;
-  spIncome: number;
   soda: number;
-  sodaIncome: number;
   cam4: number;
+  cbIncome: number;
+  spIncome: number;
+  sodaIncome: number;
   cam4Income: number;
+  stripchatTokens: number;
   transfers: number;
   operator: string;
   shift: boolean;
@@ -32,20 +35,27 @@ const generateInitialData = (): DayData[] => {
   const period = getCurrentPeriod();
   const dates = getDatesInPeriod(period);
   
-  return dates.map(date => ({
+  console.log('Period:', period);
+  console.log('Dates in period:', dates);
+  
+  const result = dates.map(date => ({
     date,
     cb: 0,
-    cbIncome: 0,
     sp: 0,
-    spIncome: 0,
     soda: 0,
-    sodaIncome: 0,
     cam4: 0,
+    cbIncome: 0,
+    spIncome: 0,
+    sodaIncome: 0,
     cam4Income: 0,
+    stripchatTokens: 0,
     transfers: 0,
     operator: '',
     shift: false
   }));
+  
+  console.log('Generated data length:', result.length);
+  return result;
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
@@ -82,9 +92,9 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     }
   };
   
-  const handleCellChange = (dateIndex: number, field: keyof DayData, value: string | number | boolean) => {
+  const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
     const newData = [...onlineData];
-    newData[dateIndex] = { ...newData[dateIndex], [field]: value };
+    newData[index] = { ...newData[index], [field]: value };
     setOnlineData(newData);
   };
 
@@ -125,149 +135,291 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     }
   };
 
-  const calculateTotals = () => {
-    const cbTokensSum = onlineData.reduce((sum, d) => sum + d.cb, 0);
-    const spTokensSum = onlineData.reduce((sum, d) => sum + d.sp, 0);
-    const sodaTokensSum = onlineData.reduce((sum, d) => sum + d.soda, 0);
-    const cam4Sum = onlineData.reduce((sum, d) => sum + d.cam4, 0);
-    const transfersSum = onlineData.reduce((sum, d) => sum + d.transfers, 0);
-    const shiftsCount = onlineData.filter(d => d.shift).length;
-    
-    const totalIncome = onlineData.reduce((sum, d) => 
-      sum + d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income, 0);
+  const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
+  const totalSpTokens = onlineData.reduce((sum, d) => sum + d.stripchatTokens, 0);
+  const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
+  const totalIncome = onlineData.reduce((sum, d) => sum + d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income, 0);
+  const totalShifts = onlineData.filter(d => d.shift).length;
 
-    return {
-      cbTokensSum,
-      spTokensSum,
-      sodaTokensSum,
-      cam4Sum,
-      transfersSum,
-      shiftsCount,
-      totalIncome
-    };
-  };
+  const graphOnlineData = onlineData.map(d => ({
+    date: d.date,
+    onlineSP: d.sp,
+    onlineCB: d.cb,
+  }));
 
-  const totals = calculateTotals();
-
-  const formatDate = (dateStr: string) => {
-    const [, month, day] = dateStr.split('-');
-    return `${day}.${month}`;
-  };
-
-  const rows = [
-    { label: 'Online CB', field: 'cb' as const, color: 'bg-slate-700' },
-    { label: 'Chaturbate', field: 'cbIncome' as const, color: 'bg-red-900/30' },
-    { label: 'Online SP', field: 'sp' as const, color: 'bg-slate-700' },
-    { label: 'Stripchat', field: 'spIncome' as const, color: 'bg-purple-900/30' },
-    { label: 'Online Soda', field: 'soda' as const, color: 'bg-slate-700' },
-    { label: 'CamSoda', field: 'sodaIncome' as const, color: 'bg-blue-900/30' },
-    { label: 'Cam4', field: 'cam4' as const, color: 'bg-purple-900/30' },
-    { label: 'Переводы', field: 'transfers' as const, color: 'bg-teal-900/30' },
-    { label: 'Оператор (Имя)', field: 'operator' as const, color: 'bg-slate-800' },
-    { label: 'Смены', field: 'shift' as const, color: 'bg-slate-800' },
-    { label: 'Income', field: 'income' as const, color: 'bg-slate-900' },
+  const platformSummary = [
+    { platform: 'Chaturbate', tokens: totalCbTokens, income: onlineData.reduce((sum, d) => sum + d.cbIncome, 0) },
+    { platform: 'Stripchat', tokens: totalSpTokens, income: onlineData.reduce((sum, d) => sum + d.spIncome, 0) },
+    { platform: 'CamSoda', tokens: 0, income: 0 },
+    { platform: 'Cam4', tokens: onlineData.reduce((sum, d) => sum + d.cam4, 0), income: onlineData.reduce((sum, d) => sum + d.cam4Income, 0) },
   ];
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center">
-        <div className="text-muted-foreground">Загрузка...</div>
+      <div className="animate-fade-in space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <Icon name="Loader2" size={48} className="animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {onBack && (
-            <Button variant="ghost" size="icon" onClick={onBack}>
+            <Button variant="outline" size="icon" onClick={onBack}>
               <Icon name="ArrowLeft" size={20} />
             </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold">{modelName}</h2>
-            <p className="text-sm text-muted-foreground">Настоящий период</p>
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
+              Финансы — {modelName}
+            </h2>
+            <p className="text-muted-foreground">Статистика доходов по платформам</p>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          <Icon name="Save" size={16} className="mr-2" />
-          {isSaving ? 'Сохранение...' : 'Сохранить'}
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
+          {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
         </Button>
       </div>
 
-      <Card className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="sticky left-0 z-20 bg-card px-4 py-3 text-left text-sm font-medium min-w-[180px]">
-                Настоящий период
-              </th>
-              {onlineData.map((day, idx) => (
-                <th key={idx} className="px-2 py-3 text-center text-sm font-medium min-w-[80px]">
-                  {formatDate(day.date)}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">Настоящий период</th>
+                {onlineData.map((d) => (
+                  <th key={d.date} className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50">
+                    {d.date}
+                  </th>
+                ))}
+                <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]">
+                  Tokens
                 </th>
-              ))}
-              <th className="sticky right-0 z-20 bg-card px-4 py-3 text-center text-sm font-medium min-w-[100px]">
-                Tokens
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIdx) => (
-              <tr key={rowIdx} className={`border-b border-border/50 ${row.color}`}>
-                <td className="sticky left-0 z-10 bg-inherit px-4 py-2 text-sm font-medium">
-                  {row.label}
-                </td>
-                {onlineData.map((day, colIdx) => (
-                  <td key={colIdx} className="px-2 py-2">
-                    {row.field === 'shift' ? (
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={day.shift}
-                          onCheckedChange={(checked) => 
-                            handleCellChange(colIdx, 'shift', checked === true)
-                          }
-                        />
-                      </div>
-                    ) : row.field === 'operator' ? (
-                      <Input
-                        value={day.operator}
-                        onChange={(e) => handleCellChange(colIdx, 'operator', e.target.value)}
-                        className="h-8 text-sm bg-background/50 border-border/50"
-                        placeholder="Имя"
-                      />
-                    ) : row.field === 'income' ? (
-                      <div className="text-center text-sm font-medium text-green-400">
-                        ${(day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income).toFixed(2)}
-                      </div>
-                    ) : (
-                      <Input
-                        type="number"
-                        value={day[row.field] || ''}
-                        onChange={(e) => handleCellChange(colIdx, row.field, parseFloat(e.target.value) || 0)}
-                        className="h-8 text-sm bg-background/50 border-border/50 text-center"
-                        placeholder="0"
-                      />
-                    )}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Online CB</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={d.cb || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
                   </td>
                 ))}
-                <td className="sticky right-0 z-10 bg-inherit px-4 py-2 text-center text-sm font-medium">
-                  {row.field === 'cb' && totals.cbTokensSum}
-                  {row.field === 'sp' && totals.spTokensSum}
-                  {row.field === 'soda' && totals.sodaTokensSum}
-                  {row.field === 'cam4' && totals.cam4Sum}
-                  {row.field === 'transfers' && totals.transfersSum}
-                  {row.field === 'shift' && totals.shiftsCount}
-                  {row.field === 'income' && (
-                    <span className="text-green-400">${totals.totalIncome.toFixed(2)}</span>
-                  )}
-                  {!['cb', 'sp', 'soda', 'cam4', 'transfers', 'shift', 'income'].includes(row.field) && ''}
+                <td className="p-2 text-center font-bold bg-accent/5">{totalCbTokens}</td>
+              </tr>
+
+              <tr className="border-b bg-red-500/5">
+                <td className="p-2 font-medium sticky left-0 bg-red-500/5">Chaturbate</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <div className="h-8 bg-red-500/10 rounded"></div>
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-red-500/10">{totalChaturbateTokens}</td>
+              </tr>
+
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Online SP</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={d.sp || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+              </tr>
+
+              <tr className="border-b bg-purple-500/5">
+                <td className="p-2 font-medium sticky left-0 bg-purple-500/5">Stripchat</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <div className="h-8 bg-purple-500/10 rounded"></div>
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-purple-500/10">{totalSpTokens}</td>
+              </tr>
+
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Online Soda</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={d.soda || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'soda', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+              </tr>
+
+              <tr className="border-b bg-blue-500/5">
+                <td className="p-2 font-medium sticky left-0 bg-blue-500/5">CamSoda</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <div className="h-8 bg-blue-500/10 rounded"></div>
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-blue-500/10">0</td>
+              </tr>
+
+              <tr className="border-b bg-pink-500/5">
+                <td className="p-2 font-medium sticky left-0 bg-pink-500/5">Cam4</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      inputMode="decimal"
+                      value={d.cam4 || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'cam4', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-pink-500/10">
+                  {platformSummary[3].tokens.toFixed(1)}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Переводы</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <div className="h-8 bg-muted/20 rounded"></div>
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-accent/5">0</td>
+              </tr>
+
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Оператор (Имя)</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center text-xs text-muted-foreground">
+                    Имя
+                  </td>
+                ))}
+                <td className="p-2 text-center"></td>
+              </tr>
+
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Смены</td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Checkbox 
+                      checked={d.shift}
+                      onCheckedChange={(checked) => handleCellChange(idx, 'shift', checked === true)}
+                    />
+                  </td>
+                ))}
+                <td className="p-2 text-center font-bold bg-accent/5">{totalShifts}</td>
+              </tr>
+
+              <tr className="border-b bg-green-500/10">
+                <td className="p-2 font-bold sticky left-0 bg-green-500/10">Income</td>
+                {onlineData.map((d) => {
+                  const total = d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income;
+                  return (
+                    <td key={d.date} className="p-2 text-center font-semibold text-green-600">
+                      ${total.toFixed(2)}
+                    </td>
+                  );
+                })}
+                <td className="p-2 text-center font-bold text-lg text-green-600 bg-green-500/20">
+                  ${totalIncome.toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {platformSummary.map((platform) => (
+          <Card key={platform.platform} className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{platform.platform}</h3>
+              <Badge variant="outline">{platform.tokens.toFixed(platform.platform === 'Cam4' ? 1 : 0)} токенов</Badge>
+            </div>
+            <div className="text-3xl font-bold text-primary">
+              ${platform.income.toFixed(2)}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Онлайн по платформам</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={graphOnlineData}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis dataKey="date" className="text-xs" />
+            <YAxis className="text-xs" />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="onlineSP" stroke="#ef4444" name="Stripchat" strokeWidth={2} />
+            <Line type="monotone" dataKey="onlineCB" stroke="#f97316" name="Chaturbate" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Доходы по дням</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={onlineData.map(d => ({ date: d.date, CB: d.cbIncome, SP: d.spIncome }))}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis dataKey="date" className="text-xs" />
+            <YAxis className="text-xs" />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Legend />
+            <Bar dataKey="CB" fill="#f97316" name="Chaturbate ($)" />
+            <Bar dataKey="SP" fill="#ef4444" name="Stripchat ($)" />
+          </BarChart>
+        </ResponsiveContainer>
       </Card>
     </div>
   );
