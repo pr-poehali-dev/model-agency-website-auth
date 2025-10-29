@@ -35,10 +35,7 @@ const generateInitialData = (): DayData[] => {
   const period = getCurrentPeriod();
   const dates = getDatesInPeriod(period);
   
-  console.log('Period:', period);
-  console.log('Dates in period:', dates);
-  
-  const result = dates.map(date => ({
+  return dates.map(date => ({
     date,
     cb: 0,
     sp: 0,
@@ -53,9 +50,6 @@ const generateInitialData = (): DayData[] => {
     operator: '',
     shift: false
   }));
-  
-  console.log('Generated data length:', result.length);
-  return result;
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
@@ -78,15 +72,10 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
         const data = await response.json();
         if (data.length > 0) {
           setOnlineData(data);
-        } else {
-          setOnlineData(generateInitialData());
         }
-      } else {
-        setOnlineData(generateInitialData());
       }
     } catch (error) {
       console.error('Failed to load financial data:', error);
-      setOnlineData(generateInitialData());
     } finally {
       setIsLoading(false);
     }
@@ -186,25 +175,25 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
         </Button>
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-border">
-                <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">Настоящий период</th>
+              <tr className="border-b border-slate-700">
+                <th className="p-2 text-left font-semibold text-slate-300 sticky left-0 bg-slate-800 min-w-[140px]">Настоящий период</th>
                 {onlineData.map((d) => (
-                  <th key={d.date} className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50">
+                  <th key={d.date} className="p-2 text-center font-medium text-slate-300 whitespace-nowrap min-w-[60px] bg-slate-800">
                     {d.date}
                   </th>
                 ))}
-                <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]">
+                <th className="p-2 text-center font-semibold text-slate-300 bg-slate-800 min-w-[80px]">
                   Tokens
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online CB</td>
+              <tr className="border-b border-slate-700">
+                <td className="p-2 font-medium sticky left-0 bg-slate-900 text-slate-300">Online CB</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -216,25 +205,25 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
                       }}
-                      className="w-14 h-8 text-center text-xs p-1"
+                      className="w-14 h-8 text-center text-xs p-1 bg-slate-800 border-slate-700 text-slate-200"
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">{totalCbTokens}</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">{totalCbTokens}</td>
               </tr>
 
-              <tr className="border-b bg-red-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-red-500/5">Chaturbate</td>
+              <tr className="border-b border-slate-700 bg-red-950/30">
+                <td className="p-2 font-medium sticky left-0 bg-red-950/30 text-slate-300">Chaturbate</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-red-500/10 rounded"></div>
+                    <div className="h-8 bg-slate-800 rounded"></div>
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-red-500/10">{totalChaturbateTokens}</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">{totalChaturbateTokens}</td>
               </tr>
 
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online SP</td>
+              <tr className="border-b border-slate-700">
+                <td className="p-2 font-medium sticky left-0 bg-slate-900 text-slate-300">Online SP</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -246,25 +235,25 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
                       }}
-                      className="w-14 h-8 text-center text-xs p-1"
+                      className="w-14 h-8 text-center text-xs p-1 bg-slate-800 border-slate-700 text-slate-200"
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">Tokens</td>
               </tr>
 
-              <tr className="border-b bg-purple-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-purple-500/5">Stripchat</td>
+              <tr className="border-b border-slate-700 bg-purple-950/20">
+                <td className="p-2 font-medium sticky left-0 bg-purple-950/20 text-slate-300">Stripchat</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-purple-500/10 rounded"></div>
+                    <div className="h-8 bg-slate-800 rounded"></div>
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-purple-500/10">{totalSpTokens}</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">{totalSpTokens}</td>
               </tr>
 
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online Soda</td>
+              <tr className="border-b border-slate-700">
+                <td className="p-2 font-medium sticky left-0 bg-slate-900 text-slate-300">Online Soda</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -276,25 +265,25 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         handleCellChange(idx, 'soda', val === '' ? 0 : Number(val));
                       }}
-                      className="w-14 h-8 text-center text-xs p-1"
+                      className="w-14 h-8 text-center text-xs p-1 bg-slate-800 border-slate-700 text-slate-200"
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">Tokens</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">Tokens</td>
               </tr>
 
-              <tr className="border-b bg-blue-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-blue-500/5">CamSoda</td>
+              <tr className="border-b border-slate-700 bg-blue-950/20">
+                <td className="p-2 font-medium sticky left-0 bg-blue-950/20 text-slate-300">CamSoda</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-blue-500/10 rounded"></div>
+                    <div className="h-8 bg-slate-800 rounded"></div>
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-blue-500/10">0</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">0</td>
               </tr>
 
-              <tr className="border-b bg-pink-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-pink-500/5">Cam4</td>
+              <tr className="border-b border-slate-700 bg-pink-950/20">
+                <td className="p-2 font-medium sticky left-0 bg-pink-950/20 text-slate-300">Cam4</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -305,59 +294,60 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                         const val = e.target.value.replace(/[^0-9.]/g, '');
                         handleCellChange(idx, 'cam4', val === '' ? 0 : Number(val));
                       }}
-                      className="w-14 h-8 text-center text-xs p-1"
+                      className="w-14 h-8 text-center text-xs p-1 bg-slate-800 border-slate-700 text-slate-200"
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-pink-500/10">
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">
                   {platformSummary[3].tokens.toFixed(1)}
                 </td>
               </tr>
 
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Переводы</td>
+              <tr className="border-b border-slate-700 bg-teal-950/20">
+                <td className="p-2 font-medium sticky left-0 bg-teal-950/20 text-slate-300">Переводы</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-muted/20 rounded"></div>
+                    <div className="h-8 bg-slate-800 rounded"></div>
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">0</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">0</td>
               </tr>
 
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Оператор (Имя)</td>
+              <tr className="border-b border-slate-700">
+                <td className="p-2 font-medium sticky left-0 bg-slate-900 text-slate-300">Оператор (Имя)</td>
                 {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center text-xs text-muted-foreground">
+                  <td key={d.date} className="p-2 text-center text-xs text-slate-500">
                     Имя
                   </td>
                 ))}
                 <td className="p-2 text-center"></td>
               </tr>
 
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Смены</td>
+              <tr className="border-b border-slate-700">
+                <td className="p-2 font-medium sticky left-0 bg-slate-900 text-slate-300">Смены</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Checkbox 
                       checked={d.shift}
                       onCheckedChange={(checked) => handleCellChange(idx, 'shift', checked === true)}
+                      className="border-slate-600"
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">{totalShifts}</td>
+                <td className="p-2 text-center font-bold text-amber-500 bg-slate-800">{totalShifts}</td>
               </tr>
 
-              <tr className="border-b bg-green-500/10">
-                <td className="p-2 font-bold sticky left-0 bg-green-500/10">Income</td>
+              <tr className="border-b border-slate-700 bg-green-950/30">
+                <td className="p-2 font-bold sticky left-0 bg-green-950/30 text-slate-300">Income</td>
                 {onlineData.map((d) => {
                   const total = d.cbIncome + d.spIncome + d.sodaIncome + d.cam4Income;
                   return (
-                    <td key={d.date} className="p-2 text-center font-semibold text-green-600">
+                    <td key={d.date} className="p-2 text-center font-semibold text-green-400">
                       ${total.toFixed(2)}
                     </td>
                   );
                 })}
-                <td className="p-2 text-center font-bold text-lg text-green-600 bg-green-500/20">
+                <td className="p-2 text-center font-bold text-lg text-green-400 bg-slate-800">
                   ${totalIncome.toFixed(2)}
                 </td>
               </tr>
