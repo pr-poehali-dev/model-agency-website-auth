@@ -35,7 +35,10 @@ const generateInitialData = (): DayData[] => {
   const period = getCurrentPeriod();
   const dates = getDatesInPeriod(period);
   
-  return dates.map(date => ({
+  console.log('Period:', period);
+  console.log('Dates in period:', dates);
+  
+  const result = dates.map(date => ({
     date,
     cb: 0,
     sp: 0,
@@ -50,6 +53,9 @@ const generateInitialData = (): DayData[] => {
     operator: '',
     shift: false
   }));
+  
+  console.log('Generated data length:', result.length);
+  return result;
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
@@ -72,10 +78,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
         const data = await response.json();
         if (data.length > 0) {
           setOnlineData(data);
+        } else {
+          setOnlineData(generateInitialData());
         }
+      } else {
+        setOnlineData(generateInitialData());
       }
     } catch (error) {
       console.error('Failed to load financial data:', error);
+      setOnlineData(generateInitialData());
     } finally {
       setIsLoading(false);
     }
