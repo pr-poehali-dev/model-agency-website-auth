@@ -35,7 +35,11 @@ const generateInitialData = (): DayData[] => {
   const period = getCurrentPeriod();
   const dates = getDatesInPeriod(period);
   
-  return dates.map(date => ({
+  console.log('🔍 Period:', period);
+  console.log('🔍 Dates count:', dates.length);
+  console.log('🔍 Dates:', dates);
+  
+  const result = dates.map(date => ({
     date,
     cb: 0,
     sp: 0,
@@ -50,6 +54,9 @@ const generateInitialData = (): DayData[] => {
     operator: '',
     shift: false
   }));
+  
+  console.log('🔍 Generated data count:', result.length);
+  return result;
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
@@ -68,14 +75,31 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}?modelId=${modelId}`);
+      console.log('📡 Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📡 Server data length:', data.length);
+        console.log('📡 Server data:', data);
+        
         if (data.length > 0) {
           setOnlineData(data);
+          console.log('✅ Loaded data from server');
+        } else {
+          const initialData = generateInitialData();
+          setOnlineData(initialData);
+          console.log('✅ Using generated initial data (server returned empty)');
         }
+      } else {
+        const initialData = generateInitialData();
+        setOnlineData(initialData);
+        console.log('✅ Using generated initial data (server error)');
       }
     } catch (error) {
-      console.error('Failed to load financial data:', error);
+      console.error('❌ Failed to load financial data:', error);
+      const initialData = generateInitialData();
+      setOnlineData(initialData);
+      console.log('✅ Using generated initial data (network error)');
     } finally {
       setIsLoading(false);
     }
