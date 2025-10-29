@@ -207,6 +207,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
     date: d.date,
     onlineSP: d.sp,
     onlineCB: d.cb,
+    onlineSoda: d.soda,
   }));
 
   const totalCbIncomeTokens = onlineData.reduce((sum, d) => sum + d.cbIncome, 0);
@@ -514,6 +515,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
             <Legend />
             <Line type="monotone" dataKey="onlineSP" stroke="#ef4444" name="Stripchat" strokeWidth={2} />
             <Line type="monotone" dataKey="onlineCB" stroke="#f97316" name="Chaturbate" strokeWidth={2} />
+            <Line type="monotone" dataKey="onlineSoda" stroke="#3b82f6" name="CamSoda" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </Card>
@@ -521,7 +523,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Доходы по дням</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={onlineData.map(d => ({ date: d.date, CB: d.cbIncome, SP: d.spIncome }))}>
+          <BarChart data={onlineData.map(d => ({ 
+            date: d.date, 
+            CB: d.cbIncome * 0.05 * 0.6, 
+            SP: d.spIncome * 0.05 * 0.6, 
+            Soda: d.sodaIncome * 0.05 * 0.6,
+            Cam4: d.cam4 * 0.6,
+            Transfers: d.transfers * 0.6
+          }))}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis dataKey="date" className="text-xs" />
             <YAxis className="text-xs" />
@@ -535,6 +544,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
             <Legend />
             <Bar dataKey="CB" fill="#f97316" name="Chaturbate ($)" />
             <Bar dataKey="SP" fill="#ef4444" name="Stripchat ($)" />
+            <Bar dataKey="Soda" fill="#3b82f6" name="CamSoda ($)" />
+            <Bar dataKey="Cam4" fill="#ec4899" name="Cam4 ($)" />
+            <Bar dataKey="Transfers" fill="#10b981" name="Переводы ($)" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
