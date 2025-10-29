@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Icon from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { PERMISSIONS, ROLE_LABELS, type UserRole } from '@/lib/permissions';
+import { PERMISSIONS, type UserRole } from '@/lib/permissions';
+import { addAuditLog } from '@/lib/auditLog';
+import { useTheme } from '@/hooks/useTheme';
+import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
+import DashboardHome from '@/components/dashboard/DashboardHome';
+import ModelsTab from '@/components/dashboard/ModelsTab';
+import ChecksTab from '@/components/dashboard/ChecksTab';
+import DashboardTab from '@/components/dashboard/DashboardTab';
+import FilesTab from '@/components/dashboard/FilesTab';
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
@@ -14,9 +16,6 @@ import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
-import { addAuditLog } from '@/lib/auditLog';
-import { useTheme } from '@/hooks/useTheme';
-import NotificationCenter from '@/components/NotificationCenter';
 
 const models = [
   {
@@ -130,12 +129,10 @@ const Dashboard = () => {
         setUserName(currentUser.fullName || '');
         setUserPermissions(currentUser.permissions || []);
         
-        // Загрузить назначенные модели для оператора
         if (currentUser.role === 'operator') {
           loadOperatorAssignments(email);
           loadAssignedProducer(email);
         }
-        // Загрузить назначенные модели для продюсера
         if (currentUser.role === 'producer') {
           loadProducerAssignments(email);
         }
@@ -213,430 +210,102 @@ const Dashboard = () => {
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
-    { id: 'files', label: 'Файлы', icon: 'FolderOpen', permission: PERMISSIONS.VIEW_FILES },
-    { id: 'producer-assignments', label: 'Назначения продюсерам', icon: 'Users', permission: PERMISSIONS.MANAGE_PRODUCER_ASSIGNMENTS },
-    { id: 'operator-assignments', label: 'Назначения операторам', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_OPERATOR_ASSIGNMENTS },
+    { id: 'files', label: 'Файлы', icon: 'Files', permission: PERMISSIONS.VIEW_FILES },
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
-    { id: 'audit', label: 'История', icon: 'History', permission: PERMISSIONS.MANAGE_USERS }
+    { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
+    { id: 'producer-assignments', label: 'Продюсеры', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_PRODUCERS },
+    { id: 'audit', label: 'История действий', icon: 'FileText', permission: PERMISSIONS.VIEW_AUDIT },
   ];
 
-  const visibleItems = navigationItems.filter(item => userPermissions.includes(item.permission));
+  const handleViewModelFinances = (modelId: number, modelName: string) => {
+    setSelectedModelId(modelId);
+    setActiveTab('model-finances');
+    addAuditLog(
+      userEmail, 
+      'Просмотр финансов модели',
+      `Открыта страница финансов для модели: ${modelName}`,
+      'finances'
+    );
+  };
+
+  const renderTabContent = () => {
+    if (activeTab === 'model-finances' && selectedModelId) {
+      const model = models.find(m => m.id === selectedModelId);
+      return (
+        <ModelFinances 
+          modelId={selectedModelId} 
+          modelName={model?.name || ''} 
+          onBack={() => setActiveTab('models')}
+        />
+      );
+    }
+
+    switch (activeTab) {
+      case 'home':
+        return <DashboardHome 
+          models={models} 
+          transactions={transactions} 
+          monthlyRevenue={monthlyRevenue} 
+          modelPerformance={modelPerformance}
+        />;
+      case 'models':
+        return <ModelsTab 
+          models={models} 
+          operatorAssignments={operatorAssignments}
+          producerAssignments={producerAssignments}
+          assignedProducer={assignedProducer}
+          onViewFinances={handleViewModelFinances}
+        />;
+      case 'finances':
+        return <FinancesTab />;
+      case 'checks':
+        return <ChecksTab />;
+      case 'schedule':
+        return <ScheduleTab />;
+      case 'dashboard':
+        return <DashboardTab monthlyRevenue={monthlyRevenue} />;
+      case 'files':
+        return <FilesTab />;
+      case 'users':
+        return <UserManagement />;
+      case 'assignments':
+        return <ModelAssignmentManager />;
+      case 'producer-assignments':
+        return <ProducerAssignmentManager />;
+      case 'audit':
+        return <AuditLog />;
+      default:
+        return <DashboardHome 
+          models={models} 
+          transactions={transactions} 
+          monthlyRevenue={monthlyRevenue} 
+          modelPerformance={modelPerformance}
+        />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Icon name={mobileMenuOpen ? "X" : "Menu"} size={24} />
-            </Button>
-            <div>
-              <h1 className="text-xl md:text-3xl font-serif font-bold text-foreground">MBA Corp.</h1>
-              <p className="text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">Professional Models Agency</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            <NotificationCenter />
-            <Button
-              onClick={toggleTheme}
-              variant="ghost"
-              size="icon"
-              className="border-border hover:bg-secondary"
-            >
-              <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} />
-            </Button>
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-foreground font-medium">{userEmail}</p>
-              <p className="text-xs text-muted-foreground">{userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
-            </div>
-            <Button 
-              onClick={handleLogout} 
-              variant="outline" 
-              size="icon"
-              className="border-border hover:bg-secondary md:w-auto"
-            >
-              <Icon name="LogOut" size={18} className="md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
-          </div>
+      <DashboardNavigation
+        activeTab={activeTab}
+        navigationItems={navigationItems}
+        userPermissions={userPermissions}
+        userEmail={userEmail}
+        userName={userName}
+        userRole={userRole}
+        theme={theme}
+        mobileMenuOpen={mobileMenuOpen}
+        onTabChange={handleTabChange}
+        onToggleTheme={toggleTheme}
+        onLogout={handleLogout}
+        onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+      />
+
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+        <div className="p-6 lg:p-8 animate-fade-in">
+          {renderTabContent()}
         </div>
-      </header>
-
-      <div className="flex">
-        <aside className={`fixed md:static inset-y-0 left-0 z-40 w-64 min-h-screen bg-card border-r border-border transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-          <nav className="p-4 space-y-2 mt-16 md:mt-0">
-            {visibleItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === item.id
-                    ? 'bg-primary text-primary-foreground shadow-lg'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                }`}
-              >
-                <Icon name={item.icon} size={20} />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        {mobileMenuOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden" 
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-        <main className="flex-1 p-4 md:p-8">
-          {activeTab === 'home' && (
-            <div className="animate-fade-in">
-              <div className="flex items-start gap-6 mb-8">
-                <Avatar className="w-24 h-24 border-4 border-primary/20">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName || userEmail)}`} />
-                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                    {(userName || userEmail).charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="text-4xl font-serif font-bold mb-3 text-foreground">Welcome to MBA</h2>
-                  <div className="text-lg text-muted-foreground space-y-1">
-                    <p><span className="font-semibold"></span> {userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
-                    <p><span className="font-semibold"></span> {userName || userEmail}</p>
-                    {assignedProducer && <p><span className="font-semibold">Продюсер:</span> {assignedProducer}</p>}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="p-6 bg-card border-border hover:border-primary transition-all duration-300 cursor-pointer group">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Icon name="Users" size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold text-foreground">{models.length}</p>
-                      <p className="text-sm text-muted-foreground">Active Models</p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="p-6 bg-card border-border hover:border-primary transition-all duration-300 cursor-pointer group">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Icon name="Calendar" size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold text-foreground">12</p>
-                      <p className="text-sm text-muted-foreground">Bookings This Week</p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="p-6 bg-card border-border hover:border-primary transition-all duration-300 cursor-pointer group">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Icon name="TrendingUp" size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold text-foreground">94%</p>
-                      <p className="text-sm text-muted-foreground">Client Satisfaction</p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'models' && (
-            <div className="animate-fade-in">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Our Models</h2>
-                  <p className="text-muted-foreground">Elite talent portfolio</p>
-                </div>
-                {userRole === 'director' && (
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <Icon name="Plus" size={18} className="mr-2" />
-                    Add New Model
-                  </Button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {models
-                  .filter(model => {
-                    // Оператор видит только назначенные модели
-                    if (userRole === 'operator') {
-                      return operatorAssignments.includes(model.id);
-                    }
-                    // Продюсер видит только назначенные ему модели
-                    if (userRole === 'producer') {
-                      return producerAssignments.includes(model.id);
-                    }
-                    return true;
-                  })
-                  .map((model) => (
-                  <Card 
-                    key={model.id} 
-                    className="overflow-hidden bg-card border-border hover:shadow-2xl transition-all duration-300 group cursor-pointer hover:scale-[1.02]"
-                    onClick={() => {
-                      setSelectedModelId(model.id);
-                      setActiveTab('model-finances');
-                    }}
-                  >
-                    <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent z-10"></div>
-                      <Avatar className="w-full h-full rounded-none">
-                        <AvatarImage src={model.image} className="object-cover" />
-                        <AvatarFallback className="rounded-none">{model.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <Badge 
-                        className={`absolute top-4 right-4 z-20 ${
-                          model.status === 'Available' 
-                            ? 'bg-green-500/90 hover:bg-green-500' 
-                            : 'bg-orange-500/90 hover:bg-orange-500'
-                        }`}
-                      >
-                        {model.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="p-5">
-                      <h3 className="text-xl font-serif font-bold text-foreground mb-1">{model.name}</h3>
-                      <p className="text-sm text-primary mb-4">{model.specialty}</p>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Height:</span>
-                          <span className="text-foreground font-medium">{model.height}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Measurements:</span>
-                          <span className="text-foreground font-medium">{model.bust} / {model.waist} / {model.hips}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Experience:</span>
-                          <span className="text-foreground font-medium">{model.experience}</span>
-                        </div>
-                      </div>
-
-                      <Button 
-                        className="w-full mt-4 bg-secondary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-                        variant="outline"
-                      >
-                        View Portfolio
-                      </Button>
-                    </div>
-                  </Card>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'finances' && <FinancesTab />}
-
-          {activeTab === 'finances_old' && (
-            <div className="animate-fade-in">
-              <div className="mb-8">
-                <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Финансы</h2>
-                <p className="text-muted-foreground">Financial overview and transactions</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className="p-6 bg-card border-border">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <Icon name="TrendingUp" size={20} className="text-green-500" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">₽337,000</p>
-                  <p className="text-xs text-green-500 mt-1">+12.5% from last month</p>
-                </Card>
-
-                <Card className="p-6 bg-card border-border">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Icon name="Clock" size={20} className="text-blue-500" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Pending</p>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">₽32,000</p>
-                  <p className="text-xs text-muted-foreground mt-1">1 transaction</p>
-                </Card>
-
-                <Card className="p-6 bg-card border-border">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Icon name="CheckCircle2" size={20} className="text-primary" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Paid</p>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">₽305,000</p>
-                  <p className="text-xs text-muted-foreground mt-1">4 transactions</p>
-                </Card>
-
-                <Card className="p-6 bg-card border-border">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <Icon name="BarChart3" size={20} className="text-orange-500" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Avg. Deal</p>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">₽67,400</p>
-                  <p className="text-xs text-muted-foreground mt-1">Per project</p>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <Card className="bg-card border-border p-6">
-                  <h3 className="text-xl font-serif font-bold text-foreground mb-6">Revenue Trend</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={monthlyRevenue}>
-                      <defs>
-                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))'
-                        }} 
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="revenue" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                        fill="url(#revenueGradient)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Card>
-
-                <Card className="bg-card border-border p-6">
-                  <h3 className="text-xl font-serif font-bold text-foreground mb-6">Model Performance</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={modelPerformance}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))'
-                        }} 
-                      />
-                      <Bar dataKey="earnings" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Card>
-              </div>
-
-              <Card className="bg-card border-border">
-                <div className="p-6 border-b border-border">
-                  <h3 className="text-xl font-serif font-bold text-foreground"></h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-secondary/50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Date</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Model</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Project</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Amount</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((transaction) => (
-                        <tr key={transaction.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
-                          <td className="px-6 py-4 text-sm text-muted-foreground">{transaction.date}</td>
-                          <td className="px-6 py-4 text-sm text-foreground font-medium">{transaction.model}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">{transaction.project}</td>
-                          <td className="px-6 py-4 text-sm text-foreground font-semibold">₽{transaction.amount.toLocaleString()}</td>
-                          <td className="px-6 py-4">
-                            <Badge 
-                              className={transaction.status === 'Paid' 
-                                ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' 
-                                : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'}
-                            >
-                              {transaction.status}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'checks' && (
-            <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Чеки</h2>
-              <p className="text-muted-foreground">Section coming soon...</p>
-            </div>
-          )}
-
-          {activeTab === 'schedule' && <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />}
-
-          {activeTab === 'dashboard' && (
-            <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Dashboard</h2>
-              <p className="text-muted-foreground">Section coming soon...</p>
-            </div>
-          )}
-
-          {activeTab === 'files' && (
-            <div className="animate-fade-in">
-              <h2 className="text-4xl font-serif font-bold mb-6 text-foreground">Файлы</h2>
-              <p className="text-muted-foreground">Section coming soon...</p>
-            </div>
-          )}
-
-          {activeTab === 'producer-assignments' && userRole && <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole} />}
-
-          {activeTab === 'operator-assignments' && userRole && (
-            <ModelAssignmentManager 
-              currentUserEmail={userEmail} 
-              currentUserRole={userRole}
-              onModelAssigned={(modelId) => {
-                setSelectedModelId(modelId);
-                setActiveTab('model-finances');
-              }}
-            />
-          )}
-
-          {activeTab === 'users' && <UserManagement />}
-
-          {activeTab === 'audit' && <AuditLog />}
-
-          {activeTab === 'model-finances' && selectedModelId && (
-            <ModelFinances 
-              modelId={selectedModelId} 
-              modelName={models.find(m => m.id === selectedModelId)?.name || ''}
-              onBack={() => setActiveTab('models')}
-            />
-          )}
-        </main>
-      </div>
+      </main>
     </div>
   );
 };
