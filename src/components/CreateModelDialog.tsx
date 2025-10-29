@@ -42,10 +42,12 @@ const CreateModelDialog = ({ open, onOpenChange, onModelCreated }: CreateModelDi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          action: 'create_user',
           email,
           password,
           fullName,
-          role: 'content_maker'
+          role: 'content_maker',
+          permissions: []
         }),
       });
 
