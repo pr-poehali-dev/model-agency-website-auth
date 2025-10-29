@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,10 +48,34 @@ const generateInitialData = (modelId: number): DayData[] => {
   ];
 };
 
+const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
+
 const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
   const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(modelId));
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadFinancialData();
+  }, [modelId]);
+
+  const loadFinancialData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}?modelId=${modelId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length > 0) {
+          setOnlineData(data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load financial data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
     const newData = [...onlineData];
@@ -63,7 +87,7 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     setIsSaving(true);
     
     try {
-      const response = await fetch('https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,6 +138,16 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     { platform: 'CamSoda', tokens: 0, income: 0 },
     { platform: 'Cam4', tokens: onlineData.reduce((sum, d) => sum + d.cam4, 0), income: onlineData.reduce((sum, d) => sum + d.cam4Income, 0) },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <Icon name="Loader2" size={48} className="animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">

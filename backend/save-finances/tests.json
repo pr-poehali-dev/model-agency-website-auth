@@ -30,12 +30,16 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Handle missing modelId",
-      "method": "POST",
+      "name": "Load financial data for model",
+      "method": "GET",
+      "path": "/?modelId=1",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle missing modelId in GET",
+      "method": "GET",
       "path": "/",
-      "body": {
-        "data": []
-      },
       "expectedStatus": 400,
       "expectedBody": {
         "error": "string"
