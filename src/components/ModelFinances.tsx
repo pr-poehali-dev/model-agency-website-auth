@@ -25,6 +25,7 @@ interface DayData {
   sodaIncome: number;
   cam4Income: number;
   stripchatTokens: number;
+  transfers: number;
   operator: string;
   shift: boolean;
 }
@@ -33,18 +34,18 @@ const generateInitialData = (modelId: number): DayData[] => {
   const baseMultiplier = modelId * 0.8;
   
   return [
-    { date: '16.10', cb: Math.floor(41 * baseMultiplier), sp: Math.floor(106 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 44.01 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '17.10', cb: Math.floor(38 * baseMultiplier), sp: Math.floor(79 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 1.62 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '18.10', cb: Math.floor(49 * baseMultiplier), sp: Math.floor(108 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 67.59 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '19.10', cb: Math.floor(46 * baseMultiplier), sp: Math.floor(119 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 38.61 * baseMultiplier, spIncome: 525 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(17500 * baseMultiplier), operator: 'Женя', shift: true },
-    { date: '20.10', cb: Math.floor(39 * baseMultiplier), sp: Math.floor(103 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 2.67 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '21.10', cb: Math.floor(26 * baseMultiplier), sp: Math.floor(98 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 0.06 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '22.10', cb: Math.floor(31 * baseMultiplier), sp: Math.floor(69 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 3.00 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '23.10', cb: Math.floor(100 * baseMultiplier), sp: Math.floor(81 * baseMultiplier), soda: 0, cam4: 0.2 * baseMultiplier, cbIncome: 18.84 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 * baseMultiplier, stripchatTokens: 0, operator: 'Женя', shift: true },
-    { date: '24.10', cb: Math.floor(30 * baseMultiplier), sp: Math.floor(78 * baseMultiplier), soda: 0, cam4: 0.4 * baseMultiplier, cbIncome: 8.37 * baseMultiplier, spIncome: 515.58 * baseMultiplier, sodaIncome: 0, cam4Income: 0.24 * baseMultiplier, stripchatTokens: Math.floor(17186 * baseMultiplier), operator: 'Женя', shift: true },
-    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: 'Женя', shift: false },
-    { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, operator: '', shift: false },
-    { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(3251 * baseMultiplier), operator: '', shift: false },
+    { date: '16.10', cb: Math.floor(41 * baseMultiplier), sp: Math.floor(106 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 44.01 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '17.10', cb: Math.floor(38 * baseMultiplier), sp: Math.floor(79 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 1.62 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '18.10', cb: Math.floor(49 * baseMultiplier), sp: Math.floor(108 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 67.59 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '19.10', cb: Math.floor(46 * baseMultiplier), sp: Math.floor(119 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 38.61 * baseMultiplier, spIncome: 525 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(17500 * baseMultiplier), transfers: 0, operator: 'Женя', shift: true },
+    { date: '20.10', cb: Math.floor(39 * baseMultiplier), sp: Math.floor(103 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 2.67 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '21.10', cb: Math.floor(26 * baseMultiplier), sp: Math.floor(98 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 0.06 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '22.10', cb: Math.floor(31 * baseMultiplier), sp: Math.floor(69 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 3.00 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '23.10', cb: Math.floor(100 * baseMultiplier), sp: Math.floor(81 * baseMultiplier), soda: 0, cam4: 0.2 * baseMultiplier, cbIncome: 18.84 * baseMultiplier, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 * baseMultiplier, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: true },
+    { date: '24.10', cb: Math.floor(30 * baseMultiplier), sp: Math.floor(78 * baseMultiplier), soda: 0, cam4: 0.4 * baseMultiplier, cbIncome: 8.37 * baseMultiplier, spIncome: 515.58 * baseMultiplier, sodaIncome: 0, cam4Income: 0.24 * baseMultiplier, stripchatTokens: Math.floor(17186 * baseMultiplier), transfers: 0, operator: 'Женя', shift: true },
+    { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: 'Женя', shift: false },
+    { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0, stripchatTokens: 0, transfers: 0, operator: '', shift: false },
+    { date: '27.10', cb: Math.floor(34 * baseMultiplier), sp: Math.floor(77 * baseMultiplier), soda: 0, cam4: 0, cbIncome: 15.30 * baseMultiplier, spIncome: 97.53 * baseMultiplier, sodaIncome: 0, cam4Income: 0, stripchatTokens: Math.floor(3251 * baseMultiplier), transfers: 0, operator: '', shift: false },
   ];
 };
 
@@ -193,10 +194,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={d.cb || ''}
-                      onChange={(e) => handleCellChange(idx, 'cb', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -208,10 +214,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={d.cb || ''}
-                      onChange={(e) => handleCellChange(idx, 'cb', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -223,10 +234,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={d.sp || ''}
-                      onChange={(e) => handleCellChange(idx, 'sp', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -238,10 +254,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={d.stripchatTokens || ''}
-                      onChange={(e) => handleCellChange(idx, 'stripchatTokens', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'stripchatTokens', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -253,10 +274,15 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={d.soda || ''}
-                      onChange={(e) => handleCellChange(idx, 'soda', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'soda', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -268,10 +294,14 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={d.sodaIncome || ''}
-                      onChange={(e) => handleCellChange(idx, 'sodaIncome', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'sodaIncome', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -283,11 +313,14 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
-                      type="number"
-                      step="0.1"
+                      type="text"
+                      inputMode="decimal"
                       value={d.cam4 || ''}
-                      onChange={(e) => handleCellChange(idx, 'cam4', Number(e.target.value))}
-                      className="w-16 h-8 text-center text-xs"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'cam4', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </td>
                 ))}
@@ -298,10 +331,24 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
 
               <tr className="border-b border-border dark:bg-teal-900/20 bg-teal-900/30">
                 <td className="p-3 font-medium text-foreground">Переводы</td>
-                {onlineData.map((d) => (
-                  <td key={d.date} className="p-3 text-center text-muted-foreground"></td>
+                {onlineData.map((d, idx) => (
+                  <td key={d.date} className="p-2 text-center">
+                    <Input 
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={d.transfers || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        handleCellChange(idx, 'transfers', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-16 h-8 text-center text-xs"
+                    />
+                  </td>
                 ))}
-                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">0</td>
+                <td className="p-3 text-center font-semibold dark:bg-yellow-900/50 bg-yellow-800/50">
+                  {onlineData.reduce((sum, d) => sum + (d.transfers || 0), 0)}
+                </td>
               </tr>
 
               <tr className="border-b border-border hover:bg-muted/30">
