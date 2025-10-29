@@ -253,10 +253,19 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 <td className="p-2 font-medium sticky left-0 bg-red-500/5">Chaturbate</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-red-500/10 rounded"></div>
+                    <Input 
+                      type="text"
+                      inputMode="decimal"
+                      value={d.cbIncome || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'cbIncome', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-red-500/10">{totalChaturbateTokens}</td>
+                <td className="p-2 text-center font-bold bg-red-500/10">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
@@ -283,10 +292,19 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 <td className="p-2 font-medium sticky left-0 bg-purple-500/5">Stripchat</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-purple-500/10 rounded"></div>
+                    <Input 
+                      type="text"
+                      inputMode="decimal"
+                      value={d.spIncome || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'spIncome', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-purple-500/10">{totalSpTokens}</td>
+                <td className="p-2 text-center font-bold bg-purple-500/10">{onlineData.reduce((sum, d) => sum + d.spIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
@@ -313,10 +331,19 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 <td className="p-2 font-medium sticky left-0 bg-blue-500/5">CamSoda</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-blue-500/10 rounded"></div>
+                    <Input 
+                      type="text"
+                      inputMode="decimal"
+                      value={d.sodaIncome || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'sodaIncome', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-blue-500/10">0</td>
+                <td className="p-2 text-center font-bold bg-blue-500/10">{onlineData.reduce((sum, d) => sum + d.sodaIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b bg-pink-500/5">
@@ -344,10 +371,19 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 <td className="p-2 font-medium sticky left-0 bg-background">Переводы</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <div className="h-8 bg-muted/20 rounded"></div>
+                    <Input 
+                      type="text"
+                      inputMode="decimal"
+                      value={d.transfers || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        handleCellChange(idx, 'transfers', val === '' ? 0 : Number(val));
+                      }}
+                      className="w-14 h-8 text-center text-xs p-1"
+                    />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">0</td>
+                <td className="p-2 text-center font-bold bg-accent/5">{onlineData.reduce((sum, d) => sum + d.transfers, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
