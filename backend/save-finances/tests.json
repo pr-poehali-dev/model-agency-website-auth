@@ -1,0 +1,46 @@
+{
+  "tests": [
+    {
+      "name": "Save financial data for model",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "modelId": 1,
+        "data": [
+          {
+            "date": "16.10",
+            "cb": 41,
+            "sp": 106,
+            "soda": 0,
+            "cam4": 0,
+            "cbIncome": 44.01,
+            "spIncome": 0,
+            "sodaIncome": 0,
+            "cam4Income": 0,
+            "stripchatTokens": 0,
+            "operator": "Женя",
+            "shift": true
+          }
+        ]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle missing modelId",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "data": []
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
