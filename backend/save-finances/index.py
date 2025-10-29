@@ -77,7 +77,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         for row in rows:
             date_obj = row['date']
             data.append({
-                'date': f"{date_obj.day:02d}.{date_obj.month:02d}",
+                'date': f"{date_obj.year}-{date_obj.month:02d}-{date_obj.day:02d}",
                 'cb': row['cb_tokens'] or 0,
                 'sp': row['sp_online'] or 0,
                 'soda': row['soda_tokens'] or 0,
@@ -135,10 +135,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     values = []
     for record in finance_data:
         date_str = record.get('date', '')
-        # Convert DD.MM format to proper date (assuming current year)
-        day, month = date_str.split('.')
-        year = datetime.now().year
-        full_date = f'{year}-{month.zfill(2)}-{day.zfill(2)}'
+        # Date comes as YYYY-MM-DD format from frontend
+        full_date = date_str
         
         values.append((
             model_id,
