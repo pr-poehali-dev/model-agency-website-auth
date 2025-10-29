@@ -82,11 +82,18 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
         console.log('📡 Server data length:', data.length);
         console.log('📡 Server data:', data);
         
+        // Always start with full period data
+        const initialData = generateInitialData();
+        
         if (data.length > 0) {
-          setOnlineData(data);
-          console.log('✅ Loaded data from server');
+          // Merge server data into generated data by matching dates
+          const mergedData = initialData.map(dayData => {
+            const serverRecord = data.find((d: DayData) => d.date === dayData.date);
+            return serverRecord ? { ...dayData, ...serverRecord } : dayData;
+          });
+          setOnlineData(mergedData);
+          console.log('✅ Merged server data with generated data');
         } else {
-          const initialData = generateInitialData();
           setOnlineData(initialData);
           console.log('✅ Using generated initial data (server returned empty)');
         }
