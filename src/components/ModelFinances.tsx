@@ -63,14 +63,29 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     setIsSaving(true);
     
     try {
-      // Здесь будет API-запрос для сохранения данных
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId,
+          data: onlineData
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+
+      const result = await response.json();
       
       toast({
         title: 'Данные сохранены',
-        description: `Финансовые данные для ${modelName} успешно обновлены`,
+        description: result.message || `Финансовые данные для ${modelName} успешно обновлены`,
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: 'Ошибка сохранения',
         description: 'Не удалось сохранить данные. Попробуйте снова.',
