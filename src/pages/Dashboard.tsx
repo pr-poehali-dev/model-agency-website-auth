@@ -255,6 +255,7 @@ const Dashboard = () => {
           producerAssignments={producerAssignments}
           assignedProducer={assignedProducer}
           onViewFinances={handleViewModelFinances}
+          userRole={userRole || undefined}
         />;
       case 'finances':
         return <FinancesTab />;

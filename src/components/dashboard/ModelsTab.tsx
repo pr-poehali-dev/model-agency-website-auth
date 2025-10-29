@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import CreateModelDialog from '@/components/CreateModelDialog';
 
 interface Model {
   id: number;
@@ -22,6 +24,7 @@ interface ModelsTabProps {
   producerAssignments?: number[];
   assignedProducer?: string;
   onViewFinances?: (modelId: number, modelName: string) => void;
+  userRole?: string;
 }
 
 const ModelsTab = ({ 
@@ -29,8 +32,11 @@ const ModelsTab = ({
   operatorAssignments = [], 
   producerAssignments = [],
   assignedProducer = '',
-  onViewFinances 
+  onViewFinances,
+  userRole 
 }: ModelsTabProps) => {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   const displayModels = operatorAssignments.length > 0 
     ? models.filter(m => operatorAssignments.includes(m.id))
     : producerAssignments.length > 0
@@ -59,7 +65,22 @@ const ModelsTab = ({
             </div>
           )}
         </div>
+        
+        {userRole === 'director' && (
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <Icon name="UserPlus" size={18} />
+            Создать модель
+          </Button>
+        )}
       </div>
+
+      <CreateModelDialog 
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen}
+        onModelCreated={() => {
+          window.location.reload();
+        }}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayModels.map((model) => (
