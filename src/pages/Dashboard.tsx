@@ -124,10 +124,25 @@ const Dashboard = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(MODELS_API_URL);
-      const data = await response.json();
-      if (data && data.length > 0) {
-        setModelsData(data);
+      const response = await fetch(API_URL);
+      const users = await response.json();
+      const contentMakers = users.filter((u: any) => u.role === 'content_maker');
+      
+      const modelsFromUsers = contentMakers.map((user: any, index: number) => ({
+        id: index + 1,
+        name: user.fullName || user.email,
+        image: 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',
+        height: '170 cm',
+        bust: '85 cm',
+        waist: '60 cm',
+        hips: '90 cm',
+        experience: 'Новичок',
+        specialty: 'Content Creator',
+        status: 'Available'
+      }));
+      
+      if (modelsFromUsers.length > 0) {
+        setModelsData(modelsFromUsers);
       }
     } catch (err) {
       console.error('Failed to load models', err);

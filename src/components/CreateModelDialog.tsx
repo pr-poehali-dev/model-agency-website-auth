@@ -13,7 +13,6 @@ interface CreateModelDialogProps {
 }
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-const MODELS_API_URL = 'https://functions.poehali.dev/41dffced-c9d4-4e85-b52f-b5462be730e2';
 
 const CreateModelDialog = ({ open, onOpenChange, onModelCreated }: CreateModelDialogProps) => {
   const [fullName, setFullName] = useState('');
@@ -55,29 +54,6 @@ const CreateModelDialog = ({ open, onOpenChange, onModelCreated }: CreateModelDi
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to create model');
-      }
-
-      const modelResponse = await fetch(MODELS_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Email': email
-        },
-        body: JSON.stringify({
-          name: fullName,
-          image: 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',
-          height: '170 cm',
-          bust: '85 cm',
-          waist: '60 cm',
-          hips: '90 cm',
-          experience: 'Новичок',
-          specialty: 'Content Creator',
-          status: 'Available'
-        })
-      });
-
-      if (!modelResponse.ok) {
-        console.error('Failed to create model entry, but user created');
       }
 
       toast({
