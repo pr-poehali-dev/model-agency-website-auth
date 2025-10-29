@@ -264,9 +264,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     {formatDate(d.date)}
                   </th>
                 ))}
-                <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]">
-                  Tokens
-                </th>
+                <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]"></th>
               </tr>
             </thead>
             <tbody>
