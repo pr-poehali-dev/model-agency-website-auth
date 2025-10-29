@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -65,14 +67,91 @@ interface FinancesTabProps {
 }
 
 const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: FinancesTabProps) => {
-  const totalRevenue = transactions.reduce((sum, t) => sum + (t.status === 'Paid' ? t.amount : 0), 0);
-  const pendingPayments = transactions.filter(t => t.status === 'Pending').length;
+  const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
+
+  const filteredTransactions = transactions.filter(t => {
+    if (statusFilter === 'paid') return t.status === 'Paid';
+    if (statusFilter === 'pending') return t.status === 'Pending';
+    return true;
+  });
+
+  const totalRevenue = filteredTransactions.reduce((sum, t) => sum + (t.status === 'Paid' ? t.amount : 0), 0);
+  const pendingPayments = filteredTransactions.filter(t => t.status === 'Pending').length;
+
+  const getFilteredMonthlyData = () => {
+    if (dateFilter === 'week') return monthlyRevenue.slice(-1);
+    if (dateFilter === 'month') return monthlyRevenue.slice(-4);
+    if (dateFilter === 'quarter') return monthlyRevenue.slice(-3);
+    return monthlyRevenue;
+  };
+
+  const filteredMonthlyData = getFilteredMonthlyData();
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Финансы</h2>
-        <p className="text-muted-foreground">Статистика доходов и платформ</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Финансы</h2>
+          <p className="text-muted-foreground">Статистика доходов и платформ</p>
+        </div>
+        
+        <div className="flex flex-wrap gap-3">
+          <div className="flex gap-2">
+            <Button
+              variant={dateFilter === 'week' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('week')}
+            >
+              Неделя
+            </Button>
+            <Button
+              variant={dateFilter === 'month' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('month')}
+            >
+              Месяц
+            </Button>
+            <Button
+              variant={dateFilter === 'quarter' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('quarter')}
+            >
+              Квартал
+            </Button>
+            <Button
+              variant={dateFilter === 'year' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateFilter('year')}
+            >
+              Год
+            </Button>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('all')}
+            >
+              Все
+            </Button>
+            <Button
+              variant={statusFilter === 'paid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('paid')}
+            >
+              Оплачено
+            </Button>
+            <Button
+              variant={statusFilter === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('pending')}
+            >
+              Ожидание
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Карточки статистики */}
@@ -123,7 +202,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
             Месячная выручка
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={monthlyRevenue}>
+            <AreaChart data={filteredMonthlyData}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -176,7 +255,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
             Динамика количества бронирований
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyRevenue}>
+            <LineChart data={filteredMonthlyData}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
               <XAxis dataKey="month" />
               <YAxis />
@@ -198,7 +277,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
             Средняя стоимость проекта
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyRevenue.map(m => ({ 
+            <BarChart data={filteredMonthlyData.map(m => ({ 
               month: m.month, 
               avgPrice: Math.round(m.revenue / m.bookings) 
             }))}>
@@ -236,19 +315,27 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction) => (
-                <tr key={transaction.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                  <td className="py-3 px-4 text-sm">{transaction.date}</td>
-                  <td className="py-3 px-4 text-sm font-medium">{transaction.model}</td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">{transaction.project}</td>
-                  <td className="py-3 px-4 text-sm text-right font-semibold">₽{transaction.amount.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-center">
-                    <Badge variant={transaction.status === 'Paid' ? 'default' : 'secondary'}>
-                      {transaction.status === 'Paid' ? 'Оплачено' : 'Ожидание'}
-                    </Badge>
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-4 text-sm">{transaction.date}</td>
+                    <td className="py-3 px-4 text-sm font-medium">{transaction.model}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{transaction.project}</td>
+                    <td className="py-3 px-4 text-sm text-right font-semibold">₽{transaction.amount.toLocaleString()}</td>
+                    <td className="py-3 px-4 text-center">
+                      <Badge variant={transaction.status === 'Paid' ? 'default' : 'secondary'}>
+                        {transaction.status === 'Paid' ? 'Оплачено' : 'Ожидание'}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    Нет транзакций для выбранного фильтра
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
