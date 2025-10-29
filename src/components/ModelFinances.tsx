@@ -155,6 +155,12 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    // Convert "2024-10-16" to "16.10"
+    const [, month, day] = dateStr.split('-');
+    return `${day}.${month}`;
+  };
+
   const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
   const totalSpTokens = onlineData.reduce((sum, d) => sum + d.stripchatTokens, 0);
   const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
@@ -214,7 +220,7 @@ const ModelFinances = ({ modelId, modelName, onBack }: ModelFinancesProps) => {
                 <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">Настоящий период</th>
                 {onlineData.map((d) => (
                   <th key={d.date} className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50">
-                    {d.date}
+                    {formatDate(d.date)}
                   </th>
                 ))}
                 <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]">
