@@ -32,6 +32,7 @@ interface ProducerData {
 const ChecksTab = () => {
   const [currentPeriod, setCurrentPeriod] = useState('16.10 - 02.11');
   const [exchangeRate, setExchangeRate] = useState(72.47);
+  const [cbrRate, setCbrRate] = useState(79.47);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [isLoadingRate, setIsLoadingRate] = useState(false);
@@ -49,7 +50,8 @@ const ChecksTab = () => {
       const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
       if (data.rate) {
-        setExchangeRate(data.rate);
+        setCbrRate(data.rate);
+        setExchangeRate(data.rate - 7);
       }
     } catch (err) {
       console.error('Failed to load exchange rate from CBR', err);
@@ -245,9 +247,9 @@ const ChecksTab = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <Card className="p-4">
+        <Card className="p-4 relative">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-muted-foreground">Курс USD (ЦБ РФ)</div>
+            <div className="text-sm text-muted-foreground">Курс USD (ЦБ РФ - 7₽)</div>
             <Button 
               size="sm" 
               variant="outline"
@@ -258,12 +260,12 @@ const ChecksTab = () => {
               <Icon name={isLoadingRate ? "Loader2" : "RefreshCw"} size={14} className={isLoadingRate ? "animate-spin" : ""} />
             </Button>
           </div>
-          <Input 
-            type="number" 
-            value={exchangeRate} 
-            onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
-            className="font-semibold text-lg"
-          />
+          <div className="font-semibold text-3xl text-primary mb-1">
+            {exchangeRate.toFixed(2)}₽
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Курс ЦБ: {cbrRate.toFixed(2)}₽
+          </div>
         </Card>
       </div>
 
