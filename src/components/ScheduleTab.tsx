@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import ScheduleHistory from './ScheduleHistory';
+import GoogleCalendarSync from './GoogleCalendarSync';
 
 interface TeamMember {
   id: number;
@@ -275,12 +277,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Расписание</h2>
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
-        {canEdit && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Icon name="Info" size={16} />
-            <span>Нажмите на ячейку для редактирования</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <GoogleCalendarSync />
+          <ScheduleHistory />
+          {canEdit && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon name="Info" size={16} />
+              <span className="hidden lg:inline">Нажмите на ячейку для редактирования</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {scheduleData.apartments.map((apartment, aptIndex) => (

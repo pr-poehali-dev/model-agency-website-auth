@@ -14,6 +14,8 @@ import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
 import { addAuditLog } from '@/lib/auditLog';
+import { useTheme } from '@/hooks/useTheme';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const models = [
   {
@@ -104,7 +106,9 @@ const Dashboard = () => {
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
   const [assignedProducer, setAssignedProducer] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -219,31 +223,51 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">MBA Corp.</h1>
-            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">Professional Models Agency</p>
-          </div>
+        <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="text-right">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Icon name={mobileMenuOpen ? "X" : "Menu"} size={24} />
+            </Button>
+            <div>
+              <h1 className="text-xl md:text-3xl font-serif font-bold text-foreground">MBA Corp.</h1>
+              <p className="text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">Professional Models Agency</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 md:gap-4">
+            <NotificationCenter />
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="icon"
+              className="border-border hover:bg-secondary"
+            >
+              <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} />
+            </Button>
+            <div className="text-right hidden sm:block">
               <p className="text-sm text-foreground font-medium">{userEmail}</p>
               <p className="text-xs text-muted-foreground">{userRole ? ROLE_LABELS[userRole] : 'Загрузка...'}</p>
             </div>
             <Button 
               onClick={handleLogout} 
               variant="outline" 
-              className="border-border hover:bg-secondary"
+              size="icon"
+              className="border-border hover:bg-secondary md:w-auto"
             >
-              <Icon name="LogOut" size={18} className="mr-2" />
-              Logout
+              <Icon name="LogOut" size={18} className="md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
       <div className="flex">
-        <aside className="w-64 min-h-screen bg-card border-r border-border">
-          <nav className="p-4 space-y-2">
+        <aside className={`fixed md:static inset-y-0 left-0 z-40 w-64 min-h-screen bg-card border-r border-border transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+          <nav className="p-4 space-y-2 mt-16 md:mt-0">
             {visibleItems.map((item) => (
               <button
                 key={item.id}
@@ -261,7 +285,13 @@ const Dashboard = () => {
           </nav>
         </aside>
 
-        <main className="flex-1 p-8">
+        {mobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        <main className="flex-1 p-4 md:p-8">
           {activeTab === 'home' && (
             <div className="animate-fade-in">
               <div className="flex items-start gap-6 mb-8">
