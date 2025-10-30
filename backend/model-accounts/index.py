@@ -1,7 +1,25 @@
 import json
 import os
+import base64
 import psycopg2
 from typing import Dict, Any
+from cryptography.fernet import Fernet
+
+def get_cipher():
+    key = os.environ.get('ENCRYPTION_KEY', '').encode()
+    return Fernet(key)
+
+def encrypt_password(password: str) -> str:
+    if not password:
+        return ''
+    cipher = get_cipher()
+    return cipher.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted: str) -> str:
+    if not encrypted:
+        return ''
+    cipher = get_cipher()
+    return cipher.decrypt(encrypted.encode()).decode()
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
@@ -57,8 +75,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             rows = cur.fetchall()
             accounts = {}
-            for platform, login, password in rows:
-                accounts[platform] = {'login': login or '', 'password': password or ''}
+            for platform, login, encrypted_password in rows:
+                try:
+                    decrypted_password = decrypt_password(encrypted_password) if encrypted_password else ''
+                except:
+                    decrypted_password = encrypted_password or ''
+                accounts[platform] = {'login': login or '', 'password': decrypted_password}
             
             return {
                 'statusCode': 200,
@@ -89,6 +111,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for platform, credentials in accounts.items():
                 login = credentials.get('login', '')
                 password = credentials.get('password', '')
+                encrypted_password = encrypt_password(password) if password else ''
                 
                 cur.execute("""
                     INSERT INTO model_accounts (model_id, model_name, platform, login, password, updated_at)
@@ -98,7 +121,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         login = EXCLUDED.login,
                         password = EXCLUDED.password,
                         updated_at = CURRENT_TIMESTAMP
-                """, (int(model_id), model_name, platform, login, password))
+                """, (int(model_id), model_name, platform, login, encrypted_password))
             
             return {
                 'statusCode': 200,
