@@ -66,6 +66,23 @@ const ModelsTab = ({
     loadCurrentUser();
   }, []);
 
+  useEffect(() => {
+    if (models.length > 0) {
+      loadAllModelAccounts();
+    }
+  }, [models]);
+
+  const loadAllModelAccounts = async () => {
+    const accountsData: any = {};
+    for (const model of models) {
+      const accounts = await fetchModelAccounts(model.id);
+      if (accounts && Object.keys(accounts).length > 0) {
+        accountsData[model.id] = accounts;
+      }
+    }
+    setModelAccounts(accountsData);
+  };
+
   const loadCurrentUser = () => {
     const email = localStorage.getItem('userEmail') || '';
     setCurrentUserEmail(email);
