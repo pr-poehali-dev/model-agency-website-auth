@@ -8,7 +8,7 @@ from cryptography.fernet import Fernet
 def get_cipher():
     key = os.environ.get('ENCRYPTION_KEY', '')
     if not key:
-        raise ValueError('ENCRYPTION_KEY not set')
+        raise ValueError('ENCRYPTION_KEY environment variable not set')
     return Fernet(key.encode())
 
 def encrypt_password(password: str) -> str:
