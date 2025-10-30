@@ -19,6 +19,16 @@ interface Model {
   status: string;
 }
 
+interface ProducerAssignment {
+  id: number;
+  producerEmail: string;
+  modelId: number;
+  operatorEmail: string;
+  assignedBy: string;
+  assignedAt: string;
+  assignmentType: string;
+}
+
 interface ModelsTabProps {
   models: Model[];
   operatorAssignments?: number[];
@@ -40,7 +50,44 @@ const ModelsTab = ({
   const [accountsDialogOpen, setAccountsDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [modelAccounts, setModelAccounts] = useState<any>({});
+  const [producerAssignmentsData, setProducerAssignmentsData] = useState<ProducerAssignment[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
+  const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+  const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+
+  useEffect(() => {
+    loadProducerAssignments();
+    loadUsers();
+  }, []);
+
+  const loadProducerAssignments = async () => {
+    try {
+      const response = await fetch(`${PRODUCER_API_URL}?type=model`);
+      const data = await response.json();
+      setProducerAssignmentsData(data);
+    } catch (error) {
+      console.error('Error loading producer assignments:', error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetch(USERS_API_URL);
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const getProducerName = (modelId: number): string => {
+    const assignment = producerAssignmentsData.find(a => a.modelId === modelId);
+    if (!assignment) return 'Не назначен';
+    
+    const producer = users.find(u => u.email === assignment.producerEmail);
+    return producer?.fullName || assignment.producerEmail;
+  };
 
   const fetchModelAccounts = async (modelId: number) => {
     try {
@@ -155,33 +202,9 @@ const ModelsTab = ({
             </div>
             <div className="p-6">
               <h3 className="text-xl font-serif font-bold mb-2">{model.name}</h3>
-              <p className="text-sm text-accent font-medium mb-4">{model.specialty}</p>
-              
-              <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-2">
-                  <Icon name="Ruler" size={16} />
-                  <span>Рост: {model.height}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Icon name="Award" size={16} />
-                  <span>Опыт: {model.experience}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 p-3 bg-muted/50 rounded-lg mb-4">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Грудь</p>
-                  <p className="text-sm font-semibold">{model.bust}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Талия</p>
-                  <p className="text-sm font-semibold">{model.waist}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Бедра</p>
-                  <p className="text-sm font-semibold">{model.hips}</p>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground font-medium mb-4">
+                Продюсер: {getProducerName(model.id)}
+              </p>
 
               <div className="flex gap-2">
                 {onViewFinances && (
