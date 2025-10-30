@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import CreateModelDialog from '@/components/CreateModelDialog';
+import ModelAccountsDialog from '@/components/ModelAccountsDialog';
 
 interface Model {
   id: number;
@@ -36,6 +37,8 @@ const ModelsTab = ({
   userRole 
 }: ModelsTabProps) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [accountsDialogOpen, setAccountsDialogOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
 
   const displayModels = operatorAssignments.length > 0 
     ? models.filter(m => operatorAssignments.includes(m.id))
@@ -82,6 +85,21 @@ const ModelsTab = ({
         }}
       />
 
+      {selectedModel && (
+        <ModelAccountsDialog
+          open={accountsDialogOpen}
+          onOpenChange={setAccountsDialogOpen}
+          modelName={selectedModel.name}
+          accounts={{
+            stripchat: 'model_stripchat',
+            chaturbate: 'model_chaturbate',
+            camsoda: 'model_camsoda',
+            cam4: 'model_cam4',
+            email: 'model@example.com'
+          }}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayModels.map((model) => (
           <Card key={model.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
@@ -127,16 +145,29 @@ const ModelsTab = ({
                 </div>
               </div>
 
-              {onViewFinances && (
+              <div className="flex gap-2">
+                {onViewFinances && (
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-2"
+                    onClick={() => onViewFinances(model.id, model.name)}
+                  >
+                    <Icon name="DollarSign" size={16} />
+                    Финансы
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
-                  className="w-full gap-2"
-                  onClick={() => onViewFinances(model.id, model.name)}
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    setSelectedModel(model);
+                    setAccountsDialogOpen(true);
+                  }}
                 >
-                  <Icon name="DollarSign" size={16} />
-                  Финансы модели
+                  <Icon name="User" size={16} />
+                  Аккаунты
                 </Button>
-              )}
+              </div>
             </div>
           </Card>
         ))}
