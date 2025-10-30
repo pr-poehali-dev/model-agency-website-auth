@@ -303,15 +303,29 @@ const ChecksTab = () => {
         />
       </div>
 
-      {userRole === 'producer' && (
-        <ProducerSalaryCard 
-          producerData={{
-            ...producerData,
-            name: users.find(u => u.email === userEmail)?.fullName || userEmail
-          }} 
-          period={currentPeriod} 
-        />
-      )}
+      {userRole === 'producer' && (() => {
+        const salary = salaries.producers[userEmail] || { total: 0, details: [] };
+        const sumDollars = salary.total;
+        const sumRubles = sumDollars * exchangeRate;
+        
+        return (
+          <ProducerSalaryCard 
+            producerData={{
+              name: users.find(u => u.email === userEmail)?.fullName || userEmail,
+              period: currentPeriod.label,
+              sumDollars: Math.round(sumDollars * 100) / 100,
+              rate: exchangeRate,
+              sumRubles: Math.round(sumRubles),
+              expenses: 0,
+              advance: 0,
+              penalty: 0,
+              total: Math.round(sumRubles),
+              employees: []
+            }} 
+            period={currentPeriod} 
+          />
+        );
+      })()}
 
       <div className="space-y-8">
         {userRole === 'director' && producers.length > 0 && (
