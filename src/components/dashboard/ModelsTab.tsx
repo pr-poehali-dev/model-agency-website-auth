@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,48 @@ const ModelsTab = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [accountsDialogOpen, setAccountsDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [modelAccounts, setModelAccounts] = useState<any>({});
+  const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
+
+  const fetchModelAccounts = async (modelId: number) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}?model_id=${modelId}`, {
+        headers: {
+          'X-User-Role': userRole || 'operator'
+        }
+      });
+      const data = await response.json();
+      return data.accounts || {};
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+      return {};
+    }
+  };
+
+  const handleSaveAccounts = async (accounts: any) => {
+    if (!selectedModel) return;
+    
+    try {
+      const response = await fetch(BACKEND_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Role': userRole || 'operator'
+        },
+        body: JSON.stringify({
+          model_id: selectedModel.id,
+          model_name: selectedModel.name,
+          accounts
+        })
+      });
+      
+      if (response.ok) {
+        setModelAccounts({ ...modelAccounts, [selectedModel.id]: accounts });
+      }
+    } catch (error) {
+      console.error('Error saving accounts:', error);
+    }
+  };
 
   const displayModels = operatorAssignments.length > 0 
     ? models.filter(m => operatorAssignments.includes(m.id))
@@ -91,16 +133,8 @@ const ModelsTab = ({
           onOpenChange={setAccountsDialogOpen}
           modelName={selectedModel.name}
           userRole={userRole}
-          accounts={{
-            stripchat: { login: 'model_stripchat', password: 'password123' },
-            chaturbate: { login: 'model_chaturbate', password: 'password123' },
-            camsoda: { login: 'model_camsoda', password: 'password123' },
-            cam4: { login: 'model_cam4', password: 'password123' },
-            email: { login: 'model@example.com', password: 'emailpass123' }
-          }}
-          onSave={(newAccounts) => {
-            console.log('Сохранение аккаунтов:', newAccounts);
-          }}
+          accounts={modelAccounts[selectedModel.id] || {}}
+          onSave={handleSaveAccounts}
         />
       )}
 
@@ -163,8 +197,10 @@ const ModelsTab = ({
                 <Button 
                   variant="outline" 
                   className="flex-1 gap-2"
-                  onClick={() => {
+                  onClick={async () => {
                     setSelectedModel(model);
+                    const accounts = await fetchModelAccounts(model.id);
+                    setModelAccounts({ ...modelAccounts, [model.id]: accounts });
                     setAccountsDialogOpen(true);
                   }}
                 >

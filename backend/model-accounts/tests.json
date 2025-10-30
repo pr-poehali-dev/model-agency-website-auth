@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "Get model accounts",
+      "method": "GET",
+      "path": "/?model_id=1",
+      "headers": {
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 200
+    },
+    {
+      "name": "Update model accounts - director",
+      "method": "PUT",
+      "path": "/",
+      "headers": {
+        "X-User-Role": "director"
+      },
+      "body": {
+        "model_id": 1,
+        "model_name": "Test Model",
+        "accounts": {
+          "stripchat": {
+            "login": "test_login",
+            "password": "test_pass"
+          }
+        }
+      },
+      "expectedStatus": 200
+    },
+    {
+      "name": "Access denied for operator edit",
+      "method": "PUT",
+      "path": "/",
+      "headers": {
+        "X-User-Role": "operator",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "model_id": 1,
+        "model_name": "Test Model",
+        "accounts": {}
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
