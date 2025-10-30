@@ -7,7 +7,14 @@ Returns: JSON с назначениями продюсеру
 import json
 import os
 import psycopg2
+import psycopg2.extensions
 from typing import Dict, Any
+
+def escape_sql_string(s: str) -> str:
+    """Escape single quotes for SQL string literals"""
+    if s is None:
+        return 'NULL'
+    return s.replace("'", "''")
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -41,17 +48,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             assignment_type = query_params.get('type')  # 'model' или 'operator'
             
             if producer_email and assignment_type:
-                cur.execute("""
+                cur.execute(f"""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
                     FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s AND assignment_type = %s
-                """, (producer_email, assignment_type))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}' AND assignment_type = '{escape_sql_string(assignment_type)}'
+                """)
             elif producer_email:
-                cur.execute("""
+                cur.execute(f"""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
                     FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s
-                """, (producer_email,))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}'
+                """)
             else:
                 cur.execute("""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
@@ -98,15 +105,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             # Проверка дубликатов
             if assignment_type == 'model':
-                cur.execute("""
+                cur.execute(f"""
                     SELECT id FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s AND model_id = %s AND assignment_type = 'model'
-                """, (producer_email, model_id))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}' AND model_id = {model_id} AND assignment_type = 'model'
+                """)
             else:
-                cur.execute("""
+                cur.execute(f"""
                     SELECT id FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s AND operator_email = %s AND assignment_type = 'operator'
-                """, (producer_email, operator_email))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}' AND operator_email = '{escape_sql_string(operator_email)}' AND assignment_type = 'operator'
+                """)
             
             if cur.fetchone():
                 return {
@@ -118,12 +125,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Already assigned'})
                 }
             
-            cur.execute("""
+            model_id_val = f"{model_id}" if model_id else "NULL"
+            operator_email_val = f"'{escape_sql_string(operator_email)}'" if operator_email else "NULL"
+            
+            cur.execute(f"""
                 INSERT INTO t_p35405502_model_agency_website.producer_assignments 
                 (producer_email, model_id, operator_email, assigned_by, assignment_type) 
-                VALUES (%s, %s, %s, %s, %s) 
+                VALUES ('{escape_sql_string(producer_email)}', {model_id_val}, {operator_email_val}, '{escape_sql_string(user_email)}', '{escape_sql_string(assignment_type)}') 
                 RETURNING id
-            """, (producer_email, model_id, operator_email, user_email, assignment_type))
+            """)
             
             assignment_id = cur.fetchone()[0]
             conn.commit()
@@ -156,15 +166,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email = body_data.get('operatorEmail')
             
             if assignment_type == 'model':
-                cur.execute("""
+                cur.execute(f"""
                     DELETE FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s AND model_id = %s AND assignment_type = 'model'
-                """, (producer_email, model_id))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}' AND model_id = {model_id} AND assignment_type = 'model'
+                """)
             else:
-                cur.execute("""
+                cur.execute(f"""
                     DELETE FROM t_p35405502_model_agency_website.producer_assignments 
-                    WHERE producer_email = %s AND operator_email = %s AND assignment_type = 'operator'
-                """, (producer_email, operator_email))
+                    WHERE producer_email = '{escape_sql_string(producer_email)}' AND operator_email = '{escape_sql_string(operator_email)}' AND assignment_type = 'operator'
+                """)
             
             conn.commit()
             
