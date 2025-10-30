@@ -265,11 +265,6 @@ const ModelsTab = ({
                 alt={model.name}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
-              <div className="absolute top-3 right-3">
-                <Badge variant={model.status === 'Available' ? 'default' : 'secondary'}>
-                  {model.status === 'Available' ? 'Доступна' : 'Занята'}
-                </Badge>
-              </div>
             </div>
             <div className="p-6">
               <h3 className="text-xl font-serif font-bold mb-2">{model.name}</h3>
