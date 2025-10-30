@@ -164,6 +164,14 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         }
       }
       await loadAssignments();
+      
+      if (currentUserRole === 'producer' && assigned) {
+        const updatedAssignments = await fetch(ASSIGNMENTS_API_URL).then(r => r.json());
+        const operatorHasModels = updatedAssignments.some((a: Assignment) => a.operatorEmail === operatorEmail);
+        if (!operatorHasModels && selectedOperator === operatorEmail) {
+          setSelectedOperator('');
+        }
+      }
     } catch (err) {
       console.error('Assignment toggle error:', err);
       toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
