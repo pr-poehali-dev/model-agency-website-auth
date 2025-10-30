@@ -136,19 +136,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income}, transfers={transfers}, total_check={total_check}")
             
-            operator_salary = total_check * 0.2
             model_salary = total_check * 0.3
             producer_salary = total_check * 0.1
             
             operator_user = next((u for u in users if u['full_name'] == operator_name and u['role'] == 'operator'), None)
+            producer_as_operator = next((u for u in users if u['full_name'] == operator_name and u['role'] == 'producer'), None)
+            
             operator_email = operator_user['email'] if operator_user else None
+            producer_operator_email = producer_as_operator['email'] if producer_as_operator else None
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             model_email = model_assignment['model_email'] if model_assignment else None
             
-            print(f"DEBUG: operator_name={operator_name}, operator_email={operator_email}, model_email={model_email}")
+            print(f"DEBUG: operator_name={operator_name}, operator_email={operator_email}, producer_as_operator={producer_operator_email}, model_email={model_email}")
             
-            if operator_email:
+            if producer_operator_email:
+                operator_salary = total_check * 0.3
+                if producer_operator_email not in producer_salaries:
+                    producer_salaries[producer_operator_email] = {
+                        'email': producer_operator_email,
+                        'total': 0,
+                        'details': []
+                    }
+                producer_salaries[producer_operator_email]['total'] += operator_salary
+                producer_salaries[producer_operator_email]['details'].append({
+                    'date': finance['date'].isoformat(),
+                    'model_id': model_id,
+                    'model_email': model_email,
+                    'amount': operator_salary,
+                    'check': total_check,
+                    'note': 'as_operator'
+                })
+            elif operator_email:
+                operator_salary = total_check * 0.2
                 if operator_email not in operator_salaries:
                     operator_salaries[operator_email] = {
                         'email': operator_email,
