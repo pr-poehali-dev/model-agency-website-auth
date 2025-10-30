@@ -62,7 +62,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 u.email,
                 u.full_name,
                 u.role
-            FROM t_p35405502_model_agency_website.users u
+            FROM users u
             WHERE u.role IN ('operator', 'content_maker', 'producer')
         """)
         users = cur.fetchall()
@@ -73,19 +73,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 oma.model_email,
                 oma.model_id,
                 u.id as model_user_id
-            FROM t_p35405502_model_agency_website.operator_model_assignments oma
-            JOIN t_p35405502_model_agency_website.users u ON u.email = oma.model_email
+            FROM operator_model_assignments oma
+            JOIN users u ON u.email = oma.model_email
         """)
         assignments = cur.fetchall()
         
         cur.execute("""
             SELECT 
                 pma.producer_email,
-                pma.model_email,
-                u.id as model_user_id
-            FROM t_p35405502_model_agency_website.producer_assignments pma
-            JOIN t_p35405502_model_agency_website.users u ON u.email = pma.model_email
-            WHERE pma.assignment_type = 'model'
+                pma.model_email
+            FROM producer_assignments pma
+            WHERE pma.assignment_type = 'model' AND pma.model_email IS NOT NULL
         """)
         producer_assignments = cur.fetchall()
         
@@ -93,13 +91,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             SELECT 
                 mf.model_id,
                 mf.date,
-                mf.chaturbate_tokens,
-                mf.stripchat_tokens,
-                mf.camsoda_tokens,
-                mf.cam4_value,
-                mf.transfers,
+                mf.cb_income,
+                mf.sp_income,
+                mf.soda_income,
+                mf.cam4_income,
                 mf.operator_name
-            FROM t_p35405502_model_agency_website.model_finances mf
+            FROM model_finances mf
             WHERE mf.date BETWEEN %s AND %s
         """, (period_start, period_end))
         finances = cur.fetchall()
@@ -112,13 +109,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_id = finance['model_id']
             operator_name = finance['operator_name']
             
-            cb_tokens = finance['chaturbate_tokens'] or 0
-            sp_tokens = finance['stripchat_tokens'] or 0
-            soda_tokens = finance['camsoda_tokens'] or 0
-            cam4_value = finance['cam4_value'] or 0
-            transfers = finance['transfers'] or 0
+            cb_income = float(finance['cb_income'] or 0)
+            sp_income = float(finance['sp_income'] or 0)
+            soda_income = float(finance['soda_income'] or 0)
+            cam4_income = float(finance['cam4_income'] or 0)
             
-            total_check = cb_tokens + sp_tokens + (soda_tokens * 0.05) + cam4_value + transfers
+            total_check = cb_income + sp_income + soda_income + cam4_income
             
             operator_salary = total_check * 0.2
             model_salary = total_check * 0.3
@@ -189,10 +185,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
     except Exception as e:
+        import traceback
+        error_details = {
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }
+        print(f"ERROR: {error_details}")
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps(error_details)
         }
     finally:
         cur.close()
