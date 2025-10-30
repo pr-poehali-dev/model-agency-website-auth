@@ -188,8 +188,8 @@ const Dashboard = () => {
     try {
       const response = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
       const assignments = await response.json();
-      const modelIds = assignments.map((a: any) => a.modelId);
-      setProducerAssignments(modelIds);
+      const modelEmails = assignments.map((a: any) => a.modelEmail);
+      setProducerAssignments(modelEmails);
     } catch (err) {
       console.error('Failed to load producer assignments', err);
     }

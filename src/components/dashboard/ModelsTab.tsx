@@ -34,7 +34,7 @@ interface ProducerAssignment {
 interface ModelsTabProps {
   models: Model[];
   operatorAssignments?: number[];
-  producerAssignments?: number[];
+  producerAssignments?: string[];
   assignedProducer?: string;
   onViewFinances?: (modelId: number, modelName: string) => void;
   userRole?: string;
@@ -186,7 +186,7 @@ const ModelsTab = ({
   const displayModels = operatorAssignments.length > 0 
     ? models.filter(m => operatorAssignments.includes(m.id))
     : producerAssignments.length > 0
-    ? models.filter(m => producerAssignments.includes(m.id))
+    ? models.filter(m => producerAssignments.includes(m.email))
     : models;
 
   return (
