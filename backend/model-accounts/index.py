@@ -115,6 +115,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 password = credentials.get('password', '')
                 encrypted_password = encrypt_password(password) if password else ''
                 
+                cur.execute(
+                    "SELECT login FROM model_accounts WHERE model_id = %s AND platform = %s",
+                    (int(model_id), platform)
+                )
+                result = cur.fetchone()
+                old_login = result[0] if result else None
+                
                 cur.execute("""
                     INSERT INTO model_accounts (model_id, model_name, platform, login, password, updated_at)
                     VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
@@ -124,6 +131,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         password = EXCLUDED.password,
                         updated_at = CURRENT_TIMESTAMP
                 """, (int(model_id), model_name, platform, login, encrypted_password))
+                
+                action = 'update' if old_login else 'create'
+                cur.execute("""
+                    INSERT INTO account_audit_log 
+                    (model_id, model_name, platform, action, changed_by_role, old_login, new_login, changed_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                """, (int(model_id), model_name, platform, action, user_role, old_login, login))
             
             return {
                 'statusCode': 200,
