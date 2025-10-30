@@ -105,6 +105,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """, (period_start, period_end))
         finances = cur.fetchall()
         
+        print(f"DEBUG: period={period_start} to {period_end}, finances_count={len(finances)}")
+        
         operator_salaries = {}
         model_salaries = {}
         producer_salaries = {}
@@ -112,6 +114,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         for finance in finances:
             model_id = finance['model_id']
             operator_name = finance['operator_name']
+            
+            print(f"DEBUG: Processing finance for model_id={model_id}")
             
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['stripchat_tokens'] or 0)
@@ -133,9 +137,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             producer_salary = total_check * 0.1
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
+            print(f"DEBUG: model_assignment found: {model_assignment is not None}")
             if model_assignment:
                 operator_email = model_assignment['operator_email']
                 model_email = model_assignment['model_email']
+                print(f"DEBUG: operator_email={operator_email}, model_email={model_email}")
                 
                 if operator_email and operator_email not in operator_salaries:
                     operator_salaries[operator_email] = {
@@ -166,8 +172,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 })
                 
                 producer_assignment = next((pa for pa in producer_assignments if pa['model_email'] == model_email), None)
+                print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}")
                 if producer_assignment:
                     producer_email = producer_assignment['producer_email']
+                    print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary}")
                     if producer_email not in producer_salaries:
                         producer_salaries[producer_email] = {
                             'email': producer_email,
@@ -188,6 +196,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'models': model_salaries,
             'producers': producer_salaries
         }
+        
+        print(f"DEBUG FINAL: operators={len(operator_salaries)}, models={len(model_salaries)}, producers={len(producer_salaries)}")
+        print(f"DEBUG FINAL: producer_emails={list(producer_salaries.keys())}")
         
         return {
             'statusCode': 200,
