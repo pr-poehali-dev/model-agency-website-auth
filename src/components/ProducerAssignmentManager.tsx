@@ -15,7 +15,7 @@ interface User {
 interface ProducerAssignment {
   id: number;
   producerEmail: string;
-  modelId: number | null;
+  modelEmail: string | null;
   operatorEmail: string | null;
   assignmentType: string;
 }
@@ -65,7 +65,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
     return assignments.some(
-      a => a.producerEmail === producerEmail && a.operatorEmail === modelEmail && a.assignmentType === 'model'
+      a => a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model'
     );
   };
 
@@ -87,7 +87,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
+          body: JSON.stringify({ producerEmail, modelEmail, assignmentType: 'model' })
         });
         
         if (!response.ok) {
@@ -105,7 +105,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
+          body: JSON.stringify({ producerEmail, modelEmail, assignmentType: 'model' })
         });
         
         if (!response.ok) {

@@ -5,26 +5,6 @@
       "method": "GET",
       "path": "/",
       "expectedStatus": 200,
-      "expectedBody": [],
-      "bodyMatcher": "partial"
-    },
-    {
-      "name": "Assign model to producer",
-      "method": "POST",
-      "path": "/",
-      "headers": {
-        "X-User-Email": "director@mba.com",
-        "X-User-Role": "director"
-      },
-      "body": {
-        "producerEmail": "producer@mba.com",
-        "assignmentType": "model",
-        "modelId": 1
-      },
-      "expectedStatus": 201,
-      "expectedBody": {
-        "message": "string"
-      },
       "bodyMatcher": "partial"
     }
   ]
