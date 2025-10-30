@@ -27,6 +27,14 @@ interface TeamMember {
   role: string;
 }
 
+interface Team {
+  operatorEmail: string;
+  operatorName: string;
+  modelEmail: string;
+  modelName: string;
+  displayName: string;
+}
+
 interface ScheduleTabProps {
   userRole?: string;
   userPermissions?: string[];
@@ -34,6 +42,7 @@ interface ScheduleTabProps {
 
 const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-1f7374a94184';
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 
 const defaultSchedule = {
   apartments: [
@@ -113,6 +122,7 @@ const defaultSchedule = {
 const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [scheduleData, setScheduleData] = useState(defaultSchedule);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editCell, setEditCell] = useState<{
@@ -129,6 +139,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   useEffect(() => {
     loadTeamMembers();
+    loadTeams();
     loadSchedule();
   }, []);
 
@@ -207,6 +218,38 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       setTeamMembers(operators);
     } catch (err) {
       console.error('Failed to load team members', err);
+    }
+  };
+
+  const loadTeams = async () => {
+    try {
+      const [usersResponse, assignmentsResponse] = await Promise.all([
+        fetch(USERS_API_URL),
+        fetch(ASSIGNMENTS_API_URL)
+      ]);
+      
+      const users = await usersResponse.json();
+      const assignments = await assignmentsResponse.json();
+      
+      const teamsData: Team[] = assignments.map((assignment: any) => {
+        const operator = users.find((u: any) => u.email === assignment.operatorEmail);
+        const model = users.find((u: any) => u.email === assignment.modelEmail);
+        
+        const operatorName = operator?.fullName || assignment.operatorEmail;
+        const modelName = model?.fullName || assignment.modelEmail;
+        
+        return {
+          operatorEmail: assignment.operatorEmail,
+          operatorName,
+          modelEmail: assignment.modelEmail,
+          modelName,
+          displayName: `${operatorName} / ${modelName}`
+        };
+      });
+      
+      setTeams(teamsData);
+    } catch (err) {
+      console.error('Failed to load teams', err);
     }
   };
 
@@ -383,16 +426,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Команда (оператор/мейкер)</label>
+              <label className="text-sm font-medium mb-2 block">Команда (оператор/модель)</label>
               <Select value={selectedTeam || 'empty'} onValueChange={(val) => setSelectedTeam(val === 'empty' ? '' : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите команду" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="empty">Пусто</SelectItem>
-                  {teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.fullName}>
-                      {member.fullName}
+                  {teams.map((team, index) => (
+                    <SelectItem key={index} value={team.displayName}>
+                      {team.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -403,7 +446,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
               <Input 
                 value={selectedTeam} 
                 onChange={(e) => setSelectedTeam(e.target.value)}
-                placeholder="Например: Иван/Мария"
+                placeholder="Например: Иван / Мария"
               />
             </div>
             <div className="flex gap-2 justify-end">
