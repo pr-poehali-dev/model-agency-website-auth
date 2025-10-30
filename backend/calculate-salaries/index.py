@@ -122,9 +122,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cam4_income = float(finance['cam4_income'] or 0)
             transfers = float(finance['transfers'] or 0)
             
-            cb_dollars = cb_income if cb_income > 0 else (cb_tokens * 0.05)
-            sp_dollars = sp_income if sp_income > 0 else (sp_tokens * 0.05)
-            soda_dollars = soda_income if soda_income > 0 else (soda_tokens * 0.05)
+            cb_dollars = (cb_income * 0.05) if cb_income > 0 else (cb_tokens * 0.05)
+            sp_dollars = (sp_income * 0.05) if sp_income > 0 else (sp_tokens * 0.05)
+            soda_dollars = (soda_income * 0.05) if soda_income > 0 else (soda_tokens * 0.05)
             
             total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income + transfers
             
