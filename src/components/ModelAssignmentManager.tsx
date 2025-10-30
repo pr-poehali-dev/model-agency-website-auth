@@ -82,7 +82,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         const assignmentsToUse = assignments || producerAssignments;
         const assignedModelEmails = assignmentsToUse
           .filter(a => a.assignmentType === 'model')
-          .map(a => a.operatorEmail);
+          .map(a => a.modelEmail);
         contentMakers = contentMakers.filter((cm: User) => assignedModelEmails.includes(cm.email));
       }
       
