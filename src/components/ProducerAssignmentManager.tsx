@@ -10,10 +10,7 @@ interface User {
   role: string;
 }
 
-interface Model {
-  id: number;
-  name: string;
-}
+
 
 interface ProducerAssignment {
   id: number;
@@ -23,18 +20,18 @@ interface ProducerAssignment {
   assignmentType: string;
 }
 
+interface ModelFromDB {
+  id: number;
+  email: string;
+}
+
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 
 const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { currentUserEmail: string; currentUserRole: string }) => {
   const [producers, setProducers] = useState<User[]>([]);
   const [operators, setOperators] = useState<User[]>([]);
-  const [models] = useState<Model[]>([
-    { id: 1, name: 'Anastasia Ivanova' },
-    { id: 2, name: 'Ekaterina Sokolova' },
-    { id: 3, name: 'Maria Petrova' },
-    { id: 4, name: 'Victoria Romanova' }
-  ]);
+  const [models, setModels] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<ProducerAssignment[]>([]);
   const [selectedProducer, setSelectedProducer] = useState<string>('');
   const { toast } = useToast();
@@ -50,6 +47,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
       const users = await response.json();
       setProducers(users.filter((u: User) => u.role === 'producer'));
       setOperators(users.filter((u: User) => u.role === 'operator'));
+      setModels(users.filter((u: User) => u.role === 'content_maker'));
     } catch (err) {
       console.error('Failed to load users', err);
     }
@@ -65,9 +63,9 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     }
   };
 
-  const isModelAssigned = (producerEmail: string, modelId: number) => {
+  const isModelAssigned = (producerEmail: string, modelEmail: string) => {
     return assignments.some(
-      a => a.producerEmail === producerEmail && a.modelId === modelId && a.assignmentType === 'model'
+      a => a.producerEmail === producerEmail && a.operatorEmail === modelEmail && a.assignmentType === 'model'
     );
   };
 
@@ -77,8 +75,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     );
   };
 
-  const handleToggleModel = async (producerEmail: string, modelId: number) => {
-    const assigned = isModelAssigned(producerEmail, modelId);
+  const handleToggleModel = async (producerEmail: string, modelEmail: string) => {
+    const assigned = isModelAssigned(producerEmail, modelEmail);
 
     try {
       if (assigned) {
@@ -89,7 +87,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ producerEmail, modelId, assignmentType: 'model' })
+          body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
         });
         toast({ title: 'Модель откреплена', description: 'Модель убрана из доступа продюсера' });
       } else {
@@ -100,7 +98,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ producerEmail, modelId, assignmentType: 'model' })
+          body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
         });
         toast({ title: 'Модель назначена', description: 'Продюсер теперь видит эту модель' });
       }
@@ -176,12 +174,12 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
               <h3 className="text-xl font-semibold text-foreground mb-4">Модели для {selectedProducer}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {models.map(model => {
-                  const assigned = isModelAssigned(selectedProducer, model.id);
+                  const assigned = isModelAssigned(selectedProducer, model.email);
                   return (
-                    <div key={model.id} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
-                      <span className="text-foreground font-medium">{model.name}</span>
+                    <div key={model.email} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
+                      <span className="text-foreground font-medium">{model.email}</span>
                       <Button
-                        onClick={() => handleToggleModel(selectedProducer, model.id)}
+                        onClick={() => handleToggleModel(selectedProducer, model.email)}
                         variant={assigned ? 'destructive' : 'default'}
                         size="sm"
                       >
