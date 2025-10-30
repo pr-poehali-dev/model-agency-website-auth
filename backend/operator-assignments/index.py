@@ -92,6 +92,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email = body_data.get('operatorEmail')
             model_email = body_data.get('modelEmail')
             
+            # Получить model_id по email модели
+            cur.execute(f"""
+                SELECT id FROM t_p35405502_model_agency_website.users 
+                WHERE email = '{escape_sql_string(model_email)}' AND role = 'content_maker'
+            """)
+            model_row = cur.fetchone()
+            model_id = model_row[0] if model_row else 0
+            
             # Проверить, не назначена ли уже
             cur.execute(f"""
                 SELECT id FROM t_p35405502_model_agency_website.operator_model_assignments 
@@ -110,8 +118,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute(f"""
                 INSERT INTO t_p35405502_model_agency_website.operator_model_assignments 
-                (operator_email, model_email, assigned_by) 
-                VALUES ('{escape_sql_string(operator_email)}', '{escape_sql_string(model_email)}', '{escape_sql_string(user_email)}') 
+                (operator_email, model_email, model_id, assigned_by) 
+                VALUES ('{escape_sql_string(operator_email)}', '{escape_sql_string(model_email)}', {model_id}, '{escape_sql_string(user_email)}') 
                 RETURNING id
             """)
             

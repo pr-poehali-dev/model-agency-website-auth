@@ -128,8 +128,8 @@ const Dashboard = () => {
       const users = await response.json();
       const contentMakers = users.filter((u: any) => u.role === 'content_maker');
       
-      const modelsFromUsers = contentMakers.map((user: any, index: number) => ({
-        id: index + 1,
+      const modelsFromUsers = contentMakers.map((user: any) => ({
+        id: user.id,
         email: user.email,
         name: user.fullName || user.email,
         image: 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',

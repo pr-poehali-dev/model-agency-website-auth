@@ -87,11 +87,18 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
       const allAssignments = await assignmentsResponse.json();
       
+      console.log('🔍 ModelId:', modelId);
+      console.log('🔍 All assignments:', allAssignments);
+      
       // Filter assignments for this specific model by modelId
       const modelAssignments = allAssignments.filter((a: any) => a.modelId === modelId);
       
+      console.log('🔍 Model assignments:', modelAssignments);
+      
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
+      
+      console.log('🔍 Operator emails:', operatorEmails);
       
       // Filter users to get only assigned operators
       const assignedOperators = users
@@ -100,6 +107,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
           email: u.email,
           name: u.fullName || u.email
         }));
+      
+      console.log('🔍 Assigned operators:', assignedOperators);
       
       setOperators(assignedOperators);
     } catch (error) {
