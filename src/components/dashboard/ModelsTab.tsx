@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
 import CreateModelDialog from '@/components/CreateModelDialog';
 import ModelAccountsDialog from '@/components/ModelAccountsDialog';
 
@@ -52,14 +53,22 @@ const ModelsTab = ({
   const [modelAccounts, setModelAccounts] = useState<any>({});
   const [producerAssignmentsData, setProducerAssignmentsData] = useState<ProducerAssignment[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+  const { toast } = useToast();
 
   useEffect(() => {
     loadProducerAssignments();
     loadUsers();
+    loadCurrentUser();
   }, []);
+
+  const loadCurrentUser = () => {
+    const email = localStorage.getItem('userEmail') || '';
+    setCurrentUserEmail(email);
+  };
 
   const loadProducerAssignments = async () => {
     try {
@@ -87,6 +96,50 @@ const ModelsTab = ({
     
     const producer = users.find(u => u.email === assignment.producerEmail);
     return producer?.fullName || assignment.producerEmail;
+  };
+
+  const getProducerAssignment = (modelId: number): ProducerAssignment | undefined => {
+    return producerAssignmentsData.find(a => a.modelId === modelId);
+  };
+
+  const handleUnassignProducer = async (modelId: number, modelName: string) => {
+    const assignment = getProducerAssignment(modelId);
+    if (!assignment) return;
+
+    try {
+      const response = await fetch(PRODUCER_API_URL, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail,
+          'X-User-Role': userRole || 'director'
+        },
+        body: JSON.stringify({ 
+          producerEmail: assignment.producerEmail, 
+          operatorEmail: assignment.operatorEmail, 
+          assignmentType: 'model' 
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to unassign producer');
+      }
+      
+      toast({ 
+        title: 'Продюсер откреплен', 
+        description: `Модель ${modelName} откреплена от продюсера` 
+      });
+      
+      await loadProducerAssignments();
+    } catch (error) {
+      console.error('Error unassigning producer:', error);
+      toast({ 
+        title: 'Ошибка', 
+        description: error instanceof Error ? error.message : 'Не удалось открепить продюсера', 
+        variant: 'destructive' 
+      });
+    }
   };
 
   const fetchModelAccounts = async (modelId: number) => {
@@ -202,9 +255,21 @@ const ModelsTab = ({
             </div>
             <div className="p-6">
               <h3 className="text-xl font-serif font-bold mb-2">{model.name}</h3>
-              <p className="text-sm text-muted-foreground font-medium mb-4">
-                Продюсер: {getProducerName(model.id)}
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground font-medium">
+                  Продюсер: {getProducerName(model.id)}
+                </p>
+                {userRole === 'director' && getProducerAssignment(model.id) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleUnassignProducer(model.id, model.name)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Icon name="X" size={14} />
+                  </Button>
+                )}
+              </div>
 
               <div className="flex gap-2">
                 {onViewFinances && (
