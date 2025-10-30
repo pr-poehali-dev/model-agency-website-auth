@@ -256,62 +256,113 @@ const ModelsTab = ({
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {displayModels.map((model) => (
-          <Card key={model.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-            <div className="relative h-64 overflow-hidden">
-              <img 
-                src={model.image} 
-                alt={model.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-serif font-bold mb-2">{model.name}</h3>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground font-medium">
-                  Продюсер: {getProducerName(model.email)}
-                </p>
-                {userRole === 'director' && getProducerAssignment(model.email) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleUnassignProducer(model.email, model.name)}
-                    className="h-6 px-2 text-xs"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayModels.map((model) => {
+          const producerName = getProducerName(model.email);
+          const producerAssignment = getProducerAssignment(model.email);
+          const accounts = modelAccounts[model.id] || {};
+          const hasAccounts = Object.keys(accounts).length > 0;
+          
+          return (
+            <Card key={model.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-2">
+              <div className="aspect-[4/5] relative bg-gradient-to-br from-muted/50 to-muted overflow-hidden group">
+                <img
+                  src={model.image}
+                  alt={model.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute top-4 right-4">
+                  <Badge 
+                    variant={model.status === 'Available' ? 'default' : 'secondary'}
+                    className="shadow-lg backdrop-blur-sm"
                   >
-                    <Icon name="X" size={14} />
-                  </Button>
-                )}
+                    {model.status === 'Available' ? 'Доступна' : 'Занята'}
+                  </Badge>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="font-bold text-xl text-white mb-1 drop-shadow-lg">
+                    {model.name}
+                  </h3>
+                  <p className="text-sm text-white/90 drop-shadow-md">{model.specialty}</p>
+                </div>
               </div>
+              
+              <div className="p-5 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Icon name="Mail" size={14} />
+                    <span className="truncate">{model.email}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Icon name="Ruler" size={14} className="text-muted-foreground" />
+                      <span className="font-medium">{model.height}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Icon name="Award" size={14} className="text-muted-foreground" />
+                      <span className="font-medium">{model.experience}</span>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="flex gap-2">
-                {onViewFinances && (
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 gap-2"
-                    onClick={() => onViewFinances(model.id, model.name)}
-                  >
-                    <Icon name="DollarSign" size={16} />
-                    Финансы
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  className="flex-1 gap-2"
-                  onClick={async () => {
-                    setSelectedModel(model);
-                    const accounts = await fetchModelAccounts(model.id);
-                    setModelAccounts({ ...modelAccounts, [model.id]: accounts });
-                    setAccountsDialogOpen(true);
-                  }}
-                >
-                  <Icon name="User" size={16} />
-                  Аккаунты
-                </Button>
+                <div className="pt-3 border-t space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Icon name="User" size={14} />
+                      <span>Продюсер:</span>
+                    </div>
+                    <span className="text-sm font-medium">{producerName}</span>
+                  </div>
+                  
+                  {userRole === 'director' && producerAssignment && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleUnassignProducer(model.email, model.name)}
+                      className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Icon name="UserMinus" size={16} />
+                      Открепить продюсера
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  {onViewFinances && (
+                    <Button 
+                      variant="default" 
+                      onClick={() => onViewFinances(model.id, model.name)}
+                      className="flex-1 gap-2"
+                      size="sm"
+                    >
+                      <Icon name="DollarSign" size={16} />
+                      Финансы
+                    </Button>
+                  )}
+
+                  {(userRole === 'operator' || userRole === 'producer' || userRole === 'director') && (
+                    <Button 
+                      variant="outline" 
+                      onClick={async () => {
+                        setSelectedModel(model);
+                        const accounts = await fetchModelAccounts(model.id);
+                        setModelAccounts({ ...modelAccounts, [model.id]: accounts });
+                        setAccountsDialogOpen(true);
+                      }}
+                      className="flex-1 gap-2"
+                      size="sm"
+                    >
+                      <Icon name="Globe" size={16} />
+                      {hasAccounts ? 'Аккаунты' : 'Добавить'}
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
