@@ -27,9 +27,10 @@ interface ModelAssignmentManagerProps {
   currentUserEmail: string;
   currentUserRole: string;
   onModelAssigned?: (modelEmail: string) => void;
+  onAssignmentChanged?: () => void;
 }
 
-const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssigned }: ModelAssignmentManagerProps) => {
+const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssigned, onAssignmentChanged }: ModelAssignmentManagerProps) => {
   const [operators, setOperators] = useState<User[]>([]);
   const [models, setModels] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -50,6 +51,12 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
       await loadAssignments();
     };
     init();
+    
+    const intervalId = setInterval(() => {
+      loadAssignments();
+    }, 5000);
+    
+    return () => clearInterval(intervalId);
   }, [currentUserRole]);
 
   const loadOperators = async (assignments?: any[]) => {
@@ -164,6 +171,10 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         }
       }
       await loadAssignments();
+      
+      if (onAssignmentChanged) {
+        onAssignmentChanged();
+      }
       
       if (currentUserRole === 'producer' && assigned) {
         const updatedAssignments = await fetch(ASSIGNMENTS_API_URL).then(r => r.json());

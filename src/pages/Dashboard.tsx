@@ -297,7 +297,15 @@ const Dashboard = () => {
       case 'users':
         return <UserManagement />;
       case 'assignments':
-        return <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'operator'} />;
+        return <ModelAssignmentManager 
+          currentUserEmail={userEmail} 
+          currentUserRole={userRole || 'operator'}
+          onAssignmentChanged={() => {
+            if (userRole === 'operator') {
+              loadOperatorAssignments(userEmail);
+            }
+          }}
+        />;
       case 'producer-assignments':
         return <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
       case 'audit':
