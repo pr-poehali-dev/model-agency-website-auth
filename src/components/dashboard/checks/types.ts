@@ -1,5 +1,6 @@
 export interface Employee {
   name: string;
+  email?: string;
   week: number;
   shifts?: number;
   model: string;

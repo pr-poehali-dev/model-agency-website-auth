@@ -16,12 +16,18 @@ const ChecksTab = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [isLoadingRate, setIsLoadingRate] = useState(false);
+  const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
+  const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+  const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     loadUserRole(email);
     loadExchangeRate();
+    if (email) {
+      loadProducerAssignments(email);
+    }
   }, []);
 
   const loadExchangeRate = async () => {
@@ -53,6 +59,25 @@ const ChecksTab = () => {
     }
   };
 
+  const loadProducerAssignments = async (email: string) => {
+    try {
+      const response = await fetch(`${ASSIGNMENTS_API_URL}`);
+      const assignments = await response.json();
+      
+      const producerModelResponse = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
+      const producerModels = await producerModelResponse.json();
+      const producerModelEmails = producerModels.map((pm: any) => pm.modelEmail);
+      
+      const filteredAssignments = assignments.filter((a: any) => 
+        producerModelEmails.includes(a.modelEmail)
+      );
+      
+      setProducerAssignments(filteredAssignments);
+    } catch (err) {
+      console.error('Failed to load producer assignments', err);
+    }
+  };
+
   const totalModelSum = producerData.employees
     .filter(e => !e.model)
     .reduce((sum, e) => sum + e.sumRubles, 0);
@@ -61,8 +86,16 @@ const ChecksTab = () => {
     .filter(e => e.model)
     .reduce((sum, e) => sum + e.sumRubles, 0);
 
-  const operators = producerData.employees.filter(e => e.model);
-  const contentMakers = producerData.employees.filter(e => !e.model);
+  let operators = producerData.employees.filter(e => e.model);
+  let contentMakers = producerData.employees.filter(e => !e.model);
+  
+  if (userRole === 'producer' && producerAssignments.length > 0) {
+    const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
+    const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
+    
+    operators = operators.filter(op => assignedOperatorEmails.includes(op.email));
+    contentMakers = contentMakers.filter(cm => assignedModelEmails.includes(cm.email));
+  }
 
   if (userRole !== 'producer' && userRole !== 'director') {
     return (
@@ -138,7 +171,20 @@ const ChecksTab = () => {
         />
       </div>
 
-      <ProducerSalaryCard producerData={producerData} period={currentPeriod} />
+      {userRole === 'director' && <ProducerSalaryCard producerData={producerData} period={currentPeriod} />}
+      {userRole === 'producer' && (
+        <Card className="p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Icon name="User" size={24} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold">{userEmail}</h3>
+              <p className="text-sm text-muted-foreground">Продюсер</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="space-y-8">
         <OperatorsSection operators={operators} period={currentPeriod} />

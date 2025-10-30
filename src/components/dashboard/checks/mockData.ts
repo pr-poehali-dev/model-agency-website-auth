@@ -13,6 +13,7 @@ export const producerData: ProducerData = {
   employees: [
     {
       name: 'Женя',
+      email: 'operator1@example.com',
       week: 11,
       shifts: 11,
       model: 'Марго',
@@ -25,6 +26,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Руслан',
+      email: 'operator2@example.com',
       week: 12,
       shifts: 12,
       model: 'Лера',
@@ -37,6 +39,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Равиг',
+      email: 'operator3@example.com',
       week: 10,
       shifts: 10,
       model: 'Лиза',
@@ -49,6 +52,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Андрей Пуд.',
+      email: 'operator4@example.com',
       week: 21,
       shifts: 21,
       model: 'Лера',
@@ -61,6 +65,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Вероника',
+      email: 'model1@example.com',
       week: 11,
       model: '',
       sumDollars: 666.985,
@@ -72,6 +77,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Марго',
+      email: 'model2@example.com',
       week: 12,
       model: '',
       sumDollars: 694.405,
@@ -83,6 +89,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Лера',
+      email: 'model3@example.com',
       week: 10,
       model: '',
       sumDollars: 763.885,
@@ -94,6 +101,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Алена',
+      email: 'model4@example.com',
       week: 21,
       model: '',
       sumDollars: 505.175,
@@ -105,6 +113,7 @@ export const producerData: ProducerData = {
     },
     {
       name: 'Лиза',
+      email: 'model5@example.com',
       week: 11,
       model: '',
       sumDollars: 650.855,
