@@ -296,9 +296,9 @@ const Dashboard = () => {
       case 'users':
         return <UserManagement />;
       case 'assignments':
-        return <ModelAssignmentManager />;
+        return <ModelAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'operator'} />;
       case 'producer-assignments':
-        return <ProducerAssignmentManager />;
+        return <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
       case 'audit':
         return <AuditLog />;
       default:

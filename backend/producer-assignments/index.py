@@ -33,8 +33,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     headers = event.get('headers', {})
-    user_email = headers.get('x-user-email') or headers.get('X-User-Email', '')
-    user_role = headers.get('x-user-role') or headers.get('X-User-Role', '')
+    # Нормализация заголовков (приведение к lowercase)
+    headers_lower = {k.lower(): v for k, v in headers.items()}
+    user_email = headers_lower.get('x-user-email', '')
+    user_role = headers_lower.get('x-user-role', '')
+    
+    print(f"Request headers: email={user_email}, role={user_role}")
     
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn)
