@@ -267,14 +267,7 @@ const ModelsTab = ({
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute top-4 right-4">
-                  <Badge 
-                    variant={model.status === 'Available' ? 'default' : 'secondary'}
-                    className="shadow-lg backdrop-blur-sm"
-                  >
-                    {model.status === 'Available' ? 'Доступна' : 'Занята'}
-                  </Badge>
-                </div>
+
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="font-bold text-xl text-white mb-1 drop-shadow-lg">
                     {model.name}

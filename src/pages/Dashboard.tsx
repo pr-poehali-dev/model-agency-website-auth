@@ -138,7 +138,7 @@ const Dashboard = () => {
         waist: '60 cm',
         hips: '90 cm',
         experience: 'Новичок',
-        specialty: 'Content Creator',
+        specialty: 'Content Maker',
         status: 'Available'
       }));
       
