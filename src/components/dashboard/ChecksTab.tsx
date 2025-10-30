@@ -113,7 +113,37 @@ const ChecksTab = () => {
     total: 0
   })) : [];
   
-  if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
+  if (userRole === 'director' && users.length > 0) {
+    const operatorUsers = users.filter(u => u.role === 'operator');
+    const modelUsers = users.filter(u => u.role === 'content_maker');
+    
+    operators = operatorUsers.map(op => ({
+      name: op.fullName || op.email,
+      email: op.email,
+      week: 0,
+      shifts: 0,
+      model: '',
+      sumDollars: 0,
+      rate: exchangeRate,
+      sumRubles: 0,
+      advance: 0,
+      penalty: 0,
+      total: 0
+    }));
+    
+    contentMakers = modelUsers.map(cm => ({
+      name: cm.fullName || cm.email,
+      email: cm.email,
+      week: 0,
+      model: '',
+      sumDollars: 0,
+      rate: exchangeRate,
+      sumRubles: 0,
+      advance: 0,
+      penalty: 0,
+      total: 0
+    }));
+  } else if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
     const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
     
