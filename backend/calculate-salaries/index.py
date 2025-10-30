@@ -94,6 +94,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.cb_tokens,
                 mf.stripchat_tokens,
                 mf.soda_tokens,
+                mf.cb_income,
+                mf.sp_income,
+                mf.soda_income,
                 mf.cam4_income,
                 mf.transfers,
                 mf.operator_name
@@ -113,12 +116,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['stripchat_tokens'] or 0)
             soda_tokens = float(finance['soda_tokens'] or 0)
+            cb_income = float(finance['cb_income'] or 0)
+            sp_income = float(finance['sp_income'] or 0)
+            soda_income = float(finance['soda_income'] or 0)
             cam4_income = float(finance['cam4_income'] or 0)
             transfers = float(finance['transfers'] or 0)
             
-            cb_dollars = cb_tokens * 0.05
-            sp_dollars = sp_tokens * 0.05
-            soda_dollars = soda_tokens * 0.05
+            cb_dollars = cb_income if cb_income > 0 else (cb_tokens * 0.05)
+            sp_dollars = sp_income if sp_income > 0 else (sp_tokens * 0.05)
+            soda_dollars = soda_income if soda_income > 0 else (soda_tokens * 0.05)
             
             total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income + transfers
             
@@ -131,13 +137,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 operator_email = model_assignment['operator_email']
                 model_email = model_assignment['model_email']
                 
-                if operator_name:
-                    if operator_email not in operator_salaries:
-                        operator_salaries[operator_email] = {
-                            'email': operator_email,
-                            'total': 0,
-                            'details': []
-                        }
+                if operator_email and operator_email not in operator_salaries:
+                    operator_salaries[operator_email] = {
+                        'email': operator_email,
+                        'total': 0,
+                        'details': []
+                    }
+                if operator_email:
                     operator_salaries[operator_email]['total'] += operator_salary
                     operator_salaries[operator_email]['details'].append({
                         'date': finance['date'].isoformat(),
