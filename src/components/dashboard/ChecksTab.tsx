@@ -17,14 +17,17 @@ const ChecksTab = () => {
   const [userEmail, setUserEmail] = useState('');
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+  const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     loadUserRole(email);
     loadExchangeRate();
+    loadUsers();
     if (email) {
       loadProducerAssignments(email);
     }
@@ -59,6 +62,16 @@ const ChecksTab = () => {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const response = await fetch(USERS_API_URL);
+      const data = await response.json();
+      setUsers(data);
+    } catch (err) {
+      console.error('Failed to load users', err);
+    }
+  };
+
   const loadProducerAssignments = async (email: string) => {
     try {
       const response = await fetch(`${ASSIGNMENTS_API_URL}`);
@@ -89,23 +102,43 @@ const ChecksTab = () => {
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
   
-  console.log('ChecksTab - userRole:', userRole);
-  console.log('ChecksTab - producerAssignments:', producerAssignments);
-  console.log('ChecksTab - all operators:', operators);
-  console.log('ChecksTab - all contentMakers:', contentMakers);
-  
-  if (userRole === 'producer' && producerAssignments.length > 0) {
+  if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
     const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
     
-    console.log('ChecksTab - assignedOperatorEmails:', assignedOperatorEmails);
-    console.log('ChecksTab - assignedModelEmails:', assignedModelEmails);
+    const operatorUsers = users.filter(u => u.role === 'operator' && assignedOperatorEmails.includes(u.email));
+    const modelUsers = users.filter(u => u.role === 'content_maker' && assignedModelEmails.includes(u.email));
     
-    operators = operators.filter(op => assignedOperatorEmails.includes(op.email));
-    contentMakers = contentMakers.filter(cm => assignedModelEmails.includes(cm.email));
+    operators = operatorUsers.map(op => {
+      const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
+      const modelUser = users.find(u => u.email === assignment?.modelEmail);
+      return {
+        name: op.fullName || op.email,
+        email: op.email,
+        week: 0,
+        shifts: 0,
+        model: modelUser?.fullName || assignment?.modelEmail || '',
+        sumDollars: 0,
+        rate: exchangeRate,
+        sumRubles: 0,
+        advance: 0,
+        penalty: 0,
+        total: 0
+      };
+    });
     
-    console.log('ChecksTab - filtered operators:', operators);
-    console.log('ChecksTab - filtered contentMakers:', contentMakers);
+    contentMakers = modelUsers.map(cm => ({
+      name: cm.fullName || cm.email,
+      email: cm.email,
+      week: 0,
+      model: '',
+      sumDollars: 0,
+      rate: exchangeRate,
+      sumRubles: 0,
+      advance: 0,
+      penalty: 0,
+      total: 0
+    }));
   }
 
   if (userRole !== 'producer' && userRole !== 'director') {
