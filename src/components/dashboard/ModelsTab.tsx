@@ -9,6 +9,7 @@ import ModelAccountsDialog from '@/components/ModelAccountsDialog';
 
 interface Model {
   id: number;
+  email: string;
   name: string;
   image: string;
   height: string;
@@ -23,8 +24,8 @@ interface Model {
 interface ProducerAssignment {
   id: number;
   producerEmail: string;
-  modelId: number;
-  operatorEmail: string;
+  modelEmail: string | null;
+  operatorEmail: string | null;
   assignedBy: string;
   assignedAt: string;
   assignmentType: string;
@@ -90,20 +91,20 @@ const ModelsTab = ({
     }
   };
 
-  const getProducerName = (modelId: number): string => {
-    const assignment = producerAssignmentsData.find(a => a.modelId === modelId);
+  const getProducerName = (modelEmail: string): string => {
+    const assignment = producerAssignmentsData.find(a => a.modelEmail === modelEmail);
     if (!assignment) return 'Не назначен';
     
     const producer = users.find(u => u.email === assignment.producerEmail);
     return producer?.fullName || assignment.producerEmail;
   };
 
-  const getProducerAssignment = (modelId: number): ProducerAssignment | undefined => {
-    return producerAssignmentsData.find(a => a.modelId === modelId);
+  const getProducerAssignment = (modelEmail: string): ProducerAssignment | undefined => {
+    return producerAssignmentsData.find(a => a.modelEmail === modelEmail);
   };
 
-  const handleUnassignProducer = async (modelId: number, modelName: string) => {
-    const assignment = getProducerAssignment(modelId);
+  const handleUnassignProducer = async (modelEmail: string, modelName: string) => {
+    const assignment = getProducerAssignment(modelEmail);
     if (!assignment) return;
 
     try {
@@ -116,7 +117,7 @@ const ModelsTab = ({
         },
         body: JSON.stringify({ 
           producerEmail: assignment.producerEmail, 
-          operatorEmail: assignment.operatorEmail, 
+          modelEmail: assignment.modelEmail, 
           assignmentType: 'model' 
         })
       });
@@ -257,13 +258,13 @@ const ModelsTab = ({
               <h3 className="text-xl font-serif font-bold mb-2">{model.name}</h3>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground font-medium">
-                  Продюсер: {getProducerName(model.id)}
+                  Продюсер: {getProducerName(model.email)}
                 </p>
-                {userRole === 'director' && getProducerAssignment(model.id) && (
+                {userRole === 'director' && getProducerAssignment(model.email) && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleUnassignProducer(model.id, model.name)}
+                    onClick={() => handleUnassignProducer(model.email, model.name)}
                     className="h-6 px-2 text-xs"
                   >
                     <Icon name="X" size={14} />

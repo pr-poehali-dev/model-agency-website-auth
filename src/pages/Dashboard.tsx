@@ -130,6 +130,7 @@ const Dashboard = () => {
       
       const modelsFromUsers = contentMakers.map((user: any, index: number) => ({
         id: index + 1,
+        email: user.email,
         name: user.fullName || user.email,
         image: 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',
         height: '170 cm',
