@@ -91,9 +91,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             SELECT 
                 mf.model_id,
                 mf.date,
-                mf.cb_income,
-                mf.sp_income,
-                mf.soda_income,
+                mf.cb_tokens,
+                mf.stripchat_tokens,
+                mf.soda_tokens,
                 mf.cam4_income,
                 mf.operator_name
             FROM model_finances mf
@@ -109,12 +109,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_id = finance['model_id']
             operator_name = finance['operator_name']
             
-            cb_income = float(finance['cb_income'] or 0)
-            sp_income = float(finance['sp_income'] or 0)
-            soda_income = float(finance['soda_income'] or 0)
+            cb_tokens = float(finance['cb_tokens'] or 0)
+            sp_tokens = float(finance['stripchat_tokens'] or 0)
+            soda_tokens = float(finance['soda_tokens'] or 0)
             cam4_income = float(finance['cam4_income'] or 0)
             
-            total_check = cb_income + sp_income + soda_income + cam4_income
+            cb_dollars = cb_tokens * 0.05
+            sp_dollars = sp_tokens * 0.05
+            soda_dollars = soda_tokens * 0.05
+            
+            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income
             
             operator_salary = total_check * 0.2
             model_salary = total_check * 0.3
