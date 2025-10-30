@@ -229,12 +229,7 @@ const ModelsTab = ({
           )}
         </div>
         
-        {userRole === 'director' && (
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <Icon name="UserPlus" size={18} />
-            Создать модель
-          </Button>
-        )}
+
       </div>
 
       <CreateModelDialog 
@@ -289,23 +284,12 @@ const ModelsTab = ({
               </div>
               
               <div className="p-5 space-y-4">
-                <div className="space-y-2">
+                {(userRole === 'director' || userRole === 'producer') && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Icon name="Mail" size={14} />
                     <span className="truncate">{model.email}</span>
                   </div>
-                  
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <Icon name="Ruler" size={14} className="text-muted-foreground" />
-                      <span className="font-medium">{model.height}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Icon name="Award" size={14} className="text-muted-foreground" />
-                      <span className="font-medium">{model.experience}</span>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 <div className="pt-3 border-t space-y-2">
                   <div className="flex items-center justify-between">
