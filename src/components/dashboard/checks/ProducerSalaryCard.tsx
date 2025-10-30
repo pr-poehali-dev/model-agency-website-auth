@@ -41,9 +41,9 @@ const ProducerSalaryCard = ({ producerData, period }: ProducerSalaryCardProps) =
           <span className="font-bold text-xl text-yellow-600 dark:text-yellow-400">{producerData.expenses.toLocaleString()}₽</span>
         </div>
         
-        <div className="flex justify-between items-center py-3 px-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+        <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/20">
           <span className="font-medium">Аванс</span>
-          <span className="font-bold text-xl text-yellow-600 dark:text-yellow-400">{producerData.advance.toLocaleString()}₽</span>
+          <span className="font-bold text-xl text-red-600 dark:text-red-400">{producerData.advance.toLocaleString()}₽</span>
         </div>
         
         <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/20">
