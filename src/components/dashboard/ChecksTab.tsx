@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import ExchangeRateCard from './checks/ExchangeRateCard';
 import ProducerSalaryCard from './checks/ProducerSalaryCard';
+import ProducersSection from './checks/ProducersSection';
 import OperatorsSection from './checks/OperatorsSection';
 import ContentMakersSection from './checks/ContentMakersSection';
 import { producerData } from './checks/mockData';
@@ -101,6 +102,16 @@ const ChecksTab = () => {
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
+  const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => ({
+    name: p.fullName || p.email,
+    sumDollars: 0,
+    rate: exchangeRate,
+    sumRubles: 0,
+    expenses: 0,
+    advance: 0,
+    penalty: 0,
+    total: 0
+  })) : [];
   
   if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
@@ -215,7 +226,6 @@ const ChecksTab = () => {
         />
       </div>
 
-      {userRole === 'director' && <ProducerSalaryCard producerData={producerData} period={currentPeriod} />}
       {userRole === 'producer' && (
         <ProducerSalaryCard 
           producerData={{
@@ -227,6 +237,9 @@ const ChecksTab = () => {
       )}
 
       <div className="space-y-8">
+        {userRole === 'director' && producers.length > 0 && (
+          <ProducersSection producers={producers} period={currentPeriod} />
+        )}
         <OperatorsSection operators={operators} period={currentPeriod} />
         <ContentMakersSection contentMakers={contentMakers} period={currentPeriod} />
       </div>
