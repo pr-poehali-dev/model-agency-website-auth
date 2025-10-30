@@ -128,9 +128,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income}, sp_income={sp_income}, transfers={transfers}")
             
-            cb_dollars = (cb_income * 0.05) if cb_income > 0 else (cb_tokens * 0.05)
-            sp_dollars = (sp_income * 0.05) if sp_income > 0 else (sp_tokens * 0.05)
-            soda_dollars = (soda_income * 0.05) if soda_income > 0 else (soda_tokens * 0.05)
+            USD_RATE = 100.0
+            
+            cb_dollars = (cb_income / USD_RATE) if cb_income > 0 else (cb_tokens * 0.05)
+            sp_dollars = (sp_income / USD_RATE) if sp_income > 0 else (sp_tokens * 0.05)
+            soda_dollars = (soda_income / USD_RATE) if soda_income > 0 else (soda_tokens * 0.05)
             
             total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income + transfers
             
