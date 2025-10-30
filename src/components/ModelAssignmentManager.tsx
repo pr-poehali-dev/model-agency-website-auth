@@ -52,8 +52,13 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     };
     init();
     
-    const intervalId = setInterval(() => {
-      loadAssignments();
+    const intervalId = setInterval(async () => {
+      await loadAssignments();
+      if (currentUserRole === 'producer') {
+        const assignments = await loadProducerAssignments();
+        await loadOperators(assignments);
+        await loadModels(assignments);
+      }
     }, 5000);
     
     return () => clearInterval(intervalId);
