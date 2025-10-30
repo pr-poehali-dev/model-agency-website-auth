@@ -54,19 +54,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if producer_email and assignment_type:
                 cur.execute(f"""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
-                    FROM t_p35405502_model_agency_website.producer_assignments 
+                    FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND assignment_type = '{escape_sql_string(assignment_type)}'
                 """)
             elif producer_email:
                 cur.execute(f"""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
-                    FROM t_p35405502_model_agency_website.producer_assignments 
+                    FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}'
                 """)
             else:
                 cur.execute("""
                     SELECT id, producer_email, model_id, operator_email, assigned_by, assigned_at, assignment_type 
-                    FROM t_p35405502_model_agency_website.producer_assignments
+                    FROM producer_assignments
                 """)
             
             rows = cur.fetchall()
@@ -110,12 +110,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Проверка дубликатов
             if assignment_type == 'model':
                 cur.execute(f"""
-                    SELECT id FROM t_p35405502_model_agency_website.producer_assignments 
+                    SELECT id FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND model_id = {model_id} AND assignment_type = 'model'
                 """)
             else:
                 cur.execute(f"""
-                    SELECT id FROM t_p35405502_model_agency_website.producer_assignments 
+                    SELECT id FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND operator_email = '{escape_sql_string(operator_email)}' AND assignment_type = 'operator'
                 """)
             
@@ -133,7 +133,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email_val = f"'{escape_sql_string(operator_email)}'" if operator_email else "NULL"
             
             cur.execute(f"""
-                INSERT INTO t_p35405502_model_agency_website.producer_assignments 
+                INSERT INTO producer_assignments 
                 (producer_email, model_id, operator_email, assigned_by, assignment_type) 
                 VALUES ('{escape_sql_string(producer_email)}', {model_id_val}, {operator_email_val}, '{escape_sql_string(user_email)}', '{escape_sql_string(assignment_type)}') 
                 RETURNING id
@@ -171,12 +171,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if assignment_type == 'model':
                 cur.execute(f"""
-                    DELETE FROM t_p35405502_model_agency_website.producer_assignments 
+                    DELETE FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND model_id = {model_id} AND assignment_type = 'model'
                 """)
             else:
                 cur.execute(f"""
-                    DELETE FROM t_p35405502_model_agency_website.producer_assignments 
+                    DELETE FROM producer_assignments 
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND operator_email = '{escape_sql_string(operator_email)}' AND assignment_type = 'operator'
                 """)
             
