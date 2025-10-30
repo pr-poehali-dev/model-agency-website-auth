@@ -19,9 +19,11 @@ const ChecksTab = () => {
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
   const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+  const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -33,6 +35,10 @@ const ChecksTab = () => {
       loadProducerAssignments(email);
     }
   }, []);
+
+  useEffect(() => {
+    loadSalaries();
+  }, [currentPeriod]);
 
   const loadExchangeRate = async () => {
     setIsLoadingRate(true);
@@ -92,57 +98,77 @@ const ChecksTab = () => {
     }
   };
 
-  const totalModelSum = producerData.employees
-    .filter(e => !e.model)
-    .reduce((sum, e) => sum + e.sumRubles, 0);
-
-  const totalOperatorSum = producerData.employees
-    .filter(e => e.model)
-    .reduce((sum, e) => sum + e.sumRubles, 0);
+  const loadSalaries = async () => {
+    try {
+      const response = await fetch(`${SALARIES_API_URL}?period_start=${currentPeriod.start}&period_end=${currentPeriod.end}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSalaries(data);
+      }
+    } catch (err) {
+      console.error('Failed to load salaries', err);
+    }
+  };
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
-  const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => ({
-    name: p.fullName || p.email,
-    sumDollars: 0,
-    rate: exchangeRate,
-    sumRubles: 0,
-    expenses: 0,
-    advance: 0,
-    penalty: 0,
-    total: 0
-  })) : [];
+  const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => {
+    const salary = salaries.producers[p.email] || { total: 0, details: [] };
+    const sumDollars = salary.total;
+    const sumRubles = sumDollars * exchangeRate;
+    return {
+      name: p.fullName || p.email,
+      email: p.email,
+      sumDollars: Math.round(sumDollars * 100) / 100,
+      rate: exchangeRate,
+      sumRubles: Math.round(sumRubles),
+      expenses: 0,
+      advance: 0,
+      penalty: 0,
+      total: Math.round(sumRubles)
+    };
+  }) : [];
   
   if (userRole === 'director' && users.length > 0) {
     const operatorUsers = users.filter(u => u.role === 'operator');
     const modelUsers = users.filter(u => u.role === 'content_maker');
     
-    operators = operatorUsers.map(op => ({
-      name: op.fullName || op.email,
-      email: op.email,
-      week: 0,
-      shifts: 0,
-      model: '',
-      sumDollars: 0,
-      rate: exchangeRate,
-      sumRubles: 0,
-      advance: 0,
-      penalty: 0,
-      total: 0
-    }));
+    operators = operatorUsers.map(op => {
+      const salary = salaries.operators[op.email] || { total: 0, details: [] };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
+      return {
+        name: op.fullName || op.email,
+        email: op.email,
+        week: 0,
+        shifts: salary.details.length,
+        model: '',
+        sumDollars: Math.round(sumDollars * 100) / 100,
+        rate: exchangeRate,
+        sumRubles: Math.round(sumRubles),
+        advance: 0,
+        penalty: 0,
+        total: Math.round(sumRubles)
+      };
+    });
     
-    contentMakers = modelUsers.map(cm => ({
-      name: cm.fullName || cm.email,
-      email: cm.email,
-      week: 0,
-      model: '',
-      sumDollars: 0,
-      rate: exchangeRate,
-      sumRubles: 0,
-      advance: 0,
-      penalty: 0,
-      total: 0
-    }));
+    contentMakers = modelUsers.map(cm => {
+      const salary = salaries.models[cm.email] || { total: 0, details: [] };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
+      return {
+        name: cm.fullName || cm.email,
+        email: cm.email,
+        week: 0,
+        model: '',
+        sumDollars: Math.round(sumDollars * 100) / 100,
+        rate: exchangeRate,
+        sumRubles: Math.round(sumRubles),
+        advance: 0,
+        penalty: 0,
+        total: Math.round(sumRubles)
+      };
+    });
   } else if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
     const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
@@ -153,34 +179,45 @@ const ChecksTab = () => {
     operators = operatorUsers.map(op => {
       const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
       const modelUser = users.find(u => u.email === assignment?.modelEmail);
+      const salary = salaries.operators[op.email] || { total: 0, details: [] };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
       return {
         name: op.fullName || op.email,
         email: op.email,
         week: 0,
-        shifts: 0,
+        shifts: salary.details.length,
         model: modelUser?.fullName || assignment?.modelEmail || '',
-        sumDollars: 0,
+        sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
-        sumRubles: 0,
+        sumRubles: Math.round(sumRubles),
         advance: 0,
         penalty: 0,
-        total: 0
+        total: Math.round(sumRubles)
       };
     });
     
-    contentMakers = modelUsers.map(cm => ({
-      name: cm.fullName || cm.email,
-      email: cm.email,
-      week: 0,
-      model: '',
-      sumDollars: 0,
-      rate: exchangeRate,
-      sumRubles: 0,
-      advance: 0,
-      penalty: 0,
-      total: 0
-    }));
+    contentMakers = modelUsers.map(cm => {
+      const salary = salaries.models[cm.email] || { total: 0, details: [] };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
+      return {
+        name: cm.fullName || cm.email,
+        email: cm.email,
+        week: 0,
+        model: '',
+        sumDollars: Math.round(sumDollars * 100) / 100,
+        rate: exchangeRate,
+        sumRubles: Math.round(sumRubles),
+        advance: 0,
+        penalty: 0,
+        total: Math.round(sumRubles)
+      };
+    });
   }
+
+  const totalModelSum = contentMakers.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
+  const totalOperatorSum = operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
 
   if (userRole !== 'producer' && userRole !== 'director') {
     return (

@@ -37,11 +37,7 @@ const generateInitialData = (): DayData[] => {
   const period = getCurrentPeriod();
   const dates = getDatesInPeriod(period);
   
-  console.log('🔍 Period:', period);
-  console.log('🔍 Dates count:', dates.length);
-  console.log('🔍 Dates:', dates);
-  
-  const result = dates.map(date => ({
+  return dates.map(date => ({
     date,
     cb: 0,
     sp: 0,
@@ -56,9 +52,6 @@ const generateInitialData = (): DayData[] => {
     operator: '',
     shift: false
   }));
-  
-  console.log('🔍 Generated data count:', result.length);
-  return result;
 };
 
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
@@ -87,18 +80,11 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
       const allAssignments = await assignmentsResponse.json();
       
-      console.log('🔍 ModelId:', modelId);
-      console.log('🔍 All assignments:', allAssignments);
-      
       // Filter assignments for this specific model by modelId
       const modelAssignments = allAssignments.filter((a: any) => a.modelId === modelId);
       
-      console.log('🔍 Model assignments:', modelAssignments);
-      
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
-      
-      console.log('🔍 Operator emails:', operatorEmails);
       
       // Filter users to get only assigned operators
       const assignedOperators = users
@@ -107,8 +93,6 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
           email: u.email,
           name: u.fullName || u.email
         }));
-      
-      console.log('🔍 Assigned operators:', assignedOperators);
       
       setOperators(assignedOperators);
     } catch (error) {
