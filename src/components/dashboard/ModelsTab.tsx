@@ -90,12 +90,16 @@ const ModelsTab = ({
           open={accountsDialogOpen}
           onOpenChange={setAccountsDialogOpen}
           modelName={selectedModel.name}
+          userRole={userRole}
           accounts={{
-            stripchat: 'model_stripchat',
-            chaturbate: 'model_chaturbate',
-            camsoda: 'model_camsoda',
-            cam4: 'model_cam4',
-            email: 'model@example.com'
+            stripchat: { login: 'model_stripchat', password: 'password123' },
+            chaturbate: { login: 'model_chaturbate', password: 'password123' },
+            camsoda: { login: 'model_camsoda', password: 'password123' },
+            cam4: { login: 'model_cam4', password: 'password123' },
+            email: { login: 'model@example.com', password: 'emailpass123' }
+          }}
+          onSave={(newAccounts) => {
+            console.log('Сохранение аккаунтов:', newAccounts);
           }}
         />
       )}
