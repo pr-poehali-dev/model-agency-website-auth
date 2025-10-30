@@ -6,8 +6,10 @@ from typing import Dict, Any
 from cryptography.fernet import Fernet
 
 def get_cipher():
-    key = os.environ.get('ENCRYPTION_KEY', '').encode()
-    return Fernet(key)
+    key = os.environ.get('ENCRYPTION_KEY', '')
+    if not key:
+        raise ValueError('ENCRYPTION_KEY not set')
+    return Fernet(key.encode())
 
 def encrypt_password(password: str) -> str:
     if not password:
