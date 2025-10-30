@@ -151,7 +151,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             print(f"DEBUG: operator_name={operator_name}, operator_email={operator_email}, producer_as_operator={producer_operator_email}, model_email={model_email}")
             
             if producer_operator_email:
-                operator_salary = total_check * 0.3
+                operator_salary = total_check * 0.2
                 if producer_operator_email not in producer_salaries:
                     producer_salaries[producer_operator_email] = {
                         'email': producer_operator_email,
