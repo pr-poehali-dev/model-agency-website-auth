@@ -95,6 +95,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.stripchat_tokens,
                 mf.soda_tokens,
                 mf.cam4_income,
+                mf.transfers,
                 mf.operator_name
             FROM model_finances mf
             WHERE mf.date BETWEEN %s AND %s
@@ -113,12 +114,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             sp_tokens = float(finance['stripchat_tokens'] or 0)
             soda_tokens = float(finance['soda_tokens'] or 0)
             cam4_income = float(finance['cam4_income'] or 0)
+            transfers = float(finance['transfers'] or 0)
             
             cb_dollars = cb_tokens * 0.05
             sp_dollars = sp_tokens * 0.05
             soda_dollars = soda_tokens * 0.05
             
-            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income
+            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income + transfers
             
             operator_salary = total_check * 0.2
             model_salary = total_check * 0.3

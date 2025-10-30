@@ -1,0 +1,1 @@
+ALTER TABLE model_finances ADD COLUMN transfers NUMERIC(10,2) DEFAULT 0;
