@@ -89,12 +89,23 @@ const ChecksTab = () => {
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
   
+  console.log('ChecksTab - userRole:', userRole);
+  console.log('ChecksTab - producerAssignments:', producerAssignments);
+  console.log('ChecksTab - all operators:', operators);
+  console.log('ChecksTab - all contentMakers:', contentMakers);
+  
   if (userRole === 'producer' && producerAssignments.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
     const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
     
+    console.log('ChecksTab - assignedOperatorEmails:', assignedOperatorEmails);
+    console.log('ChecksTab - assignedModelEmails:', assignedModelEmails);
+    
     operators = operators.filter(op => assignedOperatorEmails.includes(op.email));
     contentMakers = contentMakers.filter(cm => assignedModelEmails.includes(cm.email));
+    
+    console.log('ChecksTab - filtered operators:', operators);
+    console.log('ChecksTab - filtered contentMakers:', contentMakers);
   }
 
   if (userRole !== 'producer' && userRole !== 'director') {
