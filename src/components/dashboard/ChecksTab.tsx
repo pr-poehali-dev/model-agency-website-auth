@@ -100,7 +100,17 @@ const ChecksTab = () => {
 
   const loadSalaries = async () => {
     try {
-      const response = await fetch(`${SALARIES_API_URL}?period_start=${currentPeriod.start}&period_end=${currentPeriod.end}`);
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
+      
+      const response = await fetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
         setSalaries(data);
