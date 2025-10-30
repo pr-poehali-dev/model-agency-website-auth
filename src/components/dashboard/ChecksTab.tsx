@@ -217,17 +217,13 @@ const ChecksTab = () => {
 
       {userRole === 'director' && <ProducerSalaryCard producerData={producerData} period={currentPeriod} />}
       {userRole === 'producer' && (
-        <Card className="p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <Icon name="User" size={24} className="text-primary" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold">{userEmail}</h3>
-              <p className="text-sm text-muted-foreground">Продюсер</p>
-            </div>
-          </div>
-        </Card>
+        <ProducerSalaryCard 
+          producerData={{
+            ...producerData,
+            name: users.find(u => u.email === userEmail)?.fullName || userEmail
+          }} 
+          period={currentPeriod} 
+        />
       )}
 
       <div className="space-y-8">
