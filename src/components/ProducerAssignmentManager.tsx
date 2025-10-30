@@ -80,7 +80,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        await fetch(PRODUCER_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -89,9 +89,16 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           },
           body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Delete model failed:', errorData);
+          throw new Error(errorData.error || 'Failed to remove model');
+        }
+        
         toast({ title: 'Модель откреплена', description: 'Модель убрана из доступа продюсера' });
       } else {
-        await fetch(PRODUCER_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -100,11 +107,19 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           },
           body: JSON.stringify({ producerEmail, operatorEmail: modelEmail, assignmentType: 'model' })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Assign model failed:', errorData);
+          throw new Error(errorData.error || 'Failed to assign model');
+        }
+        
         toast({ title: 'Модель назначена', description: 'Продюсер теперь видит эту модель' });
       }
-      loadAssignments();
+      await loadAssignments();
     } catch (err) {
-      toast({ title: 'Ошибка', description: 'Не удалось выполнить операцию', variant: 'destructive' });
+      console.error('Model toggle error:', err);
+      toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
     }
   };
 
@@ -113,7 +128,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        await fetch(PRODUCER_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -122,9 +137,16 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           },
           body: JSON.stringify({ producerEmail, operatorEmail, assignmentType: 'operator' })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Delete operator failed:', errorData);
+          throw new Error(errorData.error || 'Failed to remove operator');
+        }
+        
         toast({ title: 'Оператор откреплен', description: 'Продюсер больше не управляет этим оператором' });
       } else {
-        await fetch(PRODUCER_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -133,11 +155,19 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           },
           body: JSON.stringify({ producerEmail, operatorEmail, assignmentType: 'operator' })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Assign operator failed:', errorData);
+          throw new Error(errorData.error || 'Failed to assign operator');
+        }
+        
         toast({ title: 'Оператор назначен', description: 'Продюсер может управлять этим оператором' });
       }
-      loadAssignments();
+      await loadAssignments();
     } catch (err) {
-      toast({ title: 'Ошибка', description: 'Не удалось выполнить операцию', variant: 'destructive' });
+      console.error('Operator toggle error:', err);
+      toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
     }
   };
 

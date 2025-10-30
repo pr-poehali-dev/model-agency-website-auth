@@ -123,7 +123,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
     try {
       if (assigned) {
-        await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(ASSIGNMENTS_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -132,9 +132,16 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
           },
           body: JSON.stringify({ operatorEmail, modelEmail })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Delete failed:', errorData);
+          throw new Error(errorData.error || 'Failed to delete assignment');
+        }
+        
         toast({ title: 'Модель откреплена', description: 'Модель успешно откреплена от оператора' });
       } else {
-        await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(ASSIGNMENTS_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -143,15 +150,23 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
           },
           body: JSON.stringify({ operatorEmail, modelEmail })
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Post failed:', errorData);
+          throw new Error(errorData.error || 'Failed to assign');
+        }
+        
         toast({ title: 'Модель назначена', description: 'Модель успешно назначена оператору. Открываем финансы...' });
         
         if (onModelAssigned) {
           setTimeout(() => onModelAssigned(modelEmail), 500);
         }
       }
-      loadAssignments();
+      await loadAssignments();
     } catch (err) {
-      toast({ title: 'Ошибка', description: 'Не удалось выполнить операцию', variant: 'destructive' });
+      console.error('Assignment toggle error:', err);
+      toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
     }
   };
 
