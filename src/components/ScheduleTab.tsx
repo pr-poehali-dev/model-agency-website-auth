@@ -231,6 +231,10 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const users = await usersResponse.json();
       const assignments = await assignmentsResponse.json();
       
+      console.log('Users loaded:', users.length);
+      console.log('Assignments loaded:', assignments.length);
+      console.log('Assignments:', assignments);
+      
       const teamsData: Team[] = assignments.map((assignment: any) => {
         const operator = users.find((u: any) => u.email === assignment.operatorEmail);
         const model = users.find((u: any) => u.email === assignment.modelEmail);
@@ -247,6 +251,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         };
       });
       
+      console.log('Teams created:', teamsData);
       setTeams(teamsData);
     } catch (err) {
       console.error('Failed to load teams', err);
