@@ -126,6 +126,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cam4_income = float(finance['cam4_income'] or 0)
             transfers = float(finance['transfers'] or 0)
             
+            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income}, sp_income={sp_income}, transfers={transfers}")
+            
             cb_dollars = (cb_income * 0.05) if cb_income > 0 else (cb_tokens * 0.05)
             sp_dollars = (sp_income * 0.05) if sp_income > 0 else (sp_tokens * 0.05)
             soda_dollars = (soda_income * 0.05) if soda_income > 0 else (soda_tokens * 0.05)
