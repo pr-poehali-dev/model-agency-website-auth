@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
-interface Model {
-  id: number;
-  name: string;
-}
+
 
 interface User {
   email: string;
@@ -17,7 +14,7 @@ interface User {
 interface Assignment {
   id: number;
   operatorEmail: string;
-  modelId: number;
+  modelEmail: string;
   assignedBy: string;
   assignedAt: string;
 }
@@ -29,17 +26,12 @@ const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-
 interface ModelAssignmentManagerProps {
   currentUserEmail: string;
   currentUserRole: string;
-  onModelAssigned?: (modelId: number) => void;
+  onModelAssigned?: (modelEmail: string) => void;
 }
 
 const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssigned }: ModelAssignmentManagerProps) => {
   const [operators, setOperators] = useState<User[]>([]);
-  const [models] = useState<Model[]>([
-    { id: 1, name: 'Anastasia Ivanova' },
-    { id: 2, name: 'Ekaterina Sokolova' },
-    { id: 3, name: 'Maria Petrova' },
-    { id: 4, name: 'Victoria Romanova' }
-  ]);
+  const [models, setModels] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
@@ -50,8 +42,10 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
       if (currentUserRole === 'producer') {
         const assignments = await loadProducerAssignments();
         await loadOperators(assignments);
+        await loadModels(assignments);
       } else {
         await loadOperators();
+        await loadModels();
       }
       await loadAssignments();
     };
@@ -78,6 +72,26 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     }
   };
 
+  const loadModels = async (assignments?: any[]) => {
+    try {
+      const response = await fetch(API_URL);
+      const users = await response.json();
+      let contentMakers = users.filter((u: User) => u.role === 'content_maker');
+      
+      if (currentUserRole === 'producer') {
+        const assignmentsToUse = assignments || producerAssignments;
+        const assignedModelEmails = assignmentsToUse
+          .filter(a => a.assignmentType === 'model')
+          .map(a => a.operatorEmail);
+        contentMakers = contentMakers.filter((cm: User) => assignedModelEmails.includes(cm.email));
+      }
+      
+      setModels(contentMakers);
+    } catch (err) {
+      console.error('Failed to load models', err);
+    }
+  };
+
   const loadAssignments = async () => {
     try {
       const response = await fetch(ASSIGNMENTS_API_URL);
@@ -100,12 +114,12 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     }
   };
 
-  const isAssigned = (operatorEmail: string, modelId: number) => {
-    return assignments.some(a => a.operatorEmail === operatorEmail && a.modelId === modelId);
+  const isAssigned = (operatorEmail: string, modelEmail: string) => {
+    return assignments.some(a => a.operatorEmail === operatorEmail && a.modelEmail === modelEmail);
   };
 
-  const handleToggleAssignment = async (operatorEmail: string, modelId: number) => {
-    const assigned = isAssigned(operatorEmail, modelId);
+  const handleToggleAssignment = async (operatorEmail: string, modelEmail: string) => {
+    const assigned = isAssigned(operatorEmail, modelEmail);
 
     try {
       if (assigned) {
@@ -116,7 +130,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ operatorEmail, modelId })
+          body: JSON.stringify({ operatorEmail, modelEmail })
         });
         toast({ title: 'Модель откреплена', description: 'Модель успешно откреплена от оператора' });
       } else {
@@ -127,12 +141,12 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
             'X-User-Email': currentUserEmail,
             'X-User-Role': currentUserRole
           },
-          body: JSON.stringify({ operatorEmail, modelId })
+          body: JSON.stringify({ operatorEmail, modelEmail })
         });
         toast({ title: 'Модель назначена', description: 'Модель успешно назначена оператору. Открываем финансы...' });
         
         if (onModelAssigned) {
-          setTimeout(() => onModelAssigned(modelId), 500);
+          setTimeout(() => onModelAssigned(modelEmail), 500);
         }
       }
       loadAssignments();
@@ -166,25 +180,15 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         <Card className="p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4">Модели для {selectedOperator}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {models
-              .filter(model => {
-                if (currentUserRole === 'producer') {
-                  return producerAssignments.some(
-                    a => a.assignmentType === 'model' && a.modelId === model.id
-                  );
-                }
-                return true;
-              })
-              .map(model => {
-              const assigned = isAssigned(selectedOperator, model.id);
+            {models.map(model => {
+              const assigned = isAssigned(selectedOperator, model.email);
               return (
-                <div key={model.id} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
-                  <span className="text-foreground font-medium">{model.name}</span>
+                <div key={model.email} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
+                  <span className="text-foreground font-medium">{model.email}</span>
                   <Button
-                    onClick={() => handleToggleAssignment(selectedOperator, model.id)}
+                    onClick={() => handleToggleAssignment(selectedOperator, model.email)}
                     variant={assigned ? 'destructive' : 'default'}
-                    size="sm"
-                  >
+                    size="sm">
                     <Icon name={assigned ? 'UserMinus' : 'UserPlus'} size={16} className="mr-2" />
                     {assigned ? 'Открепить' : 'Назначить'}
                   </Button>
