@@ -47,13 +47,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if operator_email:
                 cur.execute(f"""
-                    SELECT id, operator_email, model_email, assigned_by, assigned_at 
+                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at 
                     FROM t_p35405502_model_agency_website.operator_model_assignments 
                     WHERE operator_email = '{escape_sql_string(operator_email)}'
                 """)
             else:
                 cur.execute("""
-                    SELECT id, operator_email, model_email, assigned_by, assigned_at 
+                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at 
                     FROM t_p35405502_model_agency_website.operator_model_assignments
                 """)
             
@@ -62,8 +62,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'id': r[0],
                 'operatorEmail': r[1],
                 'modelEmail': r[2],
-                'assignedBy': r[3],
-                'assignedAt': r[4].isoformat() if r[4] else None
+                'modelId': r[3],
+                'assignedBy': r[4],
+                'assignedAt': r[5].isoformat() if r[5] else None
             } for r in rows]
             
             return {

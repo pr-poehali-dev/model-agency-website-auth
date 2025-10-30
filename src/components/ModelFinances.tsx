@@ -83,12 +83,15 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       const usersResponse = await fetch(USERS_API_URL);
       const users = await usersResponse.json();
       
-      // Load assignments for this model
-      const assignmentsResponse = await fetch(`${ASSIGNMENTS_API_URL}?modelId=${modelId}`);
-      const assignments = await assignmentsResponse.json();
+      // Load ALL assignments
+      const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+      const allAssignments = await assignmentsResponse.json();
       
-      // Get operator emails from assignments
-      const operatorEmails = assignments.map((a: any) => a.operatorEmail);
+      // Filter assignments for this specific model by modelId
+      const modelAssignments = allAssignments.filter((a: any) => a.modelId === modelId);
+      
+      // Get operator emails from filtered assignments
+      const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
       
       // Filter users to get only assigned operators
       const assignedOperators = users
