@@ -145,7 +145,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income_dollars + transfers_dollars
             
-            print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income}, transfers={transfers}, total_check={total_check}")
+            print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income_dollars}, transfers={transfers_dollars}, total_check={total_check}")
             
             model_salary = total_check * 0.3
             producer_salary = total_check * 0.1
