@@ -50,53 +50,53 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary to-background relative overflow-hidden">
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-primary/30 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute top-40 right-20 w-72 h-72 bg-accent/30 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
-      <Card className="w-full max-w-md p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative z-10 rounded-3xl">
+      <Card className="w-full max-w-md p-10 bg-card/95 backdrop-blur-xl border border-border shadow-2xl relative z-10 rounded-3xl">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg shadow-purple-500/50">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent mb-6 shadow-lg shadow-primary/50">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 36V12L16 24L24 12L32 24L40 12V36H36V20L32 26L24 16L16 26L12 20V36H8Z" fill="white"/>
+              <path d="M8 36V12L16 24L24 12L32 24L40 12V36H36V20L32 26L24 16L16 26L12 20V36H8Z" fill="hsl(var(--primary-foreground))"/>
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-3 text-white tracking-tight">MBA Corporation</h1>
-          <p className="text-sm tracking-[0.3em] text-purple-200 uppercase font-light">Professional Models Agency</p>
+          <h1 className="text-4xl font-bold mb-3 text-foreground tracking-tight">MBA Corporation</h1>
+          <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase font-light">Professional Models Agency</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white/90 font-medium text-sm">Email</Label>
+            <Label htmlFor="email" className="text-foreground font-medium text-sm">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
+              className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="example@mba-corp.com"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white/90 font-medium text-sm">Password</Label>
+            <Label htmlFor="password" className="text-foreground font-medium text-sm">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
+              className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-200 text-sm text-center bg-red-500/20 p-3 rounded-xl border border-red-400/30 backdrop-blur-sm">
+            <div className="text-destructive-foreground text-sm text-center bg-destructive/20 p-3 rounded-xl border border-destructive/30 backdrop-blur-sm">
               {error}
             </div>
           )}
@@ -104,7 +104,7 @@ const Login = () => {
           <Button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold h-12 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
           >
             {loading ? 'Вход...' : 'Sign In'}
           </Button>
