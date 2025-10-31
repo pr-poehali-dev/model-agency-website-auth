@@ -242,8 +242,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         const operator = users.find((u: any) => u.email === assignment.operatorEmail);
         const model = users.find((u: any) => u.email === assignment.modelEmail);
         
-        const operatorName = operator?.fullName || assignment.operatorEmail;
-        const modelName = model?.fullName || assignment.modelEmail;
+        // Всегда используем fullName, если нет - берем часть email до @
+        const operatorName = operator?.fullName || 
+          (assignment.operatorEmail ? assignment.operatorEmail.split('@')[0] : 'Оператор');
+        const modelName = model?.fullName || 
+          (assignment.modelEmail ? assignment.modelEmail.split('@')[0] : 'Модель');
         
         return {
           operatorEmail: assignment.operatorEmail,
