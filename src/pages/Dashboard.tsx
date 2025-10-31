@@ -277,7 +277,7 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardTab />;
+        return <DashboardTab onNavigate={(tab) => setActiveTab(tab)} />;
       case 'models':
         return <ModelsTab 
           models={modelsData} 
@@ -294,7 +294,7 @@ const Dashboard = () => {
       case 'schedule':
         return <ScheduleTab />;
       case 'dashboard':
-        return <DashboardTab monthlyRevenue={monthlyRevenue} />;
+        return <DashboardTab monthlyRevenue={monthlyRevenue} onNavigate={(tab) => setActiveTab(tab)} />;
       case 'files':
         return <FilesTab />;
       case 'users':

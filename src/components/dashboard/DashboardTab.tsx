@@ -19,7 +19,12 @@ const roleNames: Record<string, string> = {
   'model': 'Модель'
 };
 
-const DashboardTab = () => {
+interface DashboardTabProps {
+  monthlyRevenue?: any;
+  onNavigate?: (tab: string) => void;
+}
+
+const DashboardTab = ({ onNavigate }: DashboardTabProps) => {
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState('');
   const [userFullName, setUserFullName] = useState('');
@@ -322,7 +327,10 @@ const DashboardTab = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500">
+        <Card 
+          className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500 hover:scale-105 transition-transform"
+          onClick={() => onNavigate?.('files')}
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-500/10 rounded-lg">
               <Icon name="Files" size={20} className="text-blue-600" />
@@ -334,7 +342,10 @@ const DashboardTab = () => {
           </p>
         </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-purple-500">
+        <Card 
+          className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-purple-500 hover:scale-105 transition-transform"
+          onClick={() => onNavigate?.('schedule')}
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-purple-500/10 rounded-lg">
               <Icon name="Calendar" size={20} className="text-purple-600" />
