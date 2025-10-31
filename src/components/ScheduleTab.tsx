@@ -235,7 +235,9 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const assignments = await assignmentsResponse.json();
       
       console.log('Users loaded:', users);
+      console.log('First user example:', users[0]);
       console.log('Assignments loaded:', assignments);
+      console.log('First assignment example:', assignments[0]);
       
       const teamsData: Team[] = assignments.map((assignment: any) => {
         const operator = users.find((u: any) => u.email === assignment.operatorEmail);
