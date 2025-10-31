@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,12 @@ const ModelAccountsDialog = ({
   const [isEditing, setIsEditing] = useState(false);
   const [accounts, setAccounts] = useState(initialAccounts);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setAccounts(initialAccounts);
+    setIsEditing(false);
+    setShowPasswords({});
+  }, [initialAccounts, modelName, open]);
 
   const canEdit = userRole === 'director' || userRole === 'producer';
 
