@@ -134,7 +134,36 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
   const { toast } = useToast();
+  
+  // Функция для получения дат недели с учетом смещения
+  const getWeekDates = (weekOffset: number) => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (воскр) - 6 (суб)
+    const monday = new Date(today);
+    
+    // Находим понедельник текущей недели
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(today.getDate() + diff);
+    
+    // Применяем смещение недель
+    monday.setDate(monday.getDate() + (weekOffset * 7));
+    
+    const dates = [];
+    const dayNames = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскрес.'];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      dates.push({
+        day: dayNames[i],
+        date: date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      });
+    }
+    
+    return dates;
+  };
 
   const canEdit = userRole === 'producer' || userRole === 'director' || 
     userPermissions?.includes('edit_schedule') || 
@@ -411,6 +440,30 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {/* Переключение недель */}
+          <div className="flex items-center gap-2 border border-border rounded-lg p-1">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
+            >
+              <Icon name="ChevronLeft" size={16} />
+            </Button>
+            <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+              {currentWeekOffset === 0 ? 'Эта неделя' : 
+               currentWeekOffset === 1 ? 'След. неделя' :
+               currentWeekOffset === -1 ? 'Прош. неделя' :
+               currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : `${currentWeekOffset} нед.`}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
+            >
+              <Icon name="ChevronRight" size={16} />
+            </Button>
+          </div>
+          
           <Select value={filterTeam || "all"} onValueChange={(val) => setFilterTeam(val === "all" ? "" : val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Все команды" />
@@ -458,7 +511,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {apartment.weeks.map((week, weekIndex) => (
+                  {apartment.weeks.map((week, weekIndex) => {
+                    // Получаем даты для текущей недели с учетом смещения
+                    const currentDates = getWeekDates(currentWeekOffset + weekIndex);
+                    
+                    return (
                     <tr key={weekIndex}>
                       <td colSpan={8} className="p-0">
                         <table className="w-full text-sm">
@@ -466,7 +523,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                             <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
                               <th className="p-2 text-left font-semibold text-foreground w-20">
                                 <div className="flex items-center gap-2">
-                                  <span>{week.weekNumber}</span>
+                                  <span>Неделя {weekIndex + 1}</span>
                                   {canEdit && (
                                     <Button
                                       variant="ghost"
@@ -480,10 +537,10 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                                   )}
                                 </div>
                               </th>
-                              {week.dates.map((date, dateIndex) => (
+                              {currentDates.map((dateInfo, dateIndex) => (
                                 <th key={dateIndex} className="p-2 text-center font-medium text-foreground border-l border-border">
-                                  <div className="whitespace-nowrap">{date.day}</div>
-                                  <div className="text-xs font-normal text-muted-foreground">{date.date}</div>
+                                  <div className="whitespace-nowrap">{dateInfo.day}</div>
+                                  <div className="text-xs font-normal text-muted-foreground">{dateInfo.date}</div>
                                 </th>
                               ))}
                             </tr>
@@ -544,7 +601,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                         </table>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>
