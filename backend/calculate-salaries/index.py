@@ -102,13 +102,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.operator_name
             FROM model_finances mf
             WHERE mf.date BETWEEN '{period_start}' AND '{period_end}'
-            AND (
-                mf.cb_tokens > 0 OR mf.stripchat_tokens > 0 OR mf.soda_tokens > 0 OR
-                mf.cb_income > 0 OR mf.sp_income > 0 OR mf.soda_income > 0 OR 
-                mf.cam4_income > 0 OR mf.transfers > 0
-            )
         """)
-        finances = cur.fetchall()
+        all_finances = cur.fetchall()
+        
+        finances = [f for f in all_finances if (
+            (float(f['cb_tokens'] or 0) > 0) or
+            (float(f['stripchat_tokens'] or 0) > 0) or
+            (float(f['soda_tokens'] or 0) > 0) or
+            (float(f['cb_income'] or 0) > 0) or
+            (float(f['sp_income'] or 0) > 0) or
+            (float(f['soda_income'] or 0) > 0) or
+            (float(f['cam4_income'] or 0) > 0) or
+            (float(f['transfers'] or 0) > 0)
+        )]
         
         print(f"DEBUG: period={period_start} to {period_end}, finances_count={len(finances)}")
         
