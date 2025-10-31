@@ -367,20 +367,19 @@ const UserManagement = () => {
       </div>
 
       <AddUserDialog
-          isOpen={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          newUserEmail={newUserEmail}
-          setNewUserEmail={setNewUserEmail}
-          newUserPassword={newUserPassword}
-          setNewUserPassword={setNewUserPassword}
-          newUserFullName={newUserFullName}
-          setNewUserFullName={setNewUserFullName}
-          newUserRole={newUserRole}
-          setNewUserRole={setNewUserRole}
-          onSubmit={handleAddUser}
-          loading={loading}
-        />
-      </div>
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        newUserEmail={newUserEmail}
+        setNewUserEmail={setNewUserEmail}
+        newUserPassword={newUserPassword}
+        setNewUserPassword={setNewUserPassword}
+        newUserFullName={newUserFullName}
+        setNewUserFullName={setNewUserFullName}
+        newUserRole={newUserRole}
+        setNewUserRole={setNewUserRole}
+        onSubmit={handleAddUser}
+        loading={loading}
+      />
 
       <div className="grid gap-4">
         {filteredUsers.map((user) => (
