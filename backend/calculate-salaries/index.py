@@ -155,6 +155,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             print(f"DEBUG: operator_name={operator_name}, operator_email={operator_email}, producer_as_operator={producer_operator_email}, model_email={model_email}")
             
+            worked_as_operator = False
             if producer_operator_email:
                 operator_salary = total_check * 0.2
                 if producer_operator_email not in producer_salaries:
@@ -172,6 +173,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'check': total_check,
                     'note': 'as_operator'
                 })
+                worked_as_operator = True
             elif operator_email:
                 operator_salary = total_check * 0.2
                 if operator_email not in operator_salaries:
@@ -204,24 +206,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 if total_check > 0:
                     producer_assignment = next((pa for pa in producer_assignments if pa['model_email'] == model_email), None)
-                    print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}")
+                    print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}, worked_as_operator={worked_as_operator}")
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
-                        print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary}")
-                        if producer_email not in producer_salaries:
-                            producer_salaries[producer_email] = {
-                                'email': producer_email,
-                                'total': 0,
-                                'details': []
-                            }
-                        producer_salaries[producer_email]['total'] += producer_salary
-                        producer_salaries[producer_email]['details'].append({
-                            'date': finance['date'].isoformat(),
-                            'model_id': model_id,
-                            'model_email': model_email,
-                            'amount': producer_salary,
-                            'check': total_check
-                        })
+                        if worked_as_operator and producer_email == producer_operator_email:
+                            print(f"DEBUG: Skipping producer salary for {producer_email} - already paid as operator")
+                        else:
+                            print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary}")
+                            if producer_email not in producer_salaries:
+                                producer_salaries[producer_email] = {
+                                    'email': producer_email,
+                                    'total': 0,
+                                    'details': []
+                                }
+                            producer_salaries[producer_email]['total'] += producer_salary
+                            producer_salaries[producer_email]['details'].append({
+                                'date': finance['date'].isoformat(),
+                                'model_id': model_id,
+                                'model_email': model_email,
+                                'amount': producer_salary,
+                                'check': total_check
+                            })
         
         result = {
             'operators': operator_salaries,
