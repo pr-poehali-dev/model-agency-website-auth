@@ -110,9 +110,12 @@ const ChecksTab = () => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
+      console.log('📊 Loading salaries for period:', periodStart, 'to', periodEnd);
       const response = await fetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      console.log('📊 Salaries response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Salaries data:', data);
         setSalaries(data);
       }
     } catch (err) {
@@ -142,6 +145,10 @@ const ChecksTab = () => {
   if (userRole === 'director' && users.length > 0) {
     const operatorUsers = users.filter(u => u.role === 'operator');
     const modelUsers = users.filter(u => u.role === 'content_maker');
+    
+    console.log('👔 Director mode - operators found:', operatorUsers.length);
+    console.log('👔 Director mode - models found:', modelUsers.length);
+    console.log('👔 Salaries object:', salaries);
     
     operators = operatorUsers.map(op => {
       const salary = salaries.operators[op.email] || { total: 0, details: [] };
