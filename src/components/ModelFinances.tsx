@@ -87,27 +87,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
       
-      // Load producer assignments
-      const producerResponse = await fetch(PRODUCER_API_URL);
-      const producerAssignments = await producerResponse.json();
-      
-      // Find model user to get their email
-      const model = users.find((u: any) => u.id === modelId);
-      const modelEmail = model?.email;
-      
-      // Find producer assigned to this model
-      const producerAssignment = producerAssignments.find(
-        (pa: any) => pa.assignmentType === 'model' && pa.modelEmail === modelEmail
-      );
-      
-      // Combine operator emails with producer email (if exists)
-      const allAvailableEmails = producerAssignment?.producerEmail 
-        ? [...operatorEmails, producerAssignment.producerEmail]
-        : operatorEmails;
-      
-      // Filter users to get assigned operators + producer
+      // Filter users to get assigned operators ONLY (exclude producers)
       const assignedOperators = users
-        .filter((u: any) => allAvailableEmails.includes(u.email))
+        .filter((u: any) => operatorEmails.includes(u.email) && u.role === 'operator')
         .map((u: any) => ({
           email: u.email,
           name: u.fullName || u.email
