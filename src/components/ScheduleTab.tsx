@@ -250,11 +250,20 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           modelFound: model
         });
         
-        // Всегда используем fullName, если нет - берем часть email до @
-        const operatorName = operator?.fullName || operator?.full_name || 
-          (assignment.operatorEmail ? assignment.operatorEmail.split('@')[0] : 'Оператор');
-        const modelName = model?.fullName || model?.full_name || 
-          (assignment.modelEmail ? assignment.modelEmail.split('@')[0] : 'Модель');
+        // Если пользователь найден - используем fullName, если нет - красиво форматируем email
+        const operatorName = operator?.fullName || 
+          (assignment.operatorEmail ? 
+            assignment.operatorEmail.split('@')[0]
+              .replace(/([A-Z])/g, ' $1') // Добавляем пробел перед заглавными буквами
+              .trim() 
+            : 'Оператор');
+            
+        const modelName = model?.fullName || 
+          (assignment.modelEmail ? 
+            assignment.modelEmail.split('@')[0]
+              .replace(/([A-Z])/g, ' $1')
+              .trim()
+            : 'Модель');
         
         return {
           operatorEmail: assignment.operatorEmail,
