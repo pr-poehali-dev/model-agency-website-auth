@@ -285,12 +285,12 @@ const ChecksTab = () => {
         </Card>
         
         <Card className="p-4 bg-green-500/10 border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Сумма Мод</div>
+          <div className="text-sm text-muted-foreground mb-1">Сумма моделей</div>
           <div className="text-2xl font-bold text-green-600">{totalModelSum.toLocaleString()}₽</div>
         </Card>
 
         <Card className="p-4 bg-green-500/10 border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Сумма Опр</div>
+          <div className="text-sm text-muted-foreground mb-1">Сумма операторов</div>
           <div className="text-2xl font-bold text-green-600">{totalOperatorSum.toLocaleString()}₽</div>
         </Card>
       </div>
