@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET without parameters",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET with valid period returns data",
+      "method": "GET",
+      "path": "/?period_start=2025-10-16&period_end=2025-10-31",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "dailyData": "array",
+        "platformSummary": "array",
+        "graphOnlineData": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
