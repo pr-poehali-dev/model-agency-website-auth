@@ -270,6 +270,7 @@ const Dashboard = () => {
           modelId={selectedModelId} 
           modelName={model?.name || ''} 
           currentUserEmail={userEmail}
+          userRole={userRole || undefined}
           onBack={() => setActiveTab('models')}
         />
       );

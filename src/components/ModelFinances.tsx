@@ -14,6 +14,7 @@ interface ModelFinancesProps {
   modelId: number;
   modelName: string;
   currentUserEmail?: string;
+  userRole?: string;
   onBack?: () => void;
 }
 
@@ -58,13 +59,15 @@ const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-99
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 
-const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFinancesProps) => {
+const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack }: ModelFinancesProps) => {
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
   const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(currentPeriod));
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [operators, setOperators] = useState<Array<{email: string, name: string}>>([]);
   const { toast } = useToast();
+  
+  const isReadOnly = userRole === 'content_maker';
 
   useEffect(() => {
     loadFinancialData();
@@ -267,10 +270,12 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
               </Button>
             </div>
           </Card>
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-            <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
-          </Button>
+          {!isReadOnly && (
+            <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+              <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
+              {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -305,6 +310,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -324,6 +330,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'cbIncome', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -344,6 +351,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -363,6 +371,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'spIncome', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -383,6 +392,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'soda', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -402,6 +412,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'sodaIncome', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -421,6 +432,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'cam4Income', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -442,6 +454,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         handleCellChange(idx, 'transfers', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}
@@ -455,6 +468,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     <Select 
                       value={d.operator || 'none'} 
                       onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
+                      disabled={isReadOnly}
                     >
                       <SelectTrigger className="w-24 h-8 text-xs">
                         <SelectValue placeholder="Выбрать" />
@@ -480,6 +494,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     <Checkbox 
                       checked={d.shift}
                       onCheckedChange={(checked) => handleCellChange(idx, 'shift', checked === true)}
+                      disabled={isReadOnly}
                     />
                   </td>
                 ))}

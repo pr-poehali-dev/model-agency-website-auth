@@ -200,7 +200,9 @@ const ModelsTab = ({
     }
   };
 
-  const displayModels = operatorAssignments.length > 0 
+  const displayModels = userRole === 'content_maker'
+    ? []
+    : operatorAssignments.length > 0 
     ? models.filter(m => operatorAssignments.includes(m.id))
     : producerAssignments.length > 0
     ? models.filter(m => producerAssignments.includes(m.email))
