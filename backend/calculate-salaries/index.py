@@ -124,9 +124,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         for finance in finances:
             model_id = finance['model_id']
-            operator_name = finance['operator_name']
+            operator_name = finance.get('operator_name', '').strip()
             
-            print(f"DEBUG: Processing finance for model_id={model_id}")
+            print(f"DEBUG: Processing finance for model_id={model_id}, operator_name='{operator_name}'")
             
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['stripchat_tokens'] or 0)
@@ -154,15 +154,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_email = model_assignment['model_email'] if model_assignment else None
             
             if not model_assignment:
-                print(f"DEBUG: Skipping model_id={model_id} - no operator assignment found")
-                continue
-            
-            assigned_operator_email = model_assignment['operator_email']
-            operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
-            
-            if not operator_user:
-                print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} not found in users")
-                continue
+                print(f"DEBUG: No assignment found for model_id={model_id}, checking operator_name field")
+                if not operator_name:
+                    print(f"DEBUG: Skipping model_id={model_id} - no operator assignment and no operator_name")
+                    continue
+                
+                operator_user = next((u for u in users if u['full_name'] == operator_name), None)
+                if not operator_user:
+                    print(f"DEBUG: Skipping model_id={model_id} - operator_name '{operator_name}' not found in users")
+                    continue
+                
+                assigned_operator_email = operator_user['email']
+                model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
+            else:
+                assigned_operator_email = model_assignment['operator_email']
+                operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
+                
+                if not operator_user:
+                    print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} not found in users")
+                    continue
+                
+                if operator_name and operator_name != operator_user['full_name']:
+                    override_user = next((u for u in users if u['full_name'] == operator_name), None)
+                    if override_user:
+                        print(f"DEBUG: Override operator from assignment {operator_user['full_name']} to operator_name {operator_name}")
+                        operator_user = override_user
+                        assigned_operator_email = override_user['email']
             
             operator_email = None
             producer_operator_email = None
