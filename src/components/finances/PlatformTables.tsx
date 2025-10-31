@@ -1,63 +1,48 @@
-import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Period } from '@/utils/periodUtils';
+import { Period, getDatesInPeriod } from '@/utils/periodUtils';
+
+const onlineData = [
+  { date: '16.10', cb: 41, sp: 106, soda: 0, cam4: 0, cbIncome: 44.01, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '17.10', cb: 38, sp: 79, soda: 0, cam4: 0, cbIncome: 1.62, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '18.10', cb: 49, sp: 108, soda: 0, cam4: 0, cbIncome: 67.59, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '19.10', cb: 46, sp: 119, soda: 0, cam4: 0, cbIncome: 38.61, spIncome: 525, sodaIncome: 0, cam4Income: 0 },
+  { date: '20.10', cb: 39, sp: 103, soda: 0, cam4: 0, cbIncome: 2.67, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '21.10', cb: 26, sp: 98, soda: 0, cam4: 0, cbIncome: 0.06, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '22.10', cb: 31, sp: 69, soda: 0, cam4: 0, cbIncome: 3.00, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '23.10', cb: 100, sp: 81, soda: 0, cam4: 0.2, cbIncome: 18.84, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 },
+  { date: '24.10', cb: 30, sp: 78, soda: 0, cam4: 0.4, cbIncome: 8.37, spIncome: 515.58, sodaIncome: 0, cam4Income: 0.24 },
+  { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
+  { date: '27.10', cb: 34, sp: 77, soda: 0, cam4: 0, cbIncome: 15.30, spIncome: 97.53, sodaIncome: 0, cam4Income: 0 },
+];
+
+const platformSummary = [
+  { platform: 'Chaturbate', tokens: 1467, income: 200.07 },
+  { platform: 'Stripchat', tokens: 37137, income: 1138.11 },
+  { platform: 'CamSoda', tokens: 0, income: 0 },
+  { platform: 'Cam4', tokens: 0.6, income: 0.36 },
+];
+
+const graphOnlineData = [
+  { date: '16.10', onlineSP: 106, onlineCB: 41 },
+  { date: '17.10', onlineSP: 79, onlineCB: 38 },
+  { date: '18.10', onlineSP: 108, onlineCB: 49 },
+  { date: '19.10', onlineSP: 119, onlineCB: 46 },
+  { date: '20.10', onlineSP: 103, onlineCB: 39 },
+  { date: '21.10', onlineSP: 98, onlineCB: 26 },
+  { date: '22.10', onlineSP: 69, onlineCB: 31 },
+  { date: '23.10', onlineSP: 81, onlineCB: 100 },
+  { date: '24.10', onlineSP: 78, onlineCB: 30 },
+  { date: '27.10', onlineSP: 77, onlineCB: 34 },
+];
 
 interface PlatformTablesProps {
   period?: Period;
 }
 
 const PlatformTables = ({ period }: PlatformTablesProps) => {
-  const [onlineData, setOnlineData] = useState<any[]>([]);
-  const [platformSummary, setPlatformSummary] = useState<any[]>([]);
-  const [graphOnlineData, setGraphOnlineData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!period) return;
-
-    const loadFinances = async () => {
-      setIsLoading(true);
-      try {
-        const formatDate = (date: Date) => {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        };
-
-        const periodStart = formatDate(period.startDate);
-        const periodEnd = formatDate(period.endDate);
-
-        const response = await fetch(
-          `https://functions.poehali.dev/003274b3-54d7-44d9-8411-b37a5048c3c9?period_start=${periodStart}&period_end=${periodEnd}`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setOnlineData(data.dailyData || []);
-          setPlatformSummary(data.platformSummary || []);
-          setGraphOnlineData(data.graphOnlineData || []);
-        }
-      } catch (error) {
-        console.error('Failed to load finances:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFinances();
-  }, [period]);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Icon name="Loader2" size={32} className="animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* График онлайна */}
@@ -66,13 +51,8 @@ const PlatformTables = ({ period }: PlatformTablesProps) => {
           <Icon name="Activity" size={20} className="text-primary" />
           Онлайн по платформам
         </h3>
-        {graphOnlineData.length === 0 ? (
-          <div className="flex justify-center items-center h-[300px] text-muted-foreground">
-            Нет данных за выбранный период
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={graphOnlineData}>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={graphOnlineData}>
             <defs>
               <linearGradient id="colorOnlineSP" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
@@ -97,8 +77,7 @@ const PlatformTables = ({ period }: PlatformTablesProps) => {
             <Area type="monotone" dataKey="onlineSP" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorOnlineSP)" name="Stripchat" />
             <Area type="monotone" dataKey="onlineCB" stroke="#f97316" fillOpacity={1} fill="url(#colorOnlineCB)" name="Chaturbate" />
           </AreaChart>
-          </ResponsiveContainer>
-        )}
+        </ResponsiveContainer>
       </Card>
 
       {/* Таблицы по платформам */}
