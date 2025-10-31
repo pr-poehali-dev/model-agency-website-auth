@@ -90,13 +90,24 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
       
-      // Filter users to get assigned operators ONLY (exclude producers)
+      // Filter users to get assigned operators (include operators)
       const assignedOperators = users
         .filter((u: any) => operatorEmails.includes(u.email) && u.role === 'operator')
         .map((u: any) => ({
           email: u.email,
           name: u.fullName || u.email
         }));
+      
+      // If current user is producer, add them to the list
+      if (userRole === 'producer' && currentUserEmail) {
+        const currentUser = users.find((u: any) => u.email === currentUserEmail);
+        if (currentUser && !assignedOperators.some(op => op.email === currentUserEmail)) {
+          assignedOperators.push({
+            email: currentUser.email,
+            name: currentUser.fullName || currentUser.email
+          });
+        }
+      }
       
       setOperators(assignedOperators);
     } catch (error) {
