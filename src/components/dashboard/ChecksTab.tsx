@@ -20,7 +20,6 @@ const ChecksTab = () => {
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
-  const [hasFinanceData, setHasFinanceData] = useState(true);
   const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
@@ -115,11 +114,6 @@ const ChecksTab = () => {
       if (response.ok) {
         const data = await response.json();
         setSalaries(data);
-        
-        const hasData = Object.keys(data.operators).length > 0 || 
-                        Object.keys(data.models).length > 0 || 
-                        Object.keys(data.producers).length > 0;
-        setHasFinanceData(hasData);
       }
     } catch (err) {
       console.error('Failed to load salaries', err);
@@ -346,27 +340,13 @@ const ChecksTab = () => {
         );
       })()}
 
-      {!hasFinanceData ? (
-        <Card className="p-12 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="p-6 bg-muted rounded-full">
-              <Icon name="AlertCircle" size={48} className="text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-semibold">Нет данных за период</h3>
-            <p className="text-muted-foreground max-w-md">
-              За выбранный период отсутствуют финансовые данные. Добавьте записи в раздел "Финансы моделей" для расчета зарплат.
-            </p>
-          </div>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {userRole === 'director' && producers.length > 0 && (
-            <ProducersSection producers={producers} period={currentPeriod} />
-          )}
-          <OperatorsSection operators={operators} period={currentPeriod} />
-          <ContentMakersSection contentMakers={contentMakers} period={currentPeriod} />
-        </div>
-      )}
+      <div className="space-y-8">
+        {userRole === 'director' && producers.length > 0 && (
+          <ProducersSection producers={producers} period={currentPeriod} />
+        )}
+        <OperatorsSection operators={operators} period={currentPeriod} />
+        <ContentMakersSection contentMakers={contentMakers} period={currentPeriod} />
+      </div>
     </div>
   );
 };
