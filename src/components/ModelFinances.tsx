@@ -84,6 +84,10 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
       const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
       const allAssignments = await assignmentsResponse.json();
       
+      // Load producer assignments
+      const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+      const producerAssignments = await producerResponse.json();
+      
       // Filter assignments for this specific model by modelId
       const modelAssignments = allAssignments.filter((a: any) => a.modelId === modelId);
       
@@ -109,20 +113,27 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
         }
       }
       
-      // If current user is director, add all producers to the list
+      // If current user is director, find producer assigned to this model
       if (userRole === 'director') {
-        const producers = users
-          .filter((u: any) => u.role === 'producer')
-          .map((u: any) => ({
-            email: u.email,
-            name: u.fullName || u.email
-          }));
-        
-        producers.forEach(producer => {
-          if (!assignedOperators.some(op => op.email === producer.email)) {
-            assignedOperators.push(producer);
+        // Get model email from users by modelId
+        const modelUser = users.find((u: any) => u.id === modelId);
+        if (modelUser) {
+          // Find producer assignment for this model
+          const producerAssignment = producerAssignments.find(
+            (pa: any) => pa.modelEmail === modelUser.email
+          );
+          
+          if (producerAssignment) {
+            // Find the producer user
+            const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
+            if (producer && !assignedOperators.some(op => op.email === producer.email)) {
+              assignedOperators.push({
+                email: producer.email,
+                name: producer.fullName || producer.email
+              });
+            }
           }
-        });
+        }
       }
       
       setOperators(assignedOperators);
