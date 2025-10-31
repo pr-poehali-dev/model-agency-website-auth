@@ -57,6 +57,7 @@ const generateInitialData = (): DayData[] => {
 const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 
 const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFinancesProps) => {
   const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData());
@@ -86,9 +87,27 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
       
-      // Filter users to get only assigned operators
+      // Load producer assignments
+      const producerResponse = await fetch(PRODUCER_API_URL);
+      const producerAssignments = await producerResponse.json();
+      
+      // Find model user to get their email
+      const model = users.find((u: any) => u.id === modelId);
+      const modelEmail = model?.email;
+      
+      // Find producer assigned to this model
+      const producerAssignment = producerAssignments.find(
+        (pa: any) => pa.assignmentType === 'model' && pa.modelEmail === modelEmail
+      );
+      
+      // Combine operator emails with producer email (if exists)
+      const allAvailableEmails = producerAssignment?.producerEmail 
+        ? [...operatorEmails, producerAssignment.producerEmail]
+        : operatorEmails;
+      
+      // Filter users to get assigned operators + producer
       const assignedOperators = users
-        .filter((u: any) => operatorEmails.includes(u.email))
+        .filter((u: any) => allAvailableEmails.includes(u.email))
         .map((u: any) => ({
           email: u.email,
           name: u.fullName || u.email
