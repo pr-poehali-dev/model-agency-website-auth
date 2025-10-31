@@ -152,39 +152,48 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const data = await response.json();
       
       console.log('Schedule API response:', data);
-      console.log('Is array:', Array.isArray(data));
-      console.log('Keys length:', Object.keys(data).length);
       
       if (Object.keys(data).length === 0) {
-        console.log('Empty schedule, initializing...');
+        console.log('Empty schedule, initializing with default data...');
         await initializeSchedule();
         setScheduleData(defaultSchedule);
       } else {
-        const newSchedule = JSON.parse(JSON.stringify(defaultSchedule));
+        // Проверяем, есть ли в базе наши квартиры
+        const hasCorrectApartments = Object.values(data).some((aptData: any) => 
+          aptData.name === 'Командорская 5/3' || aptData.name === 'Бочарникова 4 к2'
+        );
         
-        Object.values(data).forEach((aptData: any) => {
-          console.log('Processing apartment:', aptData);
-          const apt = newSchedule.apartments.find(
-            a => a.name === aptData.name && a.address === aptData.address
-          );
+        if (!hasCorrectApartments) {
+          console.log('Old test data found, reinitializing with correct apartments...');
+          // Очищаем старые данные и инициализируем новые
+          await initializeSchedule();
+          setScheduleData(defaultSchedule);
+        } else {
+          // Загружаем данные из API
+          const newSchedule = JSON.parse(JSON.stringify(defaultSchedule));
           
-          if (apt) {
-            Object.entries(aptData.weeks).forEach(([weekNum, dates]: [string, any]) => {
-              const week = apt.weeks.find(w => w.weekNumber === weekNum);
-              if (week) {
-                dates.forEach((dateData: any) => {
-                  const dateEntry = week.dates.find(d => d.date === dateData.date);
-                  if (dateEntry) {
-                    dateEntry.times = dateData.times;
-                  }
-                });
-              }
-            });
-          }
-        });
-        
-        console.log('Final schedule data:', newSchedule);
-        setScheduleData(newSchedule);
+          Object.values(data).forEach((aptData: any) => {
+            const apt = newSchedule.apartments.find(
+              a => a.name === aptData.name && a.address === aptData.address
+            );
+            
+            if (apt) {
+              Object.entries(aptData.weeks).forEach(([weekNum, dates]: [string, any]) => {
+                const week = apt.weeks.find(w => w.weekNumber === weekNum);
+                if (week) {
+                  dates.forEach((dateData: any) => {
+                    const dateEntry = week.dates.find(d => d.date === dateData.date);
+                    if (dateEntry) {
+                      dateEntry.times = dateData.times;
+                    }
+                  });
+                }
+              });
+            }
+          });
+          
+          setScheduleData(newSchedule);
+        }
       }
       setLoading(false);
     } catch (err) {
