@@ -109,6 +109,22 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
         }
       }
       
+      // If current user is director, add all producers to the list
+      if (userRole === 'director') {
+        const producers = users
+          .filter((u: any) => u.role === 'producer')
+          .map((u: any) => ({
+            email: u.email,
+            name: u.fullName || u.email
+          }));
+        
+        producers.forEach(producer => {
+          if (!assignedOperators.some(op => op.email === producer.email)) {
+            assignedOperators.push(producer);
+          }
+        });
+      }
+      
       setOperators(assignedOperators);
     } catch (error) {
       console.error('Failed to load operators:', error);
