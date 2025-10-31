@@ -226,8 +226,8 @@ const ChecksTab = () => {
     });
   }
 
-  const totalModelSum = contentMakers.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
-  const totalOperatorSum = operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
+  const totalModelSum = contentMakers.reduce((sum, e) => sum + (e.total || 0), 0);
+  const totalOperatorSum = operators.reduce((sum, e) => sum + (e.total || 0), 0);
 
   if (userRole !== 'producer' && userRole !== 'director') {
     return (
