@@ -133,6 +133,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     currentValue: string;
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [filterTeam, setFilterTeam] = useState('');
   const { toast } = useToast();
 
   const canEdit = userRole === 'producer' || userRole === 'director';
@@ -258,6 +259,55 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
+  const handleCopyWeek = async (aptIndex: number, weekIndex: number) => {
+    const targetWeekIndex = weekIndex === 0 ? 1 : 0;
+    const apartment = scheduleData.apartments[aptIndex];
+    const sourceWeek = apartment.weeks[weekIndex];
+    const targetWeek = apartment.weeks[targetWeekIndex];
+
+    try {
+      for (let dateIndex = 0; dateIndex < sourceWeek.dates.length; dateIndex++) {
+        const sourceDate = sourceWeek.dates[dateIndex];
+        const targetDate = targetWeek.dates[dateIndex];
+        
+        for (const time of ['10:00', '17:00', '00:00']) {
+          await fetch(SCHEDULE_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apartment_name: apartment.name,
+              apartment_address: apartment.address,
+              week_number: targetWeek.weekNumber,
+              date: targetDate.date,
+              time_slot: time,
+              value: sourceDate.times[time]
+            })
+          });
+        }
+      }
+
+      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
+      newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates = 
+        newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates.map((date: any, idx: number) => ({
+          ...date,
+          times: { ...sourceWeek.dates[idx].times }
+        }));
+      
+      setScheduleData(newSchedule);
+
+      toast({
+        title: 'Неделя скопирована',
+        description: `Расписание "${sourceWeek.weekNumber}" скопировано в "${targetWeek.weekNumber}"`,
+      });
+    } catch (err) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось скопировать неделю',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleCellClick = (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => {
     if (!canEdit) return;
     setEditCell({ aptIndex, weekIndex, dateIndex, time, currentValue });
@@ -320,18 +370,31 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Расписание</h2>
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Select value={filterTeam} onValueChange={setFilterTeam}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Все команды" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Все команды</SelectItem>
+              {teams.map((team) => (
+                <SelectItem key={team.displayName} value={team.displayName}>
+                  {team.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <GoogleCalendarSync />
           <ScheduleHistory />
           {canEdit && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Icon name="Info" size={16} />
-              <span className="hidden lg:inline">Нажмите на ячейку для редактирования</span>
+              <span className="hidden lg:inline">Нажмите на ячейку</span>
             </div>
           )}
         </div>
@@ -340,8 +403,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       {scheduleData.apartments.map((apartment, aptIndex) => (
         <div key={aptIndex} className="space-y-4">
           <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+              <table className="w-full text-xs sm:text-sm border-collapse min-w-[800px]">
                 <thead>
                   <tr className="border-b border-border">
                     <td colSpan={8} className="p-3 font-bold text-foreground text-base bg-muted/30">
@@ -366,7 +429,22 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
-                              <th className="p-2 text-left font-semibold text-foreground w-20">{week.weekNumber}</th>
+                              <th className="p-2 text-left font-semibold text-foreground w-20">
+                                <div className="flex items-center gap-2">
+                                  <span>{week.weekNumber}</span>
+                                  {canEdit && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => handleCopyWeek(aptIndex, weekIndex)}
+                                      title="Скопировать неделю"
+                                    >
+                                      <Icon name="Copy" size={14} />
+                                    </Button>
+                                  )}
+                                </div>
+                              </th>
                               {week.dates.map((date, dateIndex) => (
                                 <th key={dateIndex} className="p-2 text-center font-medium text-foreground border-l border-border">
                                   <div className="whitespace-nowrap">{date.day}</div>
@@ -378,39 +456,54 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                           <tbody>
                             <tr className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
                               <td className="p-2 text-center font-medium">10:00</td>
-                              {week.dates.map((date, dateIndex) => (
-                                <td 
-                                  key={dateIndex} 
-                                  className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
-                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '10:00', date.times['10:00']) : undefined}
-                                >
-                                  {date.times['10:00']}
-                                </td>
-                              ))}
+                              {week.dates.map((date, dateIndex) => {
+                                const cellValue = date.times['10:00'];
+                                const isFiltered = filterTeam && cellValue !== filterTeam;
+                                const isOccupied = cellValue && cellValue.trim() !== '';
+                                return (
+                                  <td 
+                                    key={dateIndex} 
+                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '10:00', cellValue) : undefined}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                             <tr className="border-b border-border bg-orange-900/20 dark:bg-orange-900/20">
                               <td className="p-2 text-center font-medium">17:00</td>
-                              {week.dates.map((date, dateIndex) => (
-                                <td 
-                                  key={dateIndex} 
-                                  className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''}`}
-                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '17:00', date.times['17:00']) : undefined}
-                                >
-                                  {date.times['17:00']}
-                                </td>
-                              ))}
+                              {week.dates.map((date, dateIndex) => {
+                                const cellValue = date.times['17:00'];
+                                const isFiltered = filterTeam && cellValue !== filterTeam;
+                                const isOccupied = cellValue && cellValue.trim() !== '';
+                                return (
+                                  <td 
+                                    key={dateIndex} 
+                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '17:00', cellValue) : undefined}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                             <tr className="border-b border-border bg-slate-700/50 dark:bg-slate-700/50">
                               <td className="p-2 text-center font-medium">00:00</td>
-                              {week.dates.map((date, dateIndex) => (
-                                <td 
-                                  key={dateIndex} 
-                                  className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''}`}
-                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '00:00', date.times['00:00']) : undefined}
-                                >
-                                  {date.times['00:00']}
-                                </td>
-                              ))}
+                              {week.dates.map((date, dateIndex) => {
+                                const cellValue = date.times['00:00'];
+                                const isFiltered = filterTeam && cellValue !== filterTeam;
+                                const isOccupied = cellValue && cellValue.trim() !== '';
+                                return (
+                                  <td 
+                                    key={dateIndex} 
+                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '00:00', cellValue) : undefined}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           </tbody>
                         </table>

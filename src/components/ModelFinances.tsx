@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [operators, setOperators] = useState<Array<{email: string, name: string}>>([]);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   
   const isReadOnly = userRole === 'content_maker';
@@ -183,10 +185,36 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
     }
   };
   
+  const autoSave = useCallback(async (data: DayData[]) => {
+    if (isReadOnly) return;
+    
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelId, data })
+      });
+
+      if (response.ok) {
+        setLastSaved(new Date());
+      }
+    } catch (error) {
+      console.error('Auto-save error:', error);
+    }
+  }, [modelId, isReadOnly]);
+
   const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
     const newData = [...onlineData];
     newData[index] = { ...newData[index], [field]: value };
     setOnlineData(newData);
+    
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave(newData);
+    }, 2000);
   };
 
   const handleSave = async () => {
@@ -317,10 +345,18 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             </div>
           </Card>
           {!isReadOnly && (
-            <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full lg:w-auto">
-              <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-              <span className="lg:inline">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
-            </Button>
+            <>
+              {lastSaved && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Icon name="Check" size={14} className="text-green-500" />
+                  Сохранено {lastSaved.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+              <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full lg:w-auto">
+                <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
+                <span className="lg:inline">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -458,8 +494,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
       </div>
 
       <Card className="overflow-hidden hidden lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+          <table className="w-full text-sm border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-border">
                 <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">Настоящий период</th>
