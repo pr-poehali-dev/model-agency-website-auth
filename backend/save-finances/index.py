@@ -61,7 +61,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         query = '''
             SELECT date, cb_tokens, sp_online, soda_tokens, cam4_tokens,
                    cb_income, sp_income, soda_income, cam4_income, 
-                   stripchat_tokens, operator_name, has_shift
+                   stripchat_tokens, operator_name, has_shift, transfers
             FROM t_p35405502_model_agency_website.model_finances
             WHERE model_id = %s
             ORDER BY date ASC
@@ -87,6 +87,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'sodaIncome': float(row['soda_income'] or 0),
                 'cam4Income': float(row['cam4_income'] or 0),
                 'stripchatTokens': row['stripchat_tokens'] or 0,
+                'transfers': float(row['transfers'] or 0),
                 'operator': row['operator_name'] or '',
                 'shift': row['has_shift'] or False
             })
@@ -150,6 +151,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             record.get('sodaIncome', 0),
             record.get('cam4Income', 0),
             record.get('stripchatTokens', 0),
+            record.get('transfers', 0),
             record.get('operator', ''),
             record.get('shift', False)
         ))
@@ -159,7 +161,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         INSERT INTO t_p35405502_model_agency_website.model_finances 
         (model_id, date, cb_tokens, sp_online, soda_tokens, cam4_tokens, 
          cb_income, sp_income, soda_income, cam4_income, stripchat_tokens, 
-         operator_name, has_shift, updated_at)
+         transfers, operator_name, has_shift, updated_at)
         VALUES %s
         ON CONFLICT (model_id, date) 
         DO UPDATE SET
@@ -172,12 +174,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             soda_income = EXCLUDED.soda_income,
             cam4_income = EXCLUDED.cam4_income,
             stripchat_tokens = EXCLUDED.stripchat_tokens,
+            transfers = EXCLUDED.transfers,
             operator_name = EXCLUDED.operator_name,
             has_shift = EXCLUDED.has_shift,
             updated_at = CURRENT_TIMESTAMP
     '''
     
-    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
+    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
     conn.commit()
     
     cursor.close()
