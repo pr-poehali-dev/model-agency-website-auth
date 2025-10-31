@@ -478,6 +478,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                         <SelectValue placeholder="Выбрать" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="">Не выбрано</SelectItem>
                         {operators.map((op) => (
                           <SelectItem key={op.email} value={op.name}>
                             {op.name}
