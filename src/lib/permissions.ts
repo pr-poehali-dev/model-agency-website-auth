@@ -59,6 +59,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   operator: [
     PERMISSIONS.VIEW_HOME,
+    PERMISSIONS.VIEW_MODELS,
     PERMISSIONS.VIEW_SCHEDULE,
     PERMISSIONS.VIEW_FILES,
   ],

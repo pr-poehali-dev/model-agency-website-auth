@@ -72,6 +72,7 @@ const DashboardNavigation = ({
         <nav className="flex-1 p-4 overflow-y-auto">
           {navigationItems.map((item) => {
             if (!userPermissions.includes(item.permission)) return null;
+            if (item.id === 'models' && userRole === 'model') return null;
             return (
               <Button
                 key={item.id}
