@@ -8,6 +8,8 @@ import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/ut
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
 const EXCHANGE_RATE_API_URL = 'https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a';
+const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 
 const roleNames: Record<string, string> = {
   'director': 'Директор',
@@ -25,12 +27,14 @@ const DashboardTab = () => {
   const [salaryData, setSalaryData] = useState<any>(null);
   const [exchangeRate, setExchangeRate] = useState(72.47);
   const [isLoading, setIsLoading] = useState(true);
+  const [producerName, setProducerName] = useState('');
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     if (email) {
       loadUserData(email);
+      loadProducerInfo(email);
     }
   }, []);
 
@@ -68,6 +72,52 @@ const DashboardTab = () => {
       }
     } catch (error) {
       console.error('Failed to load user data:', error);
+    }
+  };
+
+  const loadProducerInfo = async (email: string) => {
+    try {
+      const usersResponse = await fetch(USERS_API_URL);
+      const users = await usersResponse.json();
+      const currentUser = users.find((u: any) => u.email === email);
+      
+      if (!currentUser) return;
+      
+      if (currentUser.role === 'operator') {
+        const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+        const assignments = await assignmentsResponse.json();
+        const operatorAssignment = assignments.find((a: any) => a.operatorEmail === email);
+        
+        if (operatorAssignment) {
+          const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+          const producerAssignments = await producerResponse.json();
+          const producerAssignment = producerAssignments.find(
+            (pa: any) => pa.modelEmail === operatorAssignment.modelEmail
+          );
+          
+          if (producerAssignment) {
+            const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
+            if (producer) {
+              setProducerName(producer.fullName || producer.email);
+            }
+          }
+        }
+      } else if (currentUser.role === 'content_maker') {
+        const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+        const producerAssignments = await producerResponse.json();
+        const producerAssignment = producerAssignments.find(
+          (pa: any) => pa.modelEmail === email
+        );
+        
+        if (producerAssignment) {
+          const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
+          if (producer) {
+            setProducerName(producer.fullName || producer.email);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load producer info:', error);
     }
   };
 
@@ -189,22 +239,47 @@ const DashboardTab = () => {
           </div>
         </Card>
 
-        <Card className="p-6 border-2 border-accent/20 bg-gradient-to-br from-background to-accent/5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Текущий курс</p>
-              <p className="text-xs text-muted-foreground">ЦБ РФ</p>
+        {(userRole === 'director' || userRole === 'producer') ? (
+          <Card className="p-6 border-2 border-accent/20 bg-gradient-to-br from-background to-accent/5">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Текущий курс</p>
+                <p className="text-xs text-muted-foreground">ЦБ РФ</p>
+              </div>
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <Icon name="TrendingUp" size={24} className="text-accent" />
+              </div>
             </div>
-            <div className="p-2 bg-accent/10 rounded-lg">
-              <Icon name="TrendingUp" size={24} className="text-accent" />
+            
+            <div className="space-y-2">
+              <p className="text-3xl font-bold text-accent">{exchangeRate.toFixed(2)}₽</p>
+              <p className="text-lg text-muted-foreground">за 1 доллар</p>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <p className="text-3xl font-bold text-accent">{exchangeRate.toFixed(2)}₽</p>
-            <p className="text-lg text-muted-foreground">за 1 доллар</p>
-          </div>
-        </Card>
+          </Card>
+        ) : (
+          <Card className="p-6 border-2 border-purple-500/20 bg-gradient-to-br from-background to-purple-500/5">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Ваш продюсер</p>
+                <p className="text-xs text-muted-foreground">Руководитель проекта</p>
+              </div>
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <Icon name="UserCheck" size={24} className="text-purple-600" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {producerName ? (
+                <>
+                  <p className="text-2xl font-bold text-purple-600">{producerName}</p>
+                  <p className="text-sm text-muted-foreground">По любым вопросам обращайтесь к вашему продюсеру</p>
+                </>
+              ) : (
+                <p className="text-lg text-muted-foreground">Продюсер не назначен</p>
+              )}
+            </div>
+          </Card>
+        )}
       </div>
 
       {salaryData && salaryData.details && salaryData.details.length > 0 && (
@@ -246,40 +321,28 @@ const DashboardTab = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-primary">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Icon name="Users" size={20} className="text-primary" />
+            <div className="p-2 bg-blue-500/10 rounded-lg">
+              <Icon name="Files" size={20} className="text-blue-600" />
             </div>
-            <h4 className="font-semibold">Команда</h4>
+            <h4 className="font-semibold">Файлы</h4>
           </div>
           <p className="text-sm text-muted-foreground">
-            Просматривайте информацию о сотрудниках и моделях
+            Удобно загружайте фотографии и видео моделей для работы
           </p>
         </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-accent">
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-purple-500">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-accent/10 rounded-lg">
-              <Icon name="BarChart3" size={20} className="text-accent" />
+            <div className="p-2 bg-purple-500/10 rounded-lg">
+              <Icon name="Calendar" size={20} className="text-purple-600" />
             </div>
-            <h4 className="font-semibold">Финансы</h4>
+            <h4 className="font-semibold">Расписание</h4>
           </div>
           <p className="text-sm text-muted-foreground">
-            Отслеживайте доходы моделей и зарплаты
-          </p>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-green-500">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <Icon name="Receipt" size={20} className="text-green-600" />
-            </div>
-            <h4 className="font-semibold">Чеки</h4>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Расчет зарплат и детальная аналитика
+            Отслеживайте свои смены и планируйте рабочее время
           </p>
         </Card>
       </div>
