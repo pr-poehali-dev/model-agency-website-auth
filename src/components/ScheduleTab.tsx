@@ -239,40 +239,33 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       console.log('Assignments loaded:', assignments);
       console.log('First assignment example:', assignments[0]);
       
-      const teamsData: Team[] = assignments.map((assignment: any) => {
-        const operator = users.find((u: any) => u.email === assignment.operatorEmail);
-        const model = users.find((u: any) => u.email === assignment.modelEmail);
-        
-        console.log('Processing assignment:', {
-          operatorEmail: assignment.operatorEmail,
-          modelEmail: assignment.modelEmail,
-          operatorFound: operator,
-          modelFound: model
-        });
-        
-        // Если пользователь найден - используем fullName, если нет - красиво форматируем email
-        const operatorName = operator?.fullName || 
-          (assignment.operatorEmail ? 
-            assignment.operatorEmail.split('@')[0]
-              .replace(/([A-Z])/g, ' $1') // Добавляем пробел перед заглавными буквами
-              .trim() 
-            : 'Оператор');
-            
-        const modelName = model?.fullName || 
-          (assignment.modelEmail ? 
-            assignment.modelEmail.split('@')[0]
-              .replace(/([A-Z])/g, ' $1')
-              .trim()
-            : 'Модель');
-        
-        return {
-          operatorEmail: assignment.operatorEmail,
-          operatorName,
-          modelEmail: assignment.modelEmail,
-          modelName,
-          displayName: `${operatorName} / ${modelName}`
-        };
-      });
+      const teamsData: Team[] = assignments
+        .map((assignment: any) => {
+          const operator = users.find((u: any) => u.email === assignment.operatorEmail);
+          const model = users.find((u: any) => u.email === assignment.modelEmail);
+          
+          console.log('Processing assignment:', {
+            operatorEmail: assignment.operatorEmail,
+            modelEmail: assignment.modelEmail,
+            operatorFound: operator,
+            modelFound: model
+          });
+          
+          // Пропускаем команды, где хотя бы один пользователь не найден или неактивен
+          if (!operator || !model || !operator.isActive || !model.isActive) {
+            console.log('Skipping team - user not found or inactive');
+            return null;
+          }
+          
+          return {
+            operatorEmail: assignment.operatorEmail,
+            operatorName: operator.fullName,
+            modelEmail: assignment.modelEmail,
+            modelName: model.fullName,
+            displayName: `${operator.fullName} / ${model.fullName}`
+          };
+        })
+        .filter((team): team is Team => team !== null); // Убираем null значения
       
       console.log('Teams created:', teamsData);
       setTeams(teamsData);
