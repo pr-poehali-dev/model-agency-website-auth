@@ -101,9 +101,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
       );
       const producerEmail = producerAssignment?.producerEmail;
       
-      // Filter users to get only assigned operators (excluding producer)
+      // Combine operator emails with producer email (if exists)
+      const allAvailableEmails = producerEmail 
+        ? [...operatorEmails, producerEmail] 
+        : operatorEmails;
+      
+      // Filter users to get assigned operators + producer
       const assignedOperators = users
-        .filter((u: any) => operatorEmails.includes(u.email) && u.email !== producerEmail)
+        .filter((u: any) => allAvailableEmails.includes(u.email))
         .map((u: any) => ({
           email: u.email,
           name: u.fullName || u.email
