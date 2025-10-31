@@ -165,6 +165,18 @@ const UserManagement = () => {
         updateData.password = editPassword;
       }
 
+      if (editRole !== selectedUser.role) {
+        const defaultPermissions = [...ROLE_PERMISSIONS[editRole]];
+        
+        if (editRole === 'producer') {
+          defaultPermissions.push('view_checks');
+        } else if (editRole === 'content_maker') {
+          defaultPermissions.push('view_schedule');
+        }
+        
+        updateData.permissions = defaultPermissions;
+      }
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: { 
