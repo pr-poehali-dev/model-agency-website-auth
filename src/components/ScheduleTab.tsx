@@ -376,12 +376,12 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Select value={filterTeam} onValueChange={setFilterTeam}>
+          <Select value={filterTeam || "all"} onValueChange={(val) => setFilterTeam(val === "all" ? "" : val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Все команды" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Все команды</SelectItem>
+              <SelectItem value="all">Все команды</SelectItem>
               {teams.map((team) => (
                 <SelectItem key={team.displayName} value={team.displayName}>
                   {team.displayName}
