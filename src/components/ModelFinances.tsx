@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import Icon from '@/components/ui/icon';
-import { getCurrentPeriod, getDatesInPeriod } from '@/utils/periodUtils';
+import { getCurrentPeriod, getDatesInPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 
 interface ModelFinancesProps {
   modelId: number;
@@ -33,8 +33,7 @@ interface DayData {
   shift: boolean;
 }
 
-const generateInitialData = (): DayData[] => {
-  const period = getCurrentPeriod();
+const generateInitialData = (period: Period): DayData[] => {
   const dates = getDatesInPeriod(period);
   
   return dates.map(date => ({
@@ -60,7 +59,8 @@ const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 
 const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFinancesProps) => {
-  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData());
+  const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
+  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(currentPeriod));
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [operators, setOperators] = useState<Array<{email: string, name: string}>>([]);
@@ -69,7 +69,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
   useEffect(() => {
     loadFinancialData();
     loadOperators();
-  }, [modelId]);
+  }, [modelId, currentPeriod]);
 
   const loadOperators = async () => {
     try {
@@ -131,7 +131,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
         console.log('📡 Server data:', data);
         
         // Always start with full period data
-        const initialData = generateInitialData();
+        const initialData = generateInitialData(currentPeriod);
         
         if (data.length > 0) {
           // Merge server data into generated data by matching dates
@@ -146,13 +146,13 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
           console.log('✅ Using generated initial data (server returned empty)');
         }
       } else {
-        const initialData = generateInitialData();
+        const initialData = generateInitialData(currentPeriod);
         setOnlineData(initialData);
         console.log('✅ Using generated initial data (server error)');
       }
     } catch (error) {
       console.error('❌ Failed to load financial data:', error);
-      const initialData = generateInitialData();
+      const initialData = generateInitialData(currentPeriod);
       setOnlineData(initialData);
       console.log('✅ Using generated initial data (network error)');
     } finally {
@@ -263,10 +263,33 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
             <p className="text-muted-foreground">Статистика доходов по платформам</p>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-          <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-          {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Card className="p-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
+              >
+                <Icon name="ChevronLeft" size={16} />
+              </Button>
+              <div className="font-semibold text-sm px-2">
+                {currentPeriod.label}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
+              >
+                <Icon name="ChevronRight" size={16} />
+              </Button>
+            </div>
+          </Card>
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+            <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
