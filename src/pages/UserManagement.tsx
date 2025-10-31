@@ -92,7 +92,13 @@ const UserManagement = () => {
 
     setLoading(true);
     try {
-      const defaultPermissions = ROLE_PERMISSIONS[newUserRole];
+      let defaultPermissions = ROLE_PERMISSIONS[newUserRole];
+      
+      if (newUserRole === 'producer') {
+        defaultPermissions = ['checks'];
+      } else if (newUserRole === 'content_maker') {
+        defaultPermissions = ['schedule'];
+      }
       
       const response = await fetch(API_URL, {
         method: 'POST',
