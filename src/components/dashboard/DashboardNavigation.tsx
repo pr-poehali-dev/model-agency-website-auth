@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import NotificationCenter from '@/components/NotificationCenter';
+import NotificationBell from '@/components/NotificationBell';
 
 interface NavigationItem {
   id: string;
@@ -87,10 +88,13 @@ const DashboardNavigation = ({
         </nav>
         
         <div className="p-4 border-t border-border space-y-2">
-          <Button variant="ghost" className="w-full justify-start" onClick={onToggleTheme}>
-            <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={20} className="mr-3" />
-            {theme === 'dark' ? 'Светлая тема' : 'Темная тема'}
-          </Button>
+          <div className="flex items-center justify-between mb-2">
+            <Button variant="ghost" size="sm" onClick={onToggleTheme}>
+              <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
+              {theme === 'dark' ? 'Светлая' : 'Темная'}
+            </Button>
+            <NotificationBell />
+          </div>
           <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onLogout}>
             <Icon name="LogOut" size={20} className="mr-3" />
             Выход

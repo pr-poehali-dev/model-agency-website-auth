@@ -222,6 +222,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
     { platform: 'Cam4', tokens: totalCam4, income: totalCam4 * 0.6 },
   ];
 
+  const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
+  const bestDay = onlineData.reduce((best, current) => {
+    const currentIncome = ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 + current.cam4Income + current.transfers) * 0.6;
+    const bestIncome = ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 + best.cam4Income + best.transfers) * 0.6;
+    return currentIncome > bestIncome ? current : best;
+  }, onlineData[0]);
+  const bestDayIncome = ((bestDay.cbIncome + bestDay.spIncome + bestDay.sodaIncome) * 0.05 + bestDay.cam4Income + bestDay.transfers) * 0.6;
+
   if (isLoading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -234,7 +242,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-4">
           {onBack && (
             <Button variant="outline" size="icon" onClick={onBack}>
@@ -242,13 +250,13 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             </Button>
           )}
           <div>
-            <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
+            <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-2">
               Финансы — {modelName}
             </h2>
-            <p className="text-muted-foreground">Статистика доходов по платформам</p>
+            <p className="text-sm text-muted-foreground">Статистика доходов по платформам</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Card className="p-2">
             <div className="flex items-center gap-2">
               <Button
@@ -271,15 +279,147 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             </div>
           </Card>
           {!isReadOnly && (
-            <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+            <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full lg:w-auto">
               <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-              {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+              <span className="lg:inline">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
             </Button>
           )}
         </div>
       </div>
 
-      <Card className="overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted-foreground">Всего за период</p>
+            <Icon name="DollarSign" size={20} className="text-green-600" />
+          </div>
+          <p className="text-3xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{totalShifts} смен</p>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted-foreground">Средний доход</p>
+            <Icon name="TrendingUp" size={20} className="text-blue-600" />
+          </div>
+          <p className="text-3xl font-bold text-blue-600">${averageDaily.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground mt-1">за смену</p>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted-foreground">Лучший день</p>
+            <Icon name="Star" size={20} className="text-purple-600" />
+          </div>
+          <p className="text-3xl font-bold text-purple-600">${bestDayIncome.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{formatDate(bestDay.date)}</p>
+        </Card>
+      </div>
+
+      <div className="lg:hidden space-y-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">По дням</h3>
+            <Badge>{totalIncome.toFixed(0)}$</Badge>
+          </div>
+          {onlineData.map((d, idx) => (
+            <Card key={d.date} className="p-4 mb-3 bg-muted/30">
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-semibold">{formatDate(d.date)}</p>
+                <Badge variant="outline" className={d.shift ? 'bg-green-500/20' : ''}>
+                  {d.shift ? 'Смена' : 'Нет смены'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">CB:</span>
+                  <Input 
+                    type="text"
+                    inputMode="numeric"
+                    value={d.cb || ''}
+                    disabled={isReadOnly}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                    }}
+                    className="w-20 h-8 text-right"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Chaturbate $:</span>
+                  <Input 
+                    type="text"
+                    inputMode="decimal"
+                    value={d.cbIncome || ''}
+                    disabled={isReadOnly}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      handleCellChange(idx, 'cbIncome', val === '' ? 0 : Number(val));
+                    }}
+                    className="w-20 h-8 text-right"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">SP:</span>
+                  <Input 
+                    type="text"
+                    inputMode="numeric"
+                    value={d.sp || ''}
+                    disabled={isReadOnly}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
+                    }}
+                    className="w-20 h-8 text-right"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Stripchat $:</span>
+                  <Input 
+                    type="text"
+                    inputMode="decimal"
+                    value={d.spIncome || ''}
+                    disabled={isReadOnly}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      handleCellChange(idx, 'spIncome', val === '' ? 0 : Number(val));
+                    }}
+                    className="w-20 h-8 text-right"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Cam4 $:</span>
+                  <Input 
+                    type="text"
+                    inputMode="decimal"
+                    value={d.cam4Income || ''}
+                    disabled={isReadOnly}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      handleCellChange(idx, 'cam4Income', val === '' ? 0 : Number(val));
+                    }}
+                    className="w-20 h-8 text-right"
+                  />
+                </div>
+
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between font-semibold text-green-600">
+                    <span>Доход:</span>
+                    <span>${(((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4Income + d.transfers) * 0.6).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </Card>
+      </div>
+
+      <Card className="overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>

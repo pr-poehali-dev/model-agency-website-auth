@@ -25,6 +25,7 @@ interface User {
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
@@ -339,15 +340,33 @@ const UserManagement = () => {
     }
   };
 
+  const filteredUsers = users.filter(u => 
+    u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
           <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Управление пользователями</h2>
           <p className="text-muted-foreground">Создавайте учетные записи и управляйте правами доступа</p>
         </div>
         
-        <AddUserDialog
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 lg:w-64">
+            <input
+              type="text"
+              placeholder="Поиск пользователей..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        </div>
+      </div>
+
+      <AddUserDialog
           isOpen={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
           newUserEmail={newUserEmail}
@@ -364,7 +383,7 @@ const UserManagement = () => {
       </div>
 
       <div className="grid gap-4">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <UserCard
             key={user.id}
             user={user}

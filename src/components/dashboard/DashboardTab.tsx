@@ -22,10 +22,12 @@ const roleNames: Record<string, string> = {
 interface DashboardTabProps {
   monthlyRevenue?: any;
   onNavigate?: (tab: string) => void;
+  onViewFinances?: (modelId: number, modelName: string) => void;
 }
 
-const DashboardTab = ({ onNavigate }: DashboardTabProps) => {
+const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   const [userEmail, setUserEmail] = useState('');
+  const [userId, setUserId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState('');
   const [userFullName, setUserFullName] = useState('');
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
@@ -74,6 +76,7 @@ const DashboardTab = ({ onNavigate }: DashboardTabProps) => {
       if (currentUser) {
         setUserRole(currentUser.role);
         setUserFullName(currentUser.fullName || email);
+        setUserId(currentUser.id);
       }
     } catch (error) {
       console.error('Failed to load user data:', error);
@@ -327,6 +330,23 @@ const DashboardTab = ({ onNavigate }: DashboardTabProps) => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {userRole === 'content_maker' && userId && (
+          <Card 
+            className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-green-500 hover:scale-105 transition-transform"
+            onClick={() => onViewFinances?.(userId, userFullName)}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Icon name="DollarSign" size={20} className="text-green-600" />
+              </div>
+              <h4 className="font-semibold">Мои финансы</h4>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Просматривайте статистику своих доходов по платформам
+            </p>
+          </Card>
+        )}
+        
         <Card 
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500 hover:scale-105 transition-transform"
           onClick={() => onNavigate?.('files')}

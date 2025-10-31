@@ -55,6 +55,7 @@ const ModelsTab = ({
   const [producerAssignmentsData, setProducerAssignmentsData] = useState<ProducerAssignment[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
@@ -208,9 +209,14 @@ const ModelsTab = ({
     ? models.filter(m => producerAssignments.includes(m.email))
     : models;
 
+  const filteredModels = displayModels.filter(m => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Наши модели</h2>
           <p className="text-muted-foreground">Управление портфолио талантов</p>
@@ -231,7 +237,18 @@ const ModelsTab = ({
           )}
         </div>
         
-
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 lg:w-64">
+            <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Поиск моделей..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        </div>
       </div>
 
       <CreateModelDialog 
@@ -253,8 +270,15 @@ const ModelsTab = ({
         />
       )}
 
+      {filteredModels.length === 0 && searchQuery && (
+        <Card className="p-8 text-center">
+          <Icon name="Search" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
+          <p className="text-muted-foreground">Ничего не найдено по запросу "{searchQuery}"</p>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayModels.map((model) => {
+        {filteredModels.map((model) => {
           const producerName = getProducerName(model.email);
           const producerAssignment = getProducerAssignment(model.email);
           const accounts = modelAccounts[model.id] || {};

@@ -278,7 +278,7 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardTab onNavigate={(tab) => setActiveTab(tab)} />;
+        return <DashboardTab onNavigate={(tab) => setActiveTab(tab)} onViewFinances={handleViewModelFinances} />;
       case 'models':
         return <ModelsTab 
           models={modelsData} 
