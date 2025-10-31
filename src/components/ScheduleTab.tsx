@@ -136,7 +136,9 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [filterTeam, setFilterTeam] = useState('');
   const { toast } = useToast();
 
-  const canEdit = userRole === 'producer' || userRole === 'director';
+  const canEdit = userRole === 'producer' || userRole === 'director' || 
+    userPermissions?.includes('edit_schedule') || 
+    userPermissions?.includes('manage_all');
 
   useEffect(() => {
     loadTeamMembers();

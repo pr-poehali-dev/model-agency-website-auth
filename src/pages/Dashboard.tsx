@@ -283,7 +283,7 @@ const Dashboard = () => {
       case 'checks':
         return <ChecksTab />;
       case 'schedule':
-        return <ScheduleTab />;
+        return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
       case 'files':
         return <FilesTab />;
       case 'users':
