@@ -471,14 +471,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Select 
-                      value={d.operator} 
-                      onValueChange={(value) => handleCellChange(idx, 'operator', value)}
+                      value={d.operator || 'none'} 
+                      onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
                     >
                       <SelectTrigger className="w-24 h-8 text-xs">
                         <SelectValue placeholder="Выбрать" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Не выбрано</SelectItem>
+                        <SelectItem value="none">Не выбрано</SelectItem>
                         {operators.map((op) => (
                           <SelectItem key={op.email} value={op.name}>
                             {op.name}
