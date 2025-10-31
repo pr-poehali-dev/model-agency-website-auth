@@ -4,7 +4,6 @@ import { PERMISSIONS, type UserRole } from '@/lib/permissions';
 import { addAuditLog } from '@/lib/auditLog';
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
-import DashboardHome from '@/components/dashboard/DashboardHome';
 import ModelsTab from '@/components/dashboard/ModelsTab';
 import ChecksTab from '@/components/dashboard/ChecksTab';
 import DashboardTab from '@/components/dashboard/DashboardTab';
@@ -278,7 +277,7 @@ const Dashboard = () => {
 
     switch (activeTab) {
       case 'home':
-        return <DashboardHome models={modelsData} />;
+        return <DashboardTab />;
       case 'models':
         return <ModelsTab 
           models={modelsData} 
