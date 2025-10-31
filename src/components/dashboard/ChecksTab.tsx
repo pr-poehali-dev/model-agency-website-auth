@@ -231,16 +231,14 @@ const ChecksTab = () => {
   
   if (userRole === 'producer') {
     const producerSalary = salaries.producers[userEmail] || { total: 0, details: [] };
-    const operatorDetails = producerSalary.details.filter((d: any) => d.note === 'as_operator');
-    const producerOperatorSum = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0) * exchangeRate;
-    totalOperatorSum += producerOperatorSum;
+    const producerTotalSum = producerSalary.total * exchangeRate;
+    totalOperatorSum += producerTotalSum;
   } else if (userRole === 'director') {
     const producerUsers = users.filter(u => u.role === 'producer');
     producerUsers.forEach(prod => {
       const salary = salaries.producers[prod.email] || { total: 0, details: [] };
-      const operatorDetails = salary.details.filter((d: any) => d.note === 'as_operator');
-      const producerOperatorSum = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0) * exchangeRate;
-      totalOperatorSum += producerOperatorSum;
+      const producerTotalSum = salary.total * exchangeRate;
+      totalOperatorSum += producerTotalSum;
     });
   }
 
