@@ -1,5 +1,4 @@
 {
-  "delete-user": "https://functions.poehali.dev/4da0fa74-ad88-4839-832a-1969782123af",
   "calculate-salaries": "https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e",
   "model-accounts": "https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c",
   "cbr-rate": "https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a",
