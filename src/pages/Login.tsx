@@ -50,48 +50,51 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background opacity-50"></div>
-      
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-2 border-muted rounded-full opacity-20"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border-2 border-muted rounded-full opacity-15"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-muted rounded-full opacity-10"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-40 right-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
 
-      <Card className="w-full max-w-md p-8 bg-card/95 backdrop-blur-sm border-border shadow-2xl relative z-10 animate-scale-in">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif font-bold mb-2 text-foreground">MBA Corp.</h1>
-          <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase">Professional Models Agency</p>
+      <Card className="w-full max-w-md p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative z-10 rounded-3xl">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg">
+            <span className="text-4xl font-bold text-white">M</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-3 text-white tracking-tight">MBA Corp.</h1>
+          <p className="text-sm tracking-[0.3em] text-purple-200 uppercase font-light">Professional Models Agency</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
+            <Label htmlFor="email" className="text-white/90 font-medium text-sm">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary"
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="example@mba-corp.com"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
+            <Label htmlFor="password" className="text-white/90 font-medium text-sm">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary"
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
+            <div className="text-red-200 text-sm text-center bg-red-500/20 p-3 rounded-xl border border-red-400/30 backdrop-blur-sm">
               {error}
             </div>
           )}
@@ -99,24 +102,11 @@ const Login = () => {
           <Button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold h-12 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
           >
             {loading ? 'Вход...' : 'Sign In'}
           </Button>
         </form>
-
-        <div className="mt-6 text-center space-y-2">
-          <button className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
-            Forgot password?
-          </button>
-          <div className="text-xs text-muted-foreground border-t border-border pt-4 mt-4">
-            <p className="mb-2">Тестовые аккаунты (пароль: password123):</p>
-            <p>Директор: director@mba-corp.com</p>
-            <p>Продюссер: producer@mba-corp.com</p>
-            <p>Оператор: operator@mba-corp.com</p>
-            <p>Контент-мейкер: content@mba-corp.com</p>
-          </div>
-        </div>
       </Card>
     </div>
   );
