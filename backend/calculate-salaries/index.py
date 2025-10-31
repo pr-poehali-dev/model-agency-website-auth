@@ -150,16 +150,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_salary = total_check * 0.3
             producer_salary = total_check * 0.1
             
-            operator_user = next((u for u in users if u['full_name'] == operator_name and u['role'] == 'operator'), None)
-            producer_as_operator = next((u for u in users if u['full_name'] == operator_name and u['role'] == 'producer'), None)
-            
-            operator_email = operator_user['email'] if operator_user else None
-            producer_operator_email = producer_as_operator['email'] if producer_as_operator else None
-            
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             model_email = model_assignment['model_email'] if model_assignment else None
             
-            print(f"DEBUG: operator_name={operator_name}, operator_email={operator_email}, producer_as_operator={producer_operator_email}, model_email={model_email}")
+            if not model_assignment:
+                print(f"DEBUG: Skipping model_id={model_id} - no operator assignment found")
+                continue
+            
+            assigned_operator_email = model_assignment['operator_email']
+            operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
+            
+            if not operator_user:
+                print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} not found in users")
+                continue
+            
+            operator_email = None
+            producer_operator_email = None
+            
+            if operator_user['role'] == 'operator':
+                operator_email = assigned_operator_email
+            elif operator_user['role'] == 'producer':
+                producer_operator_email = assigned_operator_email
+            else:
+                print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} has wrong role {operator_user['role']}")
+                continue
+            
+            print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, role={operator_user['role']}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
             
             if producer_operator_email:
                 operator_salary = total_check * 0.2
