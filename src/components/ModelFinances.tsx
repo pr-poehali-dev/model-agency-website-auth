@@ -433,17 +433,17 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, onBack }: ModelFi
                     <Input 
                       type="text"
                       inputMode="decimal"
-                      value={d.cam4 || ''}
+                      value={d.cam4Income || ''}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'cam4', val === '' ? 0 : Number(val));
+                        handleCellChange(idx, 'cam4Income', val === '' ? 0 : Number(val));
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                     />
                   </td>
                 ))}
                 <td className="p-2 text-center font-bold bg-pink-500/10">
-                  {platformSummary[3].tokens.toFixed(1)}
+                  {onlineData.reduce((sum, d) => sum + d.cam4Income, 0).toFixed(2)}
                 </td>
               </tr>
 
