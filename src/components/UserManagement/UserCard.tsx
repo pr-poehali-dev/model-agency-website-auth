@@ -12,6 +12,7 @@ interface User {
   isActive: boolean;
   permissions: string[];
   createdAt?: string;
+  photoUrl?: string;
 }
 
 interface UserCardProps {
@@ -26,8 +27,12 @@ const UserCard = ({ user, onOpenPermissions, onOpenEdit, onDelete }: UserCardPro
     <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icon name="User" size={24} className="text-primary" />
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            {user.photoUrl ? (
+              <img src={user.photoUrl} alt={user.fullName} className="w-full h-full object-cover" />
+            ) : (
+              <Icon name="User" size={24} className="text-primary" />
+            )}
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-foreground">{user.fullName}</h3>

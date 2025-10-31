@@ -121,7 +121,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
         
         elif method == 'GET':
-            cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at FROM users ORDER BY created_at DESC")
+            cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url FROM users ORDER BY created_at DESC")
             users = cur.fetchall()
             
             return {
@@ -134,7 +134,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'fullName': u['full_name'],
                     'isActive': u['is_active'],
                     'permissions': json.loads(u['permissions']) if u['permissions'] else [],
-                    'createdAt': u['created_at'].isoformat()
+                    'createdAt': u['created_at'].isoformat(),
+                    'photoUrl': u.get('photo_url')
                 } for u in users])
             }
         
@@ -204,6 +205,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 updates.append("is_active = %s")
                 params.append(body_data['isActive'])
             
+            if 'photoUrl' in body_data:
+                updates.append("photo_url = %s")
+                params.append(body_data['photoUrl'])
+            
             if 'permissions' in body_data:
                 new_permissions = body_data['permissions']
                 if 'manage_users' in new_permissions and not is_director:
@@ -218,7 +223,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if updates:
                 params.append(user_id)
-                query = f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = %s RETURNING id, email, role, full_name, is_active, permissions"
+                query = f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = %s RETURNING id, email, role, full_name, is_active, permissions, photo_url"
                 cur.execute(query, params)
                 updated_user = cur.fetchone()
                 conn.commit()
@@ -232,7 +237,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'role': updated_user['role'],
                         'fullName': updated_user['full_name'],
                         'isActive': updated_user['is_active'],
-                        'permissions': json.loads(updated_user['permissions']) if updated_user['permissions'] else []
+                        'permissions': json.loads(updated_user['permissions']) if updated_user['permissions'] else [],
+                        'photoUrl': updated_user.get('photo_url')
                     })
                 }
         

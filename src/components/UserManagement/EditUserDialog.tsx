@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type UserRole } from '@/lib/permissions';
+import PhotoUpload from '@/components/PhotoUpload';
 
 interface User {
   id: number;
@@ -25,6 +26,7 @@ interface User {
   isActive: boolean;
   permissions: string[];
   createdAt?: string;
+  photoUrl?: string;
 }
 
 interface EditUserDialogProps {
@@ -68,6 +70,13 @@ const EditUserDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {selectedUser && (
+            <PhotoUpload
+              currentPhotoUrl={selectedUser.photoUrl}
+              onPhotoUploaded={() => {}}
+              userId={selectedUser.id}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="editFullName">Полное имя</Label>
             <Input

@@ -20,6 +20,7 @@ interface User {
   isActive: boolean;
   permissions: string[];
   createdAt?: string;
+  photoUrl?: string;
 }
 
 const UserManagement = () => {

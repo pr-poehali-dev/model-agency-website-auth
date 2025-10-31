@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get statistics data",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "modelPerformance": "array",
+        "monthlyRevenue": "array",
+        "transactions": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

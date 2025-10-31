@@ -3,8 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions';
-import NotificationCenter from '@/components/NotificationCenter';
-import NotificationBell from '@/components/NotificationBell';
+
 
 interface NavigationItem {
   id: string;
@@ -88,13 +87,10 @@ const DashboardNavigation = ({
         </nav>
         
         <div className="p-4 border-t border-border space-y-2">
-          <div className="flex items-center justify-between mb-2">
-            <Button variant="ghost" size="sm" onClick={onToggleTheme}>
-              <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
-              {theme === 'dark' ? 'Светлая' : 'Темная'}
-            </Button>
-            <NotificationBell />
-          </div>
+          <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full justify-start">
+            <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
+            {theme === 'dark' ? 'Светлая' : 'Темная'}
+          </Button>
           <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onLogout}>
             <Icon name="LogOut" size={20} className="mr-3" />
             Выход
@@ -107,9 +103,9 @@ const DashboardNavigation = ({
           <Icon name="Menu" size={24} />
         </Button>
         <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Agency Pro
+          MBA
         </h1>
-        <NotificationCenter userEmail={userEmail} />
+        <div className="w-10" />
       </header>
 
       {mobileMenuOpen && (

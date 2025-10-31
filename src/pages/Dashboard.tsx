@@ -67,35 +67,11 @@ const models = [
   }
 ];
 
-const transactions = [
-  { id: 1, date: '2025-10-25', model: 'Anastasia Ivanova', project: 'Vogue Editorial', amount: 45000, status: 'Paid' },
-  { id: 2, date: '2025-10-23', model: 'Ekaterina Sokolova', project: 'Fashion Week Runway', amount: 85000, status: 'Paid' },
-  { id: 3, date: '2025-10-20', model: 'Maria Petrova', project: 'Commercial Campaign', amount: 32000, status: 'Pending' },
-  { id: 4, date: '2025-10-18', model: 'Victoria Romanova', project: 'Brand Ambassador', amount: 120000, status: 'Paid' },
-  { id: 5, date: '2025-10-15', model: 'Anastasia Ivanova', project: 'Magazine Cover', amount: 55000, status: 'Paid' },
-];
-
-const monthlyRevenue = [
-  { month: 'Apr', revenue: 280000, bookings: 18 },
-  { month: 'May', revenue: 320000, bookings: 22 },
-  { month: 'Jun', revenue: 295000, bookings: 19 },
-  { month: 'Jul', revenue: 380000, bookings: 26 },
-  { month: 'Aug', revenue: 420000, bookings: 28 },
-  { month: 'Sep', revenue: 365000, bookings: 24 },
-  { month: 'Oct', revenue: 337000, bookings: 21 },
-];
-
-const modelPerformance = [
-  { name: 'Anastasia', earnings: 125000 },
-  { name: 'Ekaterina', earnings: 185000 },
-  { name: 'Maria', earnings: 98000 },
-  { name: 'Victoria', earnings: 245000 },
-];
-
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const MODELS_API_URL = 'https://functions.poehali.dev/41dffced-c9d4-4e85-b52f-b5462be730e2';
+const STATISTICS_API_URL = 'https://functions.poehali.dev/a154a7bf-592e-48d3-b0ce-6724de856af0';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -109,6 +85,9 @@ const Dashboard = () => {
   const [assignedProducer, setAssignedProducer] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modelsData, setModelsData] = useState(models);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
+  const [modelPerformance, setModelPerformance] = useState<any[]>([]);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
@@ -119,6 +98,7 @@ const Dashboard = () => {
       loadUserPermissions(email);
     }
     loadModels();
+    loadStatistics();
   }, []);
 
   const loadModels = async () => {
@@ -131,7 +111,7 @@ const Dashboard = () => {
         id: user.id,
         email: user.email,
         name: user.fullName || user.email,
-        image: 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',
+        image: user.photoUrl || 'https://cdn.poehali.dev/files/a384a4f2-a902-4860-919c-6bca8195c320.png',
         height: '170 cm',
         bust: '85 cm',
         waist: '60 cm',
@@ -146,6 +126,18 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error('Failed to load models', err);
+    }
+  };
+
+  const loadStatistics = async () => {
+    try {
+      const response = await fetch(STATISTICS_API_URL);
+      const data = await response.json();
+      setTransactions(data.transactions || []);
+      setMonthlyRevenue(data.monthlyRevenue || []);
+      setModelPerformance(data.modelPerformance || []);
+    } catch (err) {
+      console.error('Failed to load statistics', err);
     }
   };
 
