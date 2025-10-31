@@ -166,6 +166,10 @@ const Dashboard = () => {
         }
         if (currentUser.role === 'producer') {
           loadProducerAssignments(email);
+          setActiveTab('checks');
+        }
+        if (currentUser.role === 'content_maker') {
+          setActiveTab('schedule');
         }
       }
     } catch (err) {
