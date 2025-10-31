@@ -141,7 +141,6 @@ const ChecksTab = () => {
   
   if (userRole === 'director' && users.length > 0) {
     const operatorUsers = users.filter(u => u.role === 'operator');
-    const producerUsers = users.filter(u => u.role === 'producer');
     const modelUsers = users.filter(u => u.role === 'content_maker');
     
     operators = operatorUsers.map(op => {
@@ -162,28 +161,6 @@ const ChecksTab = () => {
         total: Math.round(sumRubles)
       };
     });
-    
-    const producersAsOperators = producerUsers.map(prod => {
-      const salary = salaries.producers[prod.email] || { total: 0, details: [] };
-      const operatorDetails = salary.details.filter((d: any) => d.note === 'as_operator');
-      const sumDollars = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0);
-      const sumRubles = sumDollars * exchangeRate;
-      return {
-        name: prod.fullName || prod.email,
-        email: prod.email,
-        week: 0,
-        shifts: operatorDetails.length,
-        model: '',
-        sumDollars: Math.round(sumDollars * 100) / 100,
-        rate: exchangeRate,
-        sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
-      };
-    }).filter(p => p.sumDollars > 0);
-    
-    operators = [...operators, ...producersAsOperators];
     
     contentMakers = modelUsers.map(cm => {
       const salary = salaries.models[cm.email] || { total: 0, details: [] };
@@ -229,26 +206,6 @@ const ChecksTab = () => {
         total: Math.round(sumRubles)
       };
     });
-    
-    const producerSalary = salaries.producers[userEmail] || { total: 0, details: [] };
-    const operatorDetails = producerSalary.details.filter((d: any) => d.note === 'as_operator');
-    if (operatorDetails.length > 0) {
-      const sumDollars = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0);
-      const sumRubles = sumDollars * exchangeRate;
-      operators.push({
-        name: users.find(u => u.email === userEmail)?.fullName || userEmail,
-        email: userEmail,
-        week: 0,
-        shifts: operatorDetails.length,
-        model: '',
-        sumDollars: Math.round(sumDollars * 100) / 100,
-        rate: exchangeRate,
-        sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
-      });
-    }
     
     contentMakers = modelUsers.map(cm => {
       const salary = salaries.models[cm.email] || { total: 0, details: [] };
