@@ -59,10 +59,12 @@ const Login = () => {
 
       <Card className="w-full max-w-md p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative z-10 rounded-3xl">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg">
-            <span className="text-4xl font-bold text-white">M</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg shadow-purple-500/50">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 36V12L16 24L24 12L32 24L40 12V36H36V20L32 26L24 16L16 26L12 20V36H8Z" fill="white"/>
+            </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-3 text-white tracking-tight">MBA Corp.</h1>
+          <h1 className="text-4xl font-bold mb-3 text-white tracking-tight">MBA Corporation</h1>
           <p className="text-sm tracking-[0.3em] text-purple-200 uppercase font-light">Professional Models Agency</p>
         </div>
 
