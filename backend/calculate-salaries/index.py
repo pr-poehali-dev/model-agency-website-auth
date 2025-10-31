@@ -102,6 +102,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.operator_name
             FROM model_finances mf
             WHERE mf.date BETWEEN '{period_start}' AND '{period_end}'
+            AND (
+                mf.cb_tokens > 0 OR mf.stripchat_tokens > 0 OR mf.soda_tokens > 0 OR
+                mf.cb_income > 0 OR mf.sp_income > 0 OR mf.soda_income > 0 OR 
+                mf.cam4_income > 0 OR mf.transfers > 0
+            )
         """)
         finances = cur.fetchall()
         
