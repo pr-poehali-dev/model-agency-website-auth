@@ -234,18 +234,24 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const users = await usersResponse.json();
       const assignments = await assignmentsResponse.json();
       
-      console.log('Users loaded:', users.length);
-      console.log('Assignments loaded:', assignments.length);
-      console.log('Assignments:', assignments);
+      console.log('Users loaded:', users);
+      console.log('Assignments loaded:', assignments);
       
       const teamsData: Team[] = assignments.map((assignment: any) => {
         const operator = users.find((u: any) => u.email === assignment.operatorEmail);
         const model = users.find((u: any) => u.email === assignment.modelEmail);
         
+        console.log('Processing assignment:', {
+          operatorEmail: assignment.operatorEmail,
+          modelEmail: assignment.modelEmail,
+          operatorFound: operator,
+          modelFound: model
+        });
+        
         // Всегда используем fullName, если нет - берем часть email до @
-        const operatorName = operator?.fullName || 
+        const operatorName = operator?.fullName || operator?.full_name || 
           (assignment.operatorEmail ? assignment.operatorEmail.split('@')[0] : 'Оператор');
-        const modelName = model?.fullName || 
+        const modelName = model?.fullName || model?.full_name || 
           (assignment.modelEmail ? assignment.modelEmail.split('@')[0] : 'Модель');
         
         return {
