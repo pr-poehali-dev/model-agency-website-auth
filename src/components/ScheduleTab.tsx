@@ -382,7 +382,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                                 <td 
                                   key={dateIndex} 
                                   className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
-                                  onClick={() => handleCellClick(aptIndex, weekIndex, dateIndex, '10:00', date.times['10:00'])}
+                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '10:00', date.times['10:00']) : undefined}
                                 >
                                   {date.times['10:00']}
                                 </td>
@@ -394,7 +394,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                                 <td 
                                   key={dateIndex} 
                                   className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''}`}
-                                  onClick={() => handleCellClick(aptIndex, weekIndex, dateIndex, '17:00', date.times['17:00'])}
+                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '17:00', date.times['17:00']) : undefined}
                                 >
                                   {date.times['17:00']}
                                 </td>
@@ -406,7 +406,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                                 <td 
                                   key={dateIndex} 
                                   className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''}`}
-                                  onClick={() => handleCellClick(aptIndex, weekIndex, dateIndex, '00:00', date.times['00:00'])}
+                                  onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '00:00', date.times['00:00']) : undefined}
                                 >
                                   {date.times['00:00']}
                                 </td>
