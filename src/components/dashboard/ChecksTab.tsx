@@ -270,7 +270,22 @@ const ChecksTab = () => {
   }
 
   const totalModelSum = contentMakers.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
-  const totalOperatorSum = operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
+  let totalOperatorSum = operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
+  
+  if (userRole === 'producer') {
+    const producerSalary = salaries.producers[userEmail] || { total: 0, details: [] };
+    const operatorDetails = producerSalary.details.filter((d: any) => d.note === 'as_operator');
+    const producerOperatorSum = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0) * exchangeRate;
+    totalOperatorSum += producerOperatorSum;
+  } else if (userRole === 'director') {
+    const producerUsers = users.filter(u => u.role === 'producer');
+    producerUsers.forEach(prod => {
+      const salary = salaries.producers[prod.email] || { total: 0, details: [] };
+      const operatorDetails = salary.details.filter((d: any) => d.note === 'as_operator');
+      const producerOperatorSum = operatorDetails.reduce((sum: number, d: any) => sum + d.amount, 0) * exchangeRate;
+      totalOperatorSum += producerOperatorSum;
+    });
+  }
 
   if (userRole !== 'producer' && userRole !== 'director') {
     return (
