@@ -131,19 +131,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['stripchat_tokens'] or 0)
             soda_tokens = float(finance['soda_tokens'] or 0)
-            cb_income = float(finance['cb_income'] or 0)
-            sp_income = float(finance['sp_income'] or 0)
-            soda_income = float(finance['soda_income'] or 0)
-            cam4_income = float(finance['cam4_income'] or 0)
-            transfers = float(finance['transfers'] or 0)
+            cb_income_tokens = float(finance['cb_income'] or 0)
+            sp_income_tokens = float(finance['sp_income'] or 0)
+            soda_income_tokens = float(finance['soda_income'] or 0)
+            cam4_income_dollars = float(finance['cam4_income'] or 0)
+            transfers_dollars = float(finance['transfers'] or 0)
             
-            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income}, sp_income={sp_income}, transfers={transfers}")
+            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income_tokens}, sp_income={sp_income_tokens}, transfers={transfers_dollars}")
             
-            cb_dollars = (cb_income * 0.05) if cb_income > 0 else (cb_tokens * 0.05)
-            sp_dollars = (sp_income * 0.05) if sp_income > 0 else (sp_tokens * 0.05)
-            soda_dollars = (soda_income * 0.05) if soda_income > 0 else (soda_tokens * 0.05)
+            cb_dollars = cb_income_tokens * 0.05 if cb_income_tokens > 0 else cb_tokens * 0.05
+            sp_dollars = sp_income_tokens * 0.05 if sp_income_tokens > 0 else sp_tokens * 0.05
+            soda_dollars = soda_income_tokens * 0.05 if soda_income_tokens > 0 else soda_tokens * 0.05
             
-            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income + transfers
+            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income_dollars + transfers_dollars
             
             print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income}, transfers={transfers}, total_check={total_check}")
             
