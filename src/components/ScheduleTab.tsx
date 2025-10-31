@@ -257,12 +257,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             return null;
           }
           
+          // Берем только первое слово (имя) из fullName
+          const operatorFirstName = operator.fullName.split(' ')[0];
+          const modelFirstName = model.fullName.split(' ')[0];
+          
           return {
             operatorEmail: assignment.operatorEmail,
-            operatorName: operator.fullName,
+            operatorName: operatorFirstName,
             modelEmail: assignment.modelEmail,
-            modelName: model.fullName,
-            displayName: `${operator.fullName} / ${model.fullName}`
+            modelName: modelFirstName,
+            displayName: `${operatorFirstName} / ${modelFirstName}`
           };
         })
         .filter((team): team is Team => team !== null); // Убираем null значения
