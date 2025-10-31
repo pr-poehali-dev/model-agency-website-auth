@@ -65,7 +65,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   content_maker: [
     PERMISSIONS.VIEW_HOME,
-    PERMISSIONS.VIEW_MODELS,
     PERMISSIONS.VIEW_FILES,
   ],
 };
