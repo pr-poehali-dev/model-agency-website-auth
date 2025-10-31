@@ -228,7 +228,6 @@ const Dashboard = () => {
       finances: 'Финансы',
       checks: 'Чеки',
       schedule: 'Расписание',
-      dashboard: 'Dashboard',
       files: 'Файлы',
       users: 'Пользователи',
       audit: 'История действий'
@@ -243,7 +242,6 @@ const Dashboard = () => {
     { id: 'finances', label: 'Финансы', icon: 'DollarSign', permission: PERMISSIONS.VIEW_FINANCES },
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
-    { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', permission: PERMISSIONS.VIEW_DASHBOARD },
     { id: 'files', label: 'Файлы', icon: 'Files', permission: PERMISSIONS.VIEW_FILES },
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
@@ -294,8 +292,6 @@ const Dashboard = () => {
         return <ChecksTab />;
       case 'schedule':
         return <ScheduleTab />;
-      case 'dashboard':
-        return <DashboardTab monthlyRevenue={monthlyRevenue} onNavigate={(tab) => setActiveTab(tab)} />;
       case 'files':
         return <FilesTab />;
       case 'users':
