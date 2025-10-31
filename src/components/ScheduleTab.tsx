@@ -151,13 +151,19 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const response = await fetch(SCHEDULE_API_URL);
       const data = await response.json();
       
+      console.log('Schedule API response:', data);
+      console.log('Is array:', Array.isArray(data));
+      console.log('Keys length:', Object.keys(data).length);
+      
       if (Object.keys(data).length === 0) {
+        console.log('Empty schedule, initializing...');
         await initializeSchedule();
         setScheduleData(defaultSchedule);
       } else {
         const newSchedule = JSON.parse(JSON.stringify(defaultSchedule));
         
         Object.values(data).forEach((aptData: any) => {
+          console.log('Processing apartment:', aptData);
           const apt = newSchedule.apartments.find(
             a => a.name === aptData.name && a.address === aptData.address
           );
@@ -177,6 +183,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           }
         });
         
+        console.log('Final schedule data:', newSchedule);
         setScheduleData(newSchedule);
       }
       setLoading(false);
