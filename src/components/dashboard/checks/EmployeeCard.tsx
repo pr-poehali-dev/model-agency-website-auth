@@ -89,7 +89,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
               value={advance}
               onChange={(e) => setAdvance(Number(e.target.value))}
               onBlur={(e) => handleBlur('advance', Number(e.target.value))}
-              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400"
+              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           ) : (
             <span className="font-bold text-xl text-red-600 dark:text-red-400">{advance.toLocaleString()}₽</span>
@@ -104,7 +104,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
               value={penalty}
               onChange={(e) => setPenalty(Number(e.target.value))}
               onBlur={(e) => handleBlur('penalty', Number(e.target.value))}
-              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400"
+              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           ) : (
             <span className="font-bold text-xl text-red-600 dark:text-red-400">{penalty.toLocaleString()}₽</span>
