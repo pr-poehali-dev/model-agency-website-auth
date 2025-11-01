@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import ModelAccountsDialog from '@/components/ModelAccountsDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface Model {
   id: number;
@@ -55,6 +62,9 @@ const ModelsTab = ({
   const [users, setUsers] = useState<any[]>([]);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [modelToEdit, setModelToEdit] = useState<Model | null>(null);
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
@@ -200,6 +210,60 @@ const ModelsTab = ({
     }
   };
 
+  const handleOpenPhotoDialog = (model: Model) => {
+    setModelToEdit(model);
+    setPhotoUrl(model.image);
+    setPhotoDialogOpen(true);
+  };
+
+  const handleSavePhoto = async () => {
+    if (!modelToEdit || !photoUrl.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите URL изображения',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(USERS_API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail,
+          'X-User-Role': userRole || 'director'
+        },
+        body: JSON.stringify({
+          id: modelToEdit.id,
+          image: photoUrl
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update photo');
+      }
+
+      toast({
+        title: 'Фото обновлено',
+        description: `Фото модели ${modelToEdit.name} успешно обновлено`
+      });
+
+      setPhotoDialogOpen(false);
+      setPhotoUrl('');
+      setModelToEdit(null);
+      
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating photo:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить фото',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const displayModels = userRole === 'content_maker'
     ? []
     : operatorAssignments.length > 0 
@@ -261,6 +325,45 @@ const ModelsTab = ({
         />
       )}
 
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Изменить фото модели</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {photoUrl && (
+              <div className="w-full aspect-[4/5] relative bg-muted rounded-lg overflow-hidden">
+                <img
+                  src={photoUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://via.placeholder.com/400x500?text=Invalid+URL';
+                  }}
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL изображения</label>
+              <Input
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={photoUrl}
+                onChange={(e) => setPhotoUrl(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setPhotoDialogOpen(false)} className="flex-1">
+                Отмена
+              </Button>
+              <Button onClick={handleSavePhoto} className="flex-1">
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {filteredModels.length === 0 && searchQuery && (
         <Card className="p-8 text-center">
           <Icon name="Search" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
@@ -284,6 +387,17 @@ const ModelsTab = ({
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {userRole === 'director' && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleOpenPhotoDialog(model)}
+                  >
+                    <Icon name="Camera" size={16} />
+                  </Button>
+                )}
 
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="font-bold text-xl text-white mb-1 drop-shadow-lg">
