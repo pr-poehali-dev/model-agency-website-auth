@@ -18,7 +18,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import ScheduleHistory from './ScheduleHistory';
-import GoogleCalendarSync from './GoogleCalendarSync';
 
 interface TeamMember {
   id: number;
@@ -477,7 +476,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
               ))}
             </SelectContent>
           </Select>
-          <GoogleCalendarSync />
           <ScheduleHistory />
           {canEdit && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
