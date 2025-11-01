@@ -133,7 +133,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(-6); // Смещение недель от текущей
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
