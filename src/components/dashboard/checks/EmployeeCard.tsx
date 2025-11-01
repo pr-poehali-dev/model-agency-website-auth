@@ -1,14 +1,28 @@
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
+import { useState } from 'react';
 
 interface EmployeeCardProps {
   employee: Employee;
   color: 'blue' | 'purple' | 'red';
   icon?: string;
+  canEdit?: boolean;
+  onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
 }
 
-const EmployeeCard = ({ employee, color, icon }: EmployeeCardProps) => {
+const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: EmployeeCardProps) => {
+  const [advance, setAdvance] = useState(employee.advance);
+  const [penalty, setPenalty] = useState(employee.penalty);
+
+  const handleBlur = (field: 'advance' | 'penalty', value: number) => {
+    if (onUpdate && employee.email) {
+      onUpdate(employee.email, field, value);
+    }
+  };
+
+  const total = employee.sumRubles - advance - penalty;
   const colorClasses = {
     blue: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
     purple: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
@@ -69,17 +83,37 @@ const EmployeeCard = ({ employee, color, icon }: EmployeeCardProps) => {
         
         <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/20">
           <span className="font-medium">Аванс</span>
-          <span className="font-bold text-xl text-red-600 dark:text-red-400">{employee.advance.toLocaleString()}₽</span>
+          {canEdit ? (
+            <Input
+              type="number"
+              value={advance}
+              onChange={(e) => setAdvance(Number(e.target.value))}
+              onBlur={(e) => handleBlur('advance', Number(e.target.value))}
+              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400"
+            />
+          ) : (
+            <span className="font-bold text-xl text-red-600 dark:text-red-400">{advance.toLocaleString()}₽</span>
+          )}
         </div>
         
         <div className="flex justify-between items-center py-3 px-4 bg-red-500/10 rounded-lg border border-red-500/20">
           <span className="font-medium">Штраф</span>
-          <span className="font-bold text-xl text-red-600 dark:text-red-400">{employee.penalty.toLocaleString()}₽</span>
+          {canEdit ? (
+            <Input
+              type="number"
+              value={penalty}
+              onChange={(e) => setPenalty(Number(e.target.value))}
+              onBlur={(e) => handleBlur('penalty', Number(e.target.value))}
+              className="w-32 text-right font-bold text-xl text-red-600 dark:text-red-400"
+            />
+          ) : (
+            <span className="font-bold text-xl text-red-600 dark:text-red-400">{penalty.toLocaleString()}₽</span>
+          )}
         </div>
         
         <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border-2 border-green-500/40 mt-4">
           <span className="font-bold text-lg">Итог</span>
-          <span className="font-bold text-2xl text-green-600 dark:text-green-400">{employee.total.toLocaleString()}₽</span>
+          <span className="font-bold text-2xl text-green-600 dark:text-green-400">{total.toLocaleString()}₽</span>
         </div>
       </div>
     </Card>

@@ -120,6 +120,14 @@ const ChecksTab = () => {
     }
   };
 
+  const handleUpdateProducer = async (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => {
+    console.log(`Updating producer ${email}: ${field} = ${value}`);
+  };
+
+  const handleUpdateEmployee = async (email: string, field: 'advance' | 'penalty', value: number) => {
+    console.log(`Updating employee ${email}: ${field} = ${value}`);
+  };
+
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
   const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => {
@@ -342,10 +350,25 @@ const ChecksTab = () => {
 
       <div className="space-y-8">
         {userRole === 'director' && producers.length > 0 && (
-          <ProducersSection producers={producers} period={currentPeriod} />
+          <ProducersSection 
+            producers={producers} 
+            period={currentPeriod} 
+            canEdit={true}
+            onUpdate={handleUpdateProducer}
+          />
         )}
-        <OperatorsSection operators={operators} period={currentPeriod} />
-        <ContentMakersSection contentMakers={contentMakers} period={currentPeriod} />
+        <OperatorsSection 
+          operators={operators} 
+          period={currentPeriod} 
+          canEdit={true}
+          onUpdate={handleUpdateEmployee}
+        />
+        <ContentMakersSection 
+          contentMakers={contentMakers} 
+          period={currentPeriod} 
+          canEdit={true}
+          onUpdate={handleUpdateEmployee}
+        />
       </div>
     </div>
   );

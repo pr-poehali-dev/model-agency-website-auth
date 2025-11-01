@@ -6,9 +6,11 @@ import ProducerSalaryCard from './ProducerSalaryCard';
 interface ProducersSectionProps {
   producers: ProducerData[];
   period: Period;
+  canEdit?: boolean;
+  onUpdate?: (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => void;
 }
 
-const ProducersSection = ({ producers, period }: ProducersSectionProps) => {
+const ProducersSection = ({ producers, period, canEdit, onUpdate }: ProducersSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -21,6 +23,8 @@ const ProducersSection = ({ producers, period }: ProducersSectionProps) => {
             key={index} 
             producerData={producer} 
             period={period}
+            canEdit={canEdit}
+            onUpdate={onUpdate}
           />
         ))}
       </div>

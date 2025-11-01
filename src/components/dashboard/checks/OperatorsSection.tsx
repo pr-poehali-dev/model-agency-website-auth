@@ -6,9 +6,11 @@ import EmployeeCard from './EmployeeCard';
 interface OperatorsSectionProps {
   operators: Employee[];
   period: Period;
+  canEdit?: boolean;
+  onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
 }
 
-const OperatorsSection = ({ operators, period }: OperatorsSectionProps) => {
+const OperatorsSection = ({ operators, period, canEdit, onUpdate }: OperatorsSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -22,6 +24,8 @@ const OperatorsSection = ({ operators, period }: OperatorsSectionProps) => {
             employee={employee} 
             color="blue"
             icon="Headphones"
+            canEdit={canEdit}
+            onUpdate={onUpdate}
           />
         ))}
       </div>

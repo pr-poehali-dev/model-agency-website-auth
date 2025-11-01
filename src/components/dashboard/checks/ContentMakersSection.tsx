@@ -6,9 +6,11 @@ import EmployeeCard from './EmployeeCard';
 interface ContentMakersSectionProps {
   contentMakers: Employee[];
   period: Period;
+  canEdit?: boolean;
+  onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
 }
 
-const ContentMakersSection = ({ contentMakers, period }: ContentMakersSectionProps) => {
+const ContentMakersSection = ({ contentMakers, period, canEdit, onUpdate }: ContentMakersSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -22,6 +24,8 @@ const ContentMakersSection = ({ contentMakers, period }: ContentMakersSectionPro
             employee={employee} 
             color="purple"
             icon="Camera"
+            canEdit={canEdit}
+            onUpdate={onUpdate}
           />
         ))}
       </div>
