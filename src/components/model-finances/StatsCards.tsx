@@ -22,7 +22,7 @@ const StatsCards = ({ onlineData }: StatsCardsProps) => {
     return currentIncome > bestIncome ? current : best;
   }, onlineData[0]);
   
-  const bestDayIncome = calculateDailyIncome(bestDay);
+  const bestDayIncome = bestDay ? calculateDailyIncome(bestDay) : 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -50,7 +50,7 @@ const StatsCards = ({ onlineData }: StatsCardsProps) => {
           <Icon name="Star" size={20} className="text-purple-600" />
         </div>
         <p className="text-3xl font-bold text-purple-600">${bestDayIncome.toFixed(2)}</p>
-        <p className="text-xs text-muted-foreground mt-1">{formatDate(bestDay.date)}</p>
+        <p className="text-xs text-muted-foreground mt-1">{bestDay ? formatDate(bestDay.date) : '-'}</p>
       </Card>
     </div>
   );
