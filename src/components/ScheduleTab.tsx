@@ -133,8 +133,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-  const [allScheduleData, setAllScheduleData] = useState<typeof defaultSchedule | null>(null);
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
@@ -172,14 +171,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   useEffect(() => {
     loadTeamMembers();
     loadTeams();
-    loadSchedule();
   }, []);
 
   useEffect(() => {
-    if (allScheduleData) {
-      filterScheduleByWeek();
-    }
-  }, [currentWeekOffset, allScheduleData]);
+    loadSchedule();
+  }, [currentWeekOffset]);
 
   const loadSchedule = async () => {
     try {
@@ -188,65 +184,56 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Schedule API response:', data);
       
-      if (Object.keys(data).length === 0) {
-        setAllScheduleData(defaultSchedule);
-        setScheduleData(defaultSchedule);
-        setLoading(false);
-        return;
-      }
+      // Получаем даты для текущей недели
+      const weekDates = getWeekDates(currentWeekOffset);
+      console.log('Week dates for offset', currentWeekOffset, ':', weekDates);
       
+      // Создаем расписание с датами текущей недели для обеих локаций
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => {
           const aptData: any = Object.values(data).find((a: any) => 
             a.name === apt.name && a.address === apt.address
           );
           
-          if (!aptData || !aptData.weeks) {
-            return apt;
-          }
-          
           return {
             ...apt,
             weeks: [
               {
                 weekNumber: '1 лк',
-                dates: aptData.weeks['1 лк'] || []
+                dates: weekDates.map(wd => {
+                  // Ищем сохраненные данные для этой даты в локации 1
+                  const savedDate = aptData?.weeks?.['1 лк']?.find((d: any) => d.date === wd.date);
+                  return {
+                    day: wd.day,
+                    date: wd.date,
+                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
+                  };
+                })
               },
               {
                 weekNumber: '2 лк',
-                dates: aptData.weeks['2 лк'] || []
+                dates: weekDates.map(wd => {
+                  // Ищем сохраненные данные для этой даты в локации 2
+                  const savedDate = aptData?.weeks?.['2 лк']?.find((d: any) => d.date === wd.date);
+                  return {
+                    day: wd.day,
+                    date: wd.date,
+                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
+                  };
+                })
               }
             ]
           };
         })
       };
       
-      console.log('Loaded all schedule data:', newSchedule);
-      setAllScheduleData(newSchedule);
+      console.log('Generated schedule with week offset', currentWeekOffset, ':', newSchedule);
+      setScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
       setLoading(false);
     }
-  };
-
-  const filterScheduleByWeek = () => {
-    if (!allScheduleData) return;
-
-    const currentWeekDates = getWeekDates(currentWeekOffset);
-    const weekDateStrings = currentWeekDates.map(d => d.date);
-    
-    const filteredSchedule = {
-      apartments: allScheduleData.apartments.map(apt => ({
-        ...apt,
-        weeks: apt.weeks.map(week => ({
-          ...week,
-          dates: week.dates.filter(d => weekDateStrings.includes(d.date))
-        }))
-      }))
-    };
-    
-    setScheduleData(filteredSchedule);
   };
 
   const initializeSchedule = async () => {
@@ -458,6 +445,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {/* Переключение недель */}
           <div className="flex items-center gap-2 border border-border rounded-lg p-1">
             <Button 
               variant="ghost" 
@@ -466,11 +454,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             >
               <Icon name="ChevronLeft" size={16} />
             </Button>
-            <span className="text-sm font-medium px-2 min-w-[160px] text-center">
-              {(() => {
-                const dates = getWeekDates(currentWeekOffset);
-                return `${dates[0].date} - ${dates[6].date}`;
-              })()}
+            <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+              {currentWeekOffset === 0 ? 'Эта неделя' : 
+               currentWeekOffset === 1 ? 'След. неделя' :
+               currentWeekOffset === -1 ? 'Прош. неделя' :
+               currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : `${currentWeekOffset} нед.`}
             </span>
             <Button 
               variant="ghost" 
