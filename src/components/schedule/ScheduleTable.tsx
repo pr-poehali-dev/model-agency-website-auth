@@ -29,19 +29,7 @@ export const ScheduleTable = ({
       <div className="space-y-6">
         {apartment.weeks.map((week, weekIndex) => (
           <div key={weekIndex}>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium">{week.weekNumber}</h4>
-              {canEdit && apartment.weeks.length === 2 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onCopyLocation(weekIndex, weekIndex === 0 ? 1 : 0)}
-                >
-                  <Icon name="Copy" size={14} className="mr-1" />
-                  Скопировать в {weekIndex === 0 ? '2 лк' : '1 лк'}
-                </Button>
-              )}
-            </div>
+            <h4 className="font-medium mb-3">{week.weekNumber}</h4>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -87,6 +75,18 @@ export const ScheduleTable = ({
                 </tbody>
               </table>
             </div>
+            {canEdit && apartment.weeks.length === 2 && (
+              <div className="mt-2 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onCopyLocation(weekIndex, weekIndex === 0 ? 1 : 0)}
+                >
+                  <Icon name="Copy" size={14} className="mr-1" />
+                  Скопировать в {weekIndex === 0 ? '2 лк' : '1 лк'}
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>
