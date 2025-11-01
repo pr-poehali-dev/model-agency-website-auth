@@ -111,11 +111,25 @@ def get_all_production_stats(cursor, schema: str, period_start: str, period_end:
     producers = cursor.fetchall()
     
     producer_stats = []
+    all_producer_emails = []
     for producer in producers:
         stats = get_producer_stats(cursor, schema, producer['producer_email'], period_start, period_end)
         stats['producer_name'] = producer['full_name']
         stats['producer_email'] = producer['producer_email']
         producer_stats.append(stats)
+        all_producer_emails.append(producer['producer_email'])
+    
+    director_adjustments = get_salary_adjustments(cursor, schema, all_producer_emails, period_start, period_end)
+    
+    for prod_stat in producer_stats:
+        prod_email = prod_stat['producer_email']
+        prod_current = [a for a in director_adjustments['current'] if a['email'] == prod_email]
+        prod_previous = [a for a in director_adjustments['previous'] if a['email'] == prod_email]
+        
+        if prod_current:
+            prod_stat['adjustments']['current'].extend(prod_current)
+        if prod_previous:
+            prod_stat['adjustments']['previous'].extend(prod_previous)
     
     return {'producers': producer_stats}
 

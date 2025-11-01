@@ -68,6 +68,8 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
       );
       const result = await response.json();
       
+      console.log('Production stats loaded:', result);
+      
       if (userRole === 'director') {
         setProducersData(result.producers || []);
       } else {
