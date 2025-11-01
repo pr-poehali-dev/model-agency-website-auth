@@ -107,7 +107,6 @@ const EditUserDialog = ({
                 <SelectItem value="director">Директор</SelectItem>
                 <SelectItem value="producer">Продюссер</SelectItem>
                 <SelectItem value="operator">Оператор</SelectItem>
-                <SelectItem value="solo_maker">Соло-мейкер</SelectItem>
                 <SelectItem value="content_maker">Контент-мейкер</SelectItem>
               </SelectContent>
             </Select>

@@ -1,4 +1,4 @@
-export type UserRole = 'director' | 'producer' | 'operator' | 'content_maker' | 'solo_maker';
+export type UserRole = 'director' | 'producer' | 'operator' | 'content_maker';
 
 export interface User {
   email: string;
@@ -63,12 +63,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.VIEW_SCHEDULE,
     PERMISSIONS.VIEW_FILES,
   ],
-  solo_maker: [
-    PERMISSIONS.VIEW_HOME,
-    PERMISSIONS.VIEW_MODELS,
-    PERMISSIONS.VIEW_SCHEDULE,
-    PERMISSIONS.VIEW_FILES,
-  ],
   content_maker: [
     PERMISSIONS.VIEW_HOME,
     PERMISSIONS.VIEW_FILES,
@@ -79,7 +73,6 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   director: 'Директор',
   producer: 'Продюссер',
   operator: 'Оператор',
-  solo_maker: 'Соло-мейкер',
   content_maker: 'Контент-мейкер',
 };
 

@@ -48,7 +48,6 @@ const ModelAccountsDialog = ({
   }, [initialAccounts, modelName, open]);
 
   const canEdit = userRole === 'director' || userRole === 'producer';
-  const canView = canEdit || userRole === 'operator' || userRole === 'solo_maker';
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

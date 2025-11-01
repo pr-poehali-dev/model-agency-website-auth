@@ -16,7 +16,6 @@ const roleNames: Record<string, string> = {
   'director': 'Директор',
   'producer': 'Продюсер',
   'operator': 'Оператор',
-  'solo_maker': 'Соло-мейкер',
   'content_maker': 'Контент-мейкер',
   'model': 'Модель'
 };
@@ -114,7 +113,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             }
           }
         }
-      } else if (currentUser.role === 'content_maker' || currentUser.role === 'solo_maker') {
+      } else if (currentUser.role === 'content_maker') {
         const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
         const producerAssignments = await producerResponse.json();
         const producerAssignment = producerAssignments.find(
@@ -157,10 +156,6 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
           salary = { ...data.models[userEmail], type: 'model' };
         } else if (data.producers[userEmail]) {
           salary = { ...data.producers[userEmail], type: 'producer' };
-        }
-        
-        if (!salary && userRole === 'solo_maker' && data.models[userEmail]) {
-          salary = { ...data.models[userEmail], type: 'model' };
         }
         
         setSalaryData(salary);
