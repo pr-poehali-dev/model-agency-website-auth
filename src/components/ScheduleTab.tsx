@@ -172,7 +172,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     loadTeamMembers();
     loadTeams();
     loadSchedule();
-  }, []);
+  }, [currentWeekOffset]);
 
   const loadSchedule = async () => {
     try {
@@ -181,48 +181,50 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Schedule API response:', data);
       
-      if (Object.keys(data).length === 0) {
-        console.log('Empty schedule, initializing with default data...');
-        await initializeSchedule();
-        setScheduleData(defaultSchedule);
-      } else {
-        // Проверяем, есть ли в базе наши квартиры
-        const hasCorrectApartments = Object.values(data).some((aptData: any) => 
-          aptData.name === 'Командорская 5/3' || aptData.name === 'Бочарникова 4 к2'
-        );
-        
-        if (!hasCorrectApartments) {
-          console.log('Old test data found, reinitializing with correct apartments...');
-          // Очищаем старые данные и инициализируем новые
-          await initializeSchedule();
-          setScheduleData(defaultSchedule);
-        } else {
-          // Загружаем данные из API
-          const newSchedule = JSON.parse(JSON.stringify(defaultSchedule));
+      // Получаем даты для текущей недели
+      const weekDates = getWeekDates(currentWeekOffset);
+      
+      // Создаем расписание с правильными датами
+      const newSchedule = {
+        apartments: defaultSchedule.apartments.map(apt => ({
+          ...apt,
+          weeks: [{
+            weekNumber: currentWeekOffset === 0 ? 'Текущая неделя' : 
+                        currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : 
+                        `${currentWeekOffset} нед.`,
+            dates: weekDates.map(wd => ({
+              day: wd.day,
+              date: wd.date,
+              times: { '10:00': '', '17:00': '', '00:00': '' }
+            }))
+          }]
+        }))
+      };
+      
+      // Загружаем данные из API для этих дат
+      if (Object.keys(data).length > 0) {
+        Object.values(data).forEach((aptData: any) => {
+          const apt = newSchedule.apartments.find(
+            a => a.name === aptData.name && a.address === aptData.address
+          );
           
-          Object.values(data).forEach((aptData: any) => {
-            const apt = newSchedule.apartments.find(
-              a => a.name === aptData.name && a.address === aptData.address
-            );
-            
-            if (apt) {
-              Object.entries(aptData.weeks).forEach(([weekNum, dates]: [string, any]) => {
-                const week = apt.weeks.find(w => w.weekNumber === weekNum);
-                if (week) {
-                  dates.forEach((dateData: any) => {
-                    const dateEntry = week.dates.find(d => d.date === dateData.date);
-                    if (dateEntry) {
-                      dateEntry.times = dateData.times;
-                    }
-                  });
-                }
-              });
-            }
-          });
-          
-          setScheduleData(newSchedule);
-        }
+          if (apt && aptData.weeks) {
+            Object.values(aptData.weeks).forEach((dates: any) => {
+              if (Array.isArray(dates)) {
+                dates.forEach((dateData: any) => {
+                  // Ищем эту дату в текущей неделе
+                  const dateEntry = apt.weeks[0].dates.find(d => d.date === dateData.date);
+                  if (dateEntry && dateData.times) {
+                    dateEntry.times = dateData.times;
+                  }
+                });
+              }
+            });
+          }
+        });
       }
+      
+      setScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
@@ -322,54 +324,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
-  const handleCopyWeek = async (aptIndex: number, weekIndex: number) => {
-    const targetWeekIndex = weekIndex === 0 ? 1 : 0;
-    const apartment = scheduleData.apartments[aptIndex];
-    const sourceWeek = apartment.weeks[weekIndex];
-    const targetWeek = apartment.weeks[targetWeekIndex];
 
-    try {
-      for (let dateIndex = 0; dateIndex < sourceWeek.dates.length; dateIndex++) {
-        const sourceDate = sourceWeek.dates[dateIndex];
-        const targetDate = targetWeek.dates[dateIndex];
-        
-        for (const time of ['10:00', '17:00', '00:00']) {
-          await fetch(SCHEDULE_API_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              apartment_name: apartment.name,
-              apartment_address: apartment.address,
-              week_number: targetWeek.weekNumber,
-              date: targetDate.date,
-              time_slot: time,
-              value: sourceDate.times[time]
-            })
-          });
-        }
-      }
-
-      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-      newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates = 
-        newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates.map((date: any, idx: number) => ({
-          ...date,
-          times: { ...sourceWeek.dates[idx].times }
-        }));
-      
-      setScheduleData(newSchedule);
-
-      toast({
-        title: 'Неделя скопирована',
-        description: `Расписание "${sourceWeek.weekNumber}" скопировано в "${targetWeek.weekNumber}"`,
-      });
-    } catch (err) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось скопировать неделю',
-        variant: 'destructive'
-      });
-    }
-  };
 
   const handleCellClick = (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => {
     if (!canEdit) return;
@@ -520,20 +475,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                           <thead>
                             <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
                               <th className="p-2 text-left font-semibold text-foreground w-20">
-                                <div className="flex items-center gap-2">
-                                  <span>Лок. {weekIndex + 1}</span>
-                                  {canEdit && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                      onClick={() => handleCopyWeek(aptIndex, weekIndex)}
-                                      title="Скопировать неделю"
-                                    >
-                                      <Icon name="Copy" size={14} />
-                                    </Button>
-                                  )}
-                                </div>
+                                <span>Лок. {weekIndex + 1}</span>
                               </th>
                               {currentDates.map((dateInfo, dateIndex) => (
                                 <th key={dateIndex} className="p-2 text-center font-medium text-foreground border-l border-border">
