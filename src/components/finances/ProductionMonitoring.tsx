@@ -139,8 +139,8 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
     const totalCurrentIncome = producerData.models.reduce((sum, m) => sum + m.current_income, 0);
     const totalPreviousIncome = producerData.models.reduce((sum, m) => sum + m.previous_income, 0);
     
-    const totalCurrentShifts = producerData.operators.reduce((sum, o) => sum + o.current_shifts, 0);
-    const totalPreviousShifts = producerData.operators.reduce((sum, o) => sum + o.previous_shifts, 0);
+    const totalCurrentShifts = producerData.operators.reduce((sum, o) => sum + o.current_shifts, 0) + producerData.models.reduce((sum, m) => sum + m.current_shifts, 0);
+    const totalPreviousShifts = producerData.operators.reduce((sum, o) => sum + o.previous_shifts, 0) + producerData.models.reduce((sum, m) => sum + m.previous_shifts, 0);
     
     const currentAdvances = producerData.adjustments.current.reduce((sum, a) => sum + Number(a.advance), 0);
     const previousAdvances = producerData.adjustments.previous.reduce((sum, a) => sum + Number(a.advance), 0);
@@ -175,7 +175,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icon name="Calendar" size={20} className="text-blue-600" />
-              <span className="text-sm font-medium text-muted-foreground">Смены операторов</span>
+              <span className="text-sm font-medium text-muted-foreground">Смены</span>
             </div>
             <div className="text-2xl font-bold">{totalCurrentShifts}</div>
             <div className={`text-sm mt-1 ${totalCurrentShifts >= totalPreviousShifts ? 'text-green-600' : 'text-red-600'}`}>
