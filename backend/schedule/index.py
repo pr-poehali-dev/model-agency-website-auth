@@ -112,11 +112,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             time_slot = body_data.get('time_slot')
             value = body_data.get('value', '')
             
-            time_column = {
+            time_column_map = {
                 '10:00': 'time_10',
                 '17:00': 'time_17',
                 '00:00': 'time_00'
-            }.get(time_slot)
+            }
+            
+            time_column = time_column_map.get(time_slot)
             
             if not time_column:
                 return {
@@ -127,13 +129,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             cur.execute(f"""
-                UPDATE t_p35405502_model_agency_website.schedule
-                SET {time_column} = %s, updated_at = CURRENT_TIMESTAMP
-                WHERE apartment_name = %s 
-                  AND apartment_address = %s 
-                  AND week_number = %s 
-                  AND date = %s
-            """, (value, apartment_name, apartment_address, week_number, date))
+                INSERT INTO t_p35405502_model_agency_website.schedule 
+                (apartment_name, apartment_address, week_number, date, day_name, {time_column})
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (apartment_name, apartment_address, week_number, date) 
+                DO UPDATE SET {time_column} = EXCLUDED.{time_column}, updated_at = CURRENT_TIMESTAMP
+            """, (apartment_name, apartment_address, week_number, date, '', value))
             
             conn.commit()
             
