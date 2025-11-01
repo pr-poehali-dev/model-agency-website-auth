@@ -512,8 +512,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                 </thead>
                 <tbody>
                   {apartment.weeks.map((week, weekIndex) => {
-                    // Получаем даты для текущей недели с учетом смещения
-                    const currentDates = getWeekDates(currentWeekOffset + weekIndex);
+                    // Все локации показывают одну и ту же неделю
+                    const currentDates = getWeekDates(currentWeekOffset);
                     
                     return (
                     <tr key={weekIndex}>
@@ -523,7 +523,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                             <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
                               <th className="p-2 text-left font-semibold text-foreground w-20">
                                 <div className="flex items-center gap-2">
-                                  <span>Неделя {weekIndex + 1}</span>
+                                  <span>Лок. {weekIndex + 1}</span>
                                   {canEdit && (
                                     <Button
                                       variant="ghost"
