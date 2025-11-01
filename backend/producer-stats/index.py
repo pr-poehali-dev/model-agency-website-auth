@@ -143,7 +143,9 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
     
     cursor.execute(f'''
         SELECT 
-            COALESCE(SUM(cb_income + sp_income + soda_income + cam4_income), 0) as total_income,
+            COALESCE(SUM(
+                (cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers
+            ) * 0.6, 0) as total_income,
             COUNT(CASE WHEN has_shift = true THEN 1 END) as shift_count
         FROM {schema}.model_finances
         WHERE model_id = %s AND date >= %s AND date <= %s
@@ -153,7 +155,9 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
     prev_start, prev_end = get_previous_period_dates(period_start, period_end)
     cursor.execute(f'''
         SELECT 
-            COALESCE(SUM(cb_income + sp_income + soda_income + cam4_income), 0) as total_income,
+            COALESCE(SUM(
+                (cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers
+            ) * 0.6, 0) as total_income,
             COUNT(CASE WHEN has_shift = true THEN 1 END) as shift_count
         FROM {schema}.model_finances
         WHERE model_id = %s AND date >= %s AND date <= %s
