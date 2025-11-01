@@ -250,14 +250,6 @@ const ModelsTab = ({
         </div>
       </div>
 
-      <CreateModelDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen}
-        onModelCreated={() => {
-          window.location.reload();
-        }}
-      />
-
       {selectedModel && (
         <ModelAccountsDialog
           open={accountsDialogOpen}
