@@ -95,11 +95,26 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
     }).format(amount);
   };
 
+  const formatRubles = (amount: number): string => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
   const getDifference = (current: number, previous: number): string => {
     const diff = current - previous;
     if (diff === 0) return '0';
     const sign = diff > 0 ? '+' : '';
     return `${sign}${formatCurrency(diff)}`;
+  };
+
+  const getDifferenceRubles = (current: number, previous: number): string => {
+    const diff = current - previous;
+    if (diff === 0) return '0';
+    const sign = diff > 0 ? '+' : '';
+    return `${sign}${formatRubles(diff)}`;
   };
 
   const getDifferenceColor = (current: number, previous: number): string => {
@@ -171,9 +186,9 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
               <Icon name="TrendingUp" size={20} className="text-orange-600" />
               <span className="text-sm font-medium text-muted-foreground">Авансы</span>
             </div>
-            <div className="text-2xl font-bold">{formatCurrency(currentAdvances)}</div>
+            <div className="text-2xl font-bold">{formatRubles(currentAdvances)}</div>
             <div className={`text-sm mt-1 ${getDifferenceColor(currentAdvances, previousAdvances)}`}>
-              {getDifference(currentAdvances, previousAdvances)}
+              {getDifferenceRubles(currentAdvances, previousAdvances)}
             </div>
           </Card>
 
@@ -182,9 +197,9 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
               <Icon name="AlertTriangle" size={20} className="text-red-600" />
               <span className="text-sm font-medium text-muted-foreground">Штрафы</span>
             </div>
-            <div className="text-2xl font-bold">{formatCurrency(currentPenalties)}</div>
+            <div className="text-2xl font-bold">{formatRubles(currentPenalties)}</div>
             <div className={`text-sm mt-1 ${getDifferenceColor(currentPenalties, previousPenalties)}`}>
-              {getDifference(currentPenalties, previousPenalties)}
+              {getDifferenceRubles(currentPenalties, previousPenalties)}
             </div>
           </Card>
         </div>
