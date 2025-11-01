@@ -20,10 +20,12 @@ const ChecksTab = () => {
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
+  const [adjustments, setAdjustments] = useState<any>({});
   const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
   const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
+  const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -38,6 +40,7 @@ const ChecksTab = () => {
 
   useEffect(() => {
     loadSalaries();
+    loadAdjustments();
   }, [currentPeriod]);
 
   const loadExchangeRate = async () => {
@@ -120,18 +123,104 @@ const ChecksTab = () => {
     }
   };
 
+  const loadAdjustments = async () => {
+    try {
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
+      
+      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdjustments(data);
+      }
+    } catch (err) {
+      console.error('Failed to load adjustments', err);
+    }
+  };
+
   const handleUpdateProducer = async (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => {
-    console.log(`Updating producer ${email}: ${field} = ${value}`);
+    try {
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
+      
+      await fetch(ADJUSTMENTS_API_URL, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail
+        },
+        body: JSON.stringify({
+          email,
+          role: 'producer',
+          period_start: periodStart,
+          period_end: periodEnd,
+          field,
+          value
+        })
+      });
+      
+      await loadAdjustments();
+    } catch (err) {
+      console.error('Failed to update producer adjustment', err);
+    }
   };
 
   const handleUpdateEmployee = async (email: string, field: 'advance' | 'penalty', value: number) => {
-    console.log(`Updating employee ${email}: ${field} = ${value}`);
+    try {
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
+      
+      const user = users.find(u => u.email === email);
+      const role = user?.role === 'content_maker' ? 'model' : 'operator';
+      
+      await fetch(ADJUSTMENTS_API_URL, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Email': userEmail
+        },
+        body: JSON.stringify({
+          email,
+          role,
+          period_start: periodStart,
+          period_end: periodEnd,
+          field,
+          value
+        })
+      });
+      
+      await loadAdjustments();
+    } catch (err) {
+      console.error('Failed to update employee adjustment', err);
+    }
   };
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
   const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => {
     const salary = salaries.producers[p.email] || { total: 0, details: [] };
+    const adj = adjustments[p.email] || { expenses: 0, advance: 0, penalty: 0 };
     const sumDollars = salary.total;
     const sumRubles = sumDollars * exchangeRate;
     return {
@@ -140,10 +229,10 @@ const ChecksTab = () => {
       sumDollars: Math.round(sumDollars * 100) / 100,
       rate: exchangeRate,
       sumRubles: Math.round(sumRubles),
-      expenses: 0,
-      advance: 0,
-      penalty: 0,
-      total: Math.round(sumRubles)
+      expenses: adj.expenses,
+      advance: adj.advance,
+      penalty: adj.penalty,
+      total: Math.round(sumRubles - adj.expenses - adj.advance - adj.penalty)
     };
   }) : [];
   
@@ -153,6 +242,7 @@ const ChecksTab = () => {
     
     operators = operatorUsers.map(op => {
       const salary = salaries.operators[op.email] || { total: 0, details: [] };
+      const adj = adjustments[op.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
@@ -164,14 +254,15 @@ const ChecksTab = () => {
         sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
         sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty)
       };
     });
     
     contentMakers = modelUsers.map(cm => {
       const salary = salaries.models[cm.email] || { total: 0, details: [] };
+      const adj = adjustments[cm.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
@@ -182,9 +273,9 @@ const ChecksTab = () => {
         sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
         sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty)
       };
     });
   } else if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
@@ -198,6 +289,7 @@ const ChecksTab = () => {
       const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
       const modelUser = users.find(u => u.email === assignment?.modelEmail);
       const salary = salaries.operators[op.email] || { total: 0, details: [] };
+      const adj = adjustments[op.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
@@ -209,14 +301,15 @@ const ChecksTab = () => {
         sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
         sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty)
       };
     });
     
     contentMakers = modelUsers.map(cm => {
       const salary = salaries.models[cm.email] || { total: 0, details: [] };
+      const adj = adjustments[cm.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
@@ -227,9 +320,9 @@ const ChecksTab = () => {
         sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
         sumRubles: Math.round(sumRubles),
-        advance: 0,
-        penalty: 0,
-        total: Math.round(sumRubles)
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty)
       };
     });
   }
@@ -326,6 +419,7 @@ const ChecksTab = () => {
 
       {userRole === 'producer' && (() => {
         const salary = salaries.producers[userEmail] || { total: 0, details: [] };
+        const adj = adjustments[userEmail] || { expenses: 0, advance: 0, penalty: 0 };
         const sumDollars = salary.total;
         const sumRubles = sumDollars * exchangeRate;
         
@@ -333,17 +427,20 @@ const ChecksTab = () => {
           <ProducerSalaryCard 
             producerData={{
               name: users.find(u => u.email === userEmail)?.fullName || userEmail,
+              email: userEmail,
               period: currentPeriod.label,
               sumDollars: Math.round(sumDollars * 100) / 100,
               rate: exchangeRate,
               sumRubles: Math.round(sumRubles),
-              expenses: 0,
-              advance: 0,
-              penalty: 0,
-              total: Math.round(sumRubles),
+              expenses: adj.expenses,
+              advance: adj.advance,
+              penalty: adj.penalty,
+              total: Math.round(sumRubles - adj.expenses - adj.advance - adj.penalty),
               employees: []
             }} 
-            period={currentPeriod} 
+            period={currentPeriod}
+            canEdit={true}
+            onUpdate={handleUpdateProducer}
           />
         );
       })()}

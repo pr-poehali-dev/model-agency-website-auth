@@ -14,6 +14,7 @@ export interface Employee {
 
 export interface ProducerData {
   name: string;
+  email?: string;
   period: string;
   sumDollars: number;
   rate: number;

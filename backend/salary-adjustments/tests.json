@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Get adjustments for period",
+      "method": "GET",
+      "path": "/?period_start=2025-01-01&period_end=2025-01-15",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update advance value",
+      "method": "PUT",
+      "path": "/",
+      "body": {
+        "email": "test@example.com",
+        "role": "operator",
+        "period_start": "2025-01-01",
+        "period_end": "2025-01-15",
+        "field": "advance",
+        "value": 5000
+      },
+      "headers": {
+        "X-User-Email": "admin@example.com"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      }
+    }
+  ]
+}
