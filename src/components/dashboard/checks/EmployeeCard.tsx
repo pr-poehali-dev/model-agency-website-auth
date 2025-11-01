@@ -78,7 +78,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
         
         <div className="flex justify-between items-center py-2 border-b">
           <span className="text-muted-foreground">Курс</span>
-          <span className="font-semibold text-lg">{employee.rate}</span>
+          <span className="font-semibold text-lg">{employee.rate.toFixed(2)}</span>
         </div>
         
         <div className="flex justify-between items-center py-3 px-4 bg-green-500/10 rounded-lg border border-green-500/20">
