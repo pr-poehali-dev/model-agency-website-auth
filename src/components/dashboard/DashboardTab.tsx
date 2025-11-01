@@ -269,7 +269,6 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Ваш продюсер</p>
-                <p className="text-xs text-muted-foreground">Руководитель проекта</p>
               </div>
               <div className="p-2 bg-purple-500/10 rounded-lg">
                 <Icon name="UserCheck" size={24} className="text-purple-600" />
