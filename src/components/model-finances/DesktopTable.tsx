@@ -91,15 +91,15 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
                     </td>
                     <td className="p-2">
                       <Select
-                        value={d.operator}
-                        onValueChange={(value) => onCellChange(idx, 'operator', value)}
+                        value={d.operator || 'none'}
+                        onValueChange={(value) => onCellChange(idx, 'operator', value === 'none' ? '' : value)}
                         disabled={isReadOnly}
                       >
                         <SelectTrigger className="w-32 h-9">
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">-</SelectItem>
+                          <SelectItem value="none">-</SelectItem>
                           {operators.map(op => (
                             <SelectItem key={op.email} value={op.name}>{op.name}</SelectItem>
                           ))}
