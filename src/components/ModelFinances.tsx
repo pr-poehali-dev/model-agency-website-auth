@@ -350,7 +350,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <div>
               <label className="text-xs text-muted-foreground">Оператор</label>
               <Select
-                value={d.operator || 'none'}
+                value={d.operator ? d.operator : 'none'}
                 onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
                 disabled={isReadOnly}
               >
@@ -517,7 +517,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               {onlineData.map((d, idx) => (
                 <td key={d.date} className="px-3 py-2">
                   <Select
-                    value={d.operator || 'none'}
+                    value={d.operator ? d.operator : 'none'}
                     onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
                     disabled={isReadOnly}
                   >
