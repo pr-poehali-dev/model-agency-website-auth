@@ -84,4 +84,4 @@ const EditShiftDialog = ({
   );
 };
 
-export { EditShiftDialog };
+export default EditShiftDialog;

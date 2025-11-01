@@ -7,17 +7,19 @@ import { ApartmentData, EditCellData } from './types';
 interface ScheduleTableProps {
   apartment: ApartmentData;
   aptIndex: number;
+  filterTeam: string;
   canEdit: boolean;
   onCellClick: (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => void;
-  onCopyLocation: (sourceIdx: number, targetIdx: number) => void;
+  onCellChange: (aptIndex: number, weekIndex: number, dateIndex: number, time: string, value: string) => void;
 }
 
-export const ScheduleTable = ({
+const ScheduleTable = ({
   apartment,
   aptIndex,
+  filterTeam,
   canEdit,
   onCellClick,
-  onCopyLocation
+  onCellChange
 }: ScheduleTableProps) => {
   return (
     <Card className="p-6">
@@ -48,48 +50,48 @@ export const ScheduleTable = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {week.dates.map((dateData, dateIndex) => (
-                    <tr key={dateIndex} className="hover:bg-muted/30 transition-colors">
-                      <td className="border border-border p-2 text-sm">{dateData.day}</td>
-                      <td className="border border-border p-2 text-sm">{dateData.date}</td>
-                      {Object.entries(dateData.times).map(([time, value]) => (
-                        <td 
-                          key={time} 
-                          className="border border-border p-1 text-center cursor-pointer hover:bg-accent/50"
-                          onClick={() => canEdit && onCellClick(aptIndex, weekIndex, dateIndex, time, value)}
-                        >
-                          {canEdit ? (
-                            <Input
-                              value={value}
-                              className="text-center text-sm h-8 cursor-pointer border-0 bg-background/50"
-                              placeholder="-"
-                              readOnly
-                            />
-                          ) : (
-                            <span className="text-sm">{value || '-'}</span>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  {week.dates.map((dateData, dateIndex) => {
+                    const shouldShowRow = !filterTeam || 
+                      Object.values(dateData.times).some(val => 
+                        val.toLowerCase().includes(filterTeam.toLowerCase())
+                      );
+
+                    if (!shouldShowRow) return null;
+
+                    return (
+                      <tr key={dateIndex} className="hover:bg-muted/30 transition-colors">
+                        <td className="border border-border p-2 text-sm">{dateData.day}</td>
+                        <td className="border border-border p-2 text-sm">{dateData.date}</td>
+                        {Object.entries(dateData.times).map(([time, value]) => (
+                          <td 
+                            key={time} 
+                            className="border border-border p-1 text-center cursor-pointer hover:bg-accent/50"
+                            onClick={() => canEdit && onCellClick(aptIndex, weekIndex, dateIndex, time, value)}
+                          >
+                            {canEdit ? (
+                              <Input
+                                value={value}
+                                onChange={(e) => onCellChange(aptIndex, weekIndex, dateIndex, time, e.target.value)}
+                                className="text-center text-sm h-8 cursor-pointer border-0 bg-background/50"
+                                placeholder="-"
+                                readOnly
+                              />
+                            ) : (
+                              <span className="text-sm">{value || '-'}</span>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            {canEdit && apartment.weeks.length === 2 && (
-              <div className="mt-2 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onCopyLocation(weekIndex, weekIndex === 0 ? 1 : 0)}
-                >
-                  <Icon name="Copy" size={14} className="mr-1" />
-                  Скопировать в {weekIndex === 0 ? '2 лк' : '1 лк'}
-                </Button>
-              </div>
-            )}
           </div>
         ))}
       </div>
     </Card>
   );
 };
+
+export default ScheduleTable;
