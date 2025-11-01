@@ -36,15 +36,15 @@ const ScheduleTable = ({
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-muted/50">
-                    <th className="border p-2 text-left text-sm font-medium">День</th>
-                    <th className="border p-2 text-left text-sm font-medium">Дата</th>
-                    <th className="border p-2 text-center text-sm font-medium">
+                    <th className="border border-border p-2 text-left text-sm font-medium">День</th>
+                    <th className="border border-border p-2 text-left text-sm font-medium">Дата</th>
+                    <th className="border border-border p-2 text-center text-sm font-medium">
                       {apartment.shifts.morning}
                     </th>
-                    <th className="border p-2 text-center text-sm font-medium">
+                    <th className="border border-border p-2 text-center text-sm font-medium">
                       {apartment.shifts.day}
                     </th>
-                    <th className="border p-2 text-center text-sm font-medium">
+                    <th className="border border-border p-2 text-center text-sm font-medium">
                       {apartment.shifts.night}
                     </th>
                   </tr>
@@ -59,20 +59,20 @@ const ScheduleTable = ({
                     if (!shouldShowRow) return null;
 
                     return (
-                      <tr key={dateIndex} className="hover:bg-muted/30">
-                        <td className="border p-2 text-sm">{dateData.day}</td>
-                        <td className="border p-2 text-sm">{dateData.date}</td>
+                      <tr key={dateIndex} className="hover:bg-muted/30 transition-colors">
+                        <td className="border border-border p-2 text-sm">{dateData.day}</td>
+                        <td className="border border-border p-2 text-sm">{dateData.date}</td>
                         {Object.entries(dateData.times).map(([time, value]) => (
                           <td 
                             key={time} 
-                            className="border p-1 text-center cursor-pointer hover:bg-accent/50"
+                            className="border border-border p-1 text-center cursor-pointer hover:bg-accent/50"
                             onClick={() => canEdit && onCellClick(aptIndex, weekIndex, dateIndex, time, value)}
                           >
                             {canEdit ? (
                               <Input
                                 value={value}
                                 onChange={(e) => onCellChange(aptIndex, weekIndex, dateIndex, time, e.target.value)}
-                                className="text-center text-sm h-8 cursor-pointer"
+                                className="text-center text-sm h-8 cursor-pointer border-0 bg-background/50"
                                 placeholder="-"
                                 readOnly
                               />
