@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import CreateModelDialog from '@/components/CreateModelDialog';
 import ModelAccountsDialog from '@/components/ModelAccountsDialog';
 
 interface Model {
@@ -48,7 +47,7 @@ const ModelsTab = ({
   onViewFinances,
   userRole 
 }: ModelsTabProps) => {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   const [accountsDialogOpen, setAccountsDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [modelAccounts, setModelAccounts] = useState<any>({});
