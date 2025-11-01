@@ -337,15 +337,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   };
 
   const handleCopyWeek = async (aptIndex: number, weekIndex: number) => {
-    const targetWeekIndex = weekIndex === 0 ? 1 : 0;
     const apartment = scheduleData.apartments[aptIndex];
     const sourceWeek = apartment.weeks[weekIndex];
-    const targetWeek = apartment.weeks[targetWeekIndex];
+    
+    // Получаем даты для следующей недели
+    const nextWeekDates = getWeekDates(currentWeekOffset + 1);
 
     try {
       for (let dateIndex = 0; dateIndex < sourceWeek.dates.length; dateIndex++) {
         const sourceDate = sourceWeek.dates[dateIndex];
-        const targetDate = targetWeek.dates[dateIndex];
+        const targetDate = nextWeekDates[dateIndex];
         
         for (const time of ['10:00', '17:00', '00:00']) {
           await fetch(SCHEDULE_API_URL, {
@@ -354,7 +355,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             body: JSON.stringify({
               apartment_name: apartment.name,
               apartment_address: apartment.address,
-              week_number: targetWeek.weekNumber,
+              week_number: sourceWeek.weekNumber,
               date: targetDate.date,
               time_slot: time,
               value: sourceDate.times[time]
@@ -363,23 +364,17 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         }
       }
 
-      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-      newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates = 
-        newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates.map((date: any, idx: number) => ({
-          ...date,
-          times: { ...sourceWeek.dates[idx].times }
-        }));
-      
-      setScheduleData(newSchedule);
-
       toast({
-        title: 'Локация скопирована',
-        description: `Расписание "${sourceWeek.weekNumber}" скопировано в "${targetWeek.weekNumber}"`,
+        title: 'Расписание скопировано',
+        description: `Локация "${sourceWeek.weekNumber}" скопирована на следующую неделю`,
       });
+      
+      // Переключаемся на следующую неделю чтобы показать результат
+      setCurrentWeekOffset(currentWeekOffset + 1);
     } catch (err) {
       toast({
         title: 'Ошибка',
-        description: 'Не удалось скопировать локацию',
+        description: 'Не удалось скопировать расписание',
         variant: 'destructive'
       });
     }
