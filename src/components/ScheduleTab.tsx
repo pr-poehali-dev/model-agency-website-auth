@@ -134,6 +134,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
+  const [initialLoadDone, setInitialLoadDone] = useState(false); // Флаг первой загрузки
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
@@ -184,6 +185,51 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Schedule API response:', data);
       
+      // При первой загрузке определяем неделю с данными
+      if (!initialLoadDone && Object.keys(data).length > 0) {
+        // Находим первую дату с данными
+        let firstDateWithData: string | null = null;
+        for (const aptData of Object.values(data) as any[]) {
+          if (aptData.weeks) {
+            for (const location of Object.values(aptData.weeks)) {
+              if (Array.isArray(location) && location.length > 0) {
+                firstDateWithData = location[0].date;
+                break;
+              }
+            }
+            if (firstDateWithData) break;
+          }
+        }
+        
+        if (firstDateWithData) {
+          // Парсим дату (формат DD.MM.YYYY)
+          const [day, month, year] = firstDateWithData.split('.');
+          const savedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          
+          // Находим понедельник этой недели
+          const savedDayOfWeek = savedDate.getDay();
+          const savedMonday = new Date(savedDate);
+          const diffToMonday = savedDayOfWeek === 0 ? -6 : 1 - savedDayOfWeek;
+          savedMonday.setDate(savedDate.getDate() + diffToMonday);
+          
+          // Находим понедельник текущей недели
+          const today = new Date();
+          const currentDayOfWeek = today.getDay();
+          const currentMonday = new Date(today);
+          const diffToCurrent = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+          currentMonday.setDate(today.getDate() + diffToCurrent);
+          
+          // Вычисляем разницу в неделях
+          const diffInMs = savedMonday.getTime() - currentMonday.getTime();
+          const diffInWeeks = Math.round(diffInMs / (7 * 24 * 60 * 60 * 1000));
+          
+          console.log('Found data for week starting:', savedMonday, 'Week offset:', diffInWeeks);
+          setCurrentWeekOffset(diffInWeeks);
+          setInitialLoadDone(true);
+          return; // Выходим, useEffect перезапустит загрузку с новым offset
+        }
+      }
+      
       // Получаем даты для текущей недели
       const weekDates = getWeekDates(currentWeekOffset);
       console.log('Week dates for offset', currentWeekOffset, ':', weekDates);
@@ -229,6 +275,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Generated schedule with week offset', currentWeekOffset, ':', newSchedule);
       setScheduleData(newSchedule);
+      setInitialLoadDone(true);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
