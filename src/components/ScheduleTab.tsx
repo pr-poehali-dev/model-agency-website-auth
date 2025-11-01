@@ -133,8 +133,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
-  const [initialLoadDone, setInitialLoadDone] = useState(false); // Флаг первой загрузки
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
@@ -172,11 +170,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   useEffect(() => {
     loadTeamMembers();
     loadTeams();
-  }, []);
-
-  useEffect(() => {
     loadSchedule();
-  }, [currentWeekOffset]);
+  }, []);
 
   const loadSchedule = async () => {
     try {
@@ -185,97 +180,41 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Schedule API response:', data);
       
-      // При первой загрузке определяем неделю с данными
-      if (!initialLoadDone && Object.keys(data).length > 0) {
-        // Находим первую дату с данными
-        let firstDateWithData: string | null = null;
-        for (const aptData of Object.values(data) as any[]) {
-          if (aptData.weeks) {
-            for (const location of Object.values(aptData.weeks)) {
-              if (Array.isArray(location) && location.length > 0) {
-                firstDateWithData = location[0].date;
-                break;
-              }
-            }
-            if (firstDateWithData) break;
-          }
-        }
-        
-        if (firstDateWithData) {
-          // Парсим дату (формат DD.MM.YYYY)
-          const [day, month, year] = firstDateWithData.split('.');
-          const savedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-          
-          // Находим понедельник этой недели
-          const savedDayOfWeek = savedDate.getDay();
-          const savedMonday = new Date(savedDate);
-          const diffToMonday = savedDayOfWeek === 0 ? -6 : 1 - savedDayOfWeek;
-          savedMonday.setDate(savedDate.getDate() + diffToMonday);
-          
-          // Находим понедельник текущей недели
-          const today = new Date();
-          const currentDayOfWeek = today.getDay();
-          const currentMonday = new Date(today);
-          const diffToCurrent = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
-          currentMonday.setDate(today.getDate() + diffToCurrent);
-          
-          // Вычисляем разницу в неделях
-          const diffInMs = savedMonday.getTime() - currentMonday.getTime();
-          const diffInWeeks = Math.round(diffInMs / (7 * 24 * 60 * 60 * 1000));
-          
-          console.log('Found data for week starting:', savedMonday, 'Week offset:', diffInWeeks);
-          setCurrentWeekOffset(diffInWeeks);
-          setInitialLoadDone(true);
-          return; // Выходим, useEffect перезапустит загрузку с новым offset
-        }
+      if (Object.keys(data).length === 0) {
+        setScheduleData(defaultSchedule);
+        setLoading(false);
+        return;
       }
       
-      // Получаем даты для текущей недели
-      const weekDates = getWeekDates(currentWeekOffset);
-      console.log('Week dates for offset', currentWeekOffset, ':', weekDates);
-      
-      // Создаем расписание с датами текущей недели для обеих локаций
+      // Просто загружаем все данные из API как есть
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => {
           const aptData: any = Object.values(data).find((a: any) => 
             a.name === apt.name && a.address === apt.address
           );
           
+          if (!aptData || !aptData.weeks) {
+            return apt;
+          }
+          
           return {
             ...apt,
             weeks: [
               {
                 weekNumber: '1 лк',
-                dates: weekDates.map(wd => {
-                  // Ищем сохраненные данные для этой даты в локации 1
-                  const savedDate = aptData?.weeks?.['1 лк']?.find((d: any) => d.date === wd.date);
-                  return {
-                    day: wd.day,
-                    date: wd.date,
-                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
-                  };
-                })
+                dates: aptData.weeks['1 лк'] || []
               },
               {
                 weekNumber: '2 лк',
-                dates: weekDates.map(wd => {
-                  // Ищем сохраненные данные для этой даты в локации 2
-                  const savedDate = aptData?.weeks?.['2 лк']?.find((d: any) => d.date === wd.date);
-                  return {
-                    day: wd.day,
-                    date: wd.date,
-                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
-                  };
-                })
+                dates: aptData.weeks['2 лк'] || []
               }
             ]
           };
         })
       };
       
-      console.log('Generated schedule with week offset', currentWeekOffset, ':', newSchedule);
+      console.log('Loaded schedule:', newSchedule);
       setScheduleData(newSchedule);
-      setInitialLoadDone(true);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
@@ -492,30 +431,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {/* Переключение недель */}
-          <div className="flex items-center gap-2 border border-border rounded-lg p-1">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
-            >
-              <Icon name="ChevronLeft" size={16} />
-            </Button>
-            <span className="text-sm font-medium px-2 min-w-[120px] text-center">
-              {currentWeekOffset === 0 ? 'Эта неделя' : 
-               currentWeekOffset === 1 ? 'След. неделя' :
-               currentWeekOffset === -1 ? 'Прош. неделя' :
-               currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : `${currentWeekOffset} нед.`}
-            </span>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
-            >
-              <Icon name="ChevronRight" size={16} />
-            </Button>
-          </div>
-          
           <Select value={filterTeam || "all"} onValueChange={(val) => setFilterTeam(val === "all" ? "" : val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Все команды" />
