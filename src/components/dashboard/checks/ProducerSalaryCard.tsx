@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { ProducerData } from './types';
 import { Period } from '@/utils/periodUtils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ProducerSalaryCardProps {
   producerData: ProducerData;
@@ -16,6 +16,12 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
   const [expenses, setExpenses] = useState(producerData.expenses);
   const [advance, setAdvance] = useState(producerData.advance);
   const [penalty, setPenalty] = useState(producerData.penalty);
+
+  useEffect(() => {
+    setExpenses(producerData.expenses);
+    setAdvance(producerData.advance);
+    setPenalty(producerData.penalty);
+  }, [producerData.expenses, producerData.advance, producerData.penalty]);
 
   const handleBlur = (field: 'expenses' | 'advance' | 'penalty', value: number) => {
     if (onUpdate && producerData.email) {

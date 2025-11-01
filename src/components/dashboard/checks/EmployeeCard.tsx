@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -15,6 +15,11 @@ interface EmployeeCardProps {
 const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: EmployeeCardProps) => {
   const [advance, setAdvance] = useState(employee.advance);
   const [penalty, setPenalty] = useState(employee.penalty);
+
+  useEffect(() => {
+    setAdvance(employee.advance);
+    setPenalty(employee.penalty);
+  }, [employee.advance, employee.penalty]);
 
   const handleBlur = (field: 'advance' | 'penalty', value: number) => {
     if (onUpdate && employee.email) {
