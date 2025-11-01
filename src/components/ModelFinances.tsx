@@ -3,12 +3,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
-import { Card } from '@/components/ui/card';
 import StatsCards from './model-finances/StatsCards';
 import Charts from './model-finances/Charts';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import FinancialTable from './model-finances/FinancialTable';
+import PeriodNavigation from './model-finances/PeriodNavigation';
+import ActionButtons from './model-finances/ActionButtons';
 import { DayData, ModelFinancesProps, OperatorInfo } from './model-finances/types';
 import { 
   generateInitialData, 
@@ -191,6 +190,18 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
     }
   };
 
+  const handleClearData = () => {
+    if (confirm('Вы уверены, что хотите очистить все данные за текущий период?')) {
+      const clearedData = generateInitialData(currentPeriod);
+      setOnlineData(clearedData);
+      autoSave(clearedData);
+      toast({
+        title: 'Данные очищены',
+        description: 'Все данные за текущий период были удалены',
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="animate-fade-in space-y-6">
@@ -218,349 +229,35 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Card className="p-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
-              >
-                <Icon name="ChevronLeft" size={16} />
-              </Button>
-              <div className="font-semibold text-sm px-2">
-                {currentPeriod.label}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </Button>
-            </div>
-          </Card>
+          <PeriodNavigation
+            currentPeriod={currentPeriod}
+            onPreviousPeriod={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
+            onNextPeriod={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
+          />
           {!isReadOnly && (
-            <>
-              {lastSaved && (
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Icon name="Check" size={14} className="text-green-500" />
-                  Сохранено {lastSaved.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              )}
-              <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full lg:w-auto">
-                <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-                <span className="lg:inline">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
-              </Button>
-            </>
+            <ActionButtons
+              isSaving={isSaving}
+              isReadOnly={isReadOnly}
+              lastSaved={lastSaved}
+              onSave={handleSave}
+              onClearData={handleClearData}
+            />
           )}
         </div>
       </div>
 
       <StatsCards onlineData={onlineData} />
 
-      {/* Mobile View */}
-      <div className="lg:hidden space-y-4">
-        {onlineData.map((d, idx) => (
-          <Card key={d.date} className="p-4 space-y-3">
-            <div className="font-semibold text-sm mb-3">{d.date}</div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Online CB</label>
-                <Input
-                  type="number"
-                  value={d.onlineCB || ''}
-                  onChange={(e) => handleCellChange(idx, 'onlineCB', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Chaturbate</label>
-                <Input
-                  type="number"
-                  value={d.chaturbate || ''}
-                  onChange={(e) => handleCellChange(idx, 'chaturbate', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Online SP</label>
-                <Input
-                  type="number"
-                  value={d.onlineSP || ''}
-                  onChange={(e) => handleCellChange(idx, 'onlineSP', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Stripchat</label>
-                <Input
-                  type="number"
-                  value={d.stripchat || ''}
-                  onChange={(e) => handleCellChange(idx, 'stripchat', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Online Soda</label>
-                <Input
-                  type="number"
-                  value={d.onlineSoda || ''}
-                  onChange={(e) => handleCellChange(idx, 'onlineSoda', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">CamSoda</label>
-                <Input
-                  type="number"
-                  value={d.camSoda || ''}
-                  onChange={(e) => handleCellChange(idx, 'camSoda', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Cam4</label>
-                <Input
-                  type="number"
-                  value={d.cam4 || ''}
-                  onChange={(e) => handleCellChange(idx, 'cam4', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Переводы</label>
-                <Input
-                  type="number"
-                  value={d.transfers || ''}
-                  onChange={(e) => handleCellChange(idx, 'transfers', e.target.value)}
-                  className="h-8 mt-1"
-                  disabled={isReadOnly}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-xs text-muted-foreground">Оператор</label>
-              <Select
-                value={d.operator ? d.operator : 'none'}
-                onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="w-full h-8 mt-1">
-                  <SelectValue placeholder="-" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-</SelectItem>
-                  {operators.map(op => (
-                    <SelectItem key={op.email} value={op.name}>{op.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id={`shift-${idx}`}
-                checked={d.isShift}
-                onCheckedChange={(checked) => handleCellChange(idx, 'isShift', checked)}
-                disabled={isReadOnly}
-              />
-              <label htmlFor={`shift-${idx}`} className="text-xs text-muted-foreground">Смена</label>
-            </div>
-            
-            <div className="pt-2 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Income</span>
-                <span className="font-semibold text-sm text-green-500">${d.income.toFixed(2)}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Charts onlineData={onlineData} />
       </div>
 
-      {/* Desktop Table */}
-      <Card className="hidden lg:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-left font-semibold min-w-[120px]" rowSpan={2}>Настоящий период</th>
-              {onlineData.map((d) => (
-                <th key={d.date} className="px-3 py-2 text-center font-medium min-w-[90px]">
-                  {d.date}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Online CB</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.onlineCB || ''}
-                    onChange={(e) => handleCellChange(idx, 'onlineCB', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Chaturbate</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.chaturbate || ''}
-                    onChange={(e) => handleCellChange(idx, 'chaturbate', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Online SP</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.onlineSP || ''}
-                    onChange={(e) => handleCellChange(idx, 'onlineSP', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Stripchat</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.stripchat || ''}
-                    onChange={(e) => handleCellChange(idx, 'stripchat', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Online Soda</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.onlineSoda || ''}
-                    onChange={(e) => handleCellChange(idx, 'onlineSoda', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">CamSoda</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.camSoda || ''}
-                    onChange={(e) => handleCellChange(idx, 'camSoda', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Cam4</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.cam4 || ''}
-                    onChange={(e) => handleCellChange(idx, 'cam4', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Переводы</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Input
-                    type="number"
-                    value={d.transfers || ''}
-                    onChange={(e) => handleCellChange(idx, 'transfers', e.target.value)}
-                    className="w-full h-9"
-                    disabled={isReadOnly}
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Оператор (Имя)</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <Select
-                    value={d.operator ? d.operator : 'none'}
-                    onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
-                    disabled={isReadOnly}
-                  >
-                    <SelectTrigger className="w-32 h-9">
-                      <SelectValue placeholder="-" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">-</SelectItem>
-                      {operators.map(op => (
-                        <SelectItem key={op.email} value={op.name}>{op.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b hover:bg-muted/30">
-              <td className="px-4 py-3 font-medium">Смены</td>
-              {onlineData.map((d, idx) => (
-                <td key={d.date} className="px-3 py-2">
-                  <div className="flex justify-center">
-                    <Checkbox
-                      checked={d.isShift}
-                      onCheckedChange={(checked) => handleCellChange(idx, 'isShift', checked)}
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                </td>
-              ))}
-            </tr>
-            <tr className="bg-muted/50 font-semibold">
-              <td className="px-4 py-3">Income</td>
-              {onlineData.map((d) => (
-                <td key={d.date} className="px-3 py-3 text-center text-green-500">
-                  ${d.income.toFixed(2)}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      </Card>
-
-      <Charts onlineData={onlineData} />
+      <FinancialTable
+        onlineData={onlineData}
+        operators={operators}
+        isReadOnly={isReadOnly}
+        onCellChange={handleCellChange}
+      />
     </div>
   );
 };
