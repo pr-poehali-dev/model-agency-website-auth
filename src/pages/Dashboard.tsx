@@ -104,7 +104,7 @@ const Dashboard = () => {
     try {
       const response = await fetch(API_URL);
       const users = await response.json();
-      const contentMakers = users.filter((u: any) => u.role === 'content_maker');
+      const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
       
       const modelsFromUsers = contentMakers.map((user: any) => ({
         id: user.id,
@@ -116,7 +116,7 @@ const Dashboard = () => {
         waist: '60 cm',
         hips: '90 cm',
         experience: 'Новичок',
-        specialty: 'Content Maker',
+        specialty: user.role === 'solo_maker' ? 'Соло-мейкер' : 'Content Maker',
         status: 'Available'
       }));
       
@@ -150,7 +150,7 @@ const Dashboard = () => {
         setUserName(currentUser.fullName || '');
         setUserPermissions(currentUser.permissions || []);
         
-        if (currentUser.role === 'operator') {
+        if (currentUser.role === 'operator' || currentUser.role === 'solo_maker') {
           loadOperatorAssignments(email);
           loadAssignedProducer(email);
         }
