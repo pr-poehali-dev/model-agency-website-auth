@@ -344,19 +344,11 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               </Button>
             </div>
           </Card>
-          {!isReadOnly && (
-            <>
-              {lastSaved && (
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Icon name="Check" size={14} className="text-green-500" />
-                  Сохранено {lastSaved.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              )}
-              <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full lg:w-auto">
-                <Icon name={isSaving ? "Loader2" : "Save"} size={18} className={isSaving ? "animate-spin" : ""} />
-                <span className="lg:inline">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
-              </Button>
-            </>
+          {!isReadOnly && lastSaved && (
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <Icon name="Check" size={14} className="text-green-500" />
+              Сохранено {lastSaved.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+            </div>
           )}
         </div>
       </div>
