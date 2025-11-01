@@ -10,6 +10,7 @@ const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-
 const EXCHANGE_RATE_API_URL = 'https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a';
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
 
 const roleNames: Record<string, string> = {
   'director': 'Директор',
@@ -35,6 +36,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   const [exchangeRate, setExchangeRate] = useState(72.47);
   const [isLoading, setIsLoading] = useState(true);
   const [producerName, setProducerName] = useState('');
+  const [adjustments, setAdjustments] = useState<{advance: number, penalty: number}>({advance: 0, penalty: 0});
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -46,10 +48,11 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
+    if (userEmail && userRole) {
       loadSalaryData();
+      loadAdjustments();
     }
-  }, [currentPeriod, userEmail]);
+  }, [currentPeriod, userEmail, userRole]);
 
   useEffect(() => {
     loadExchangeRate();
@@ -164,6 +167,31 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
     }
   };
 
+  const loadAdjustments = async () => {
+    try {
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
+      
+      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      if (response.ok) {
+        const data = await response.json();
+        const userAdj = data[userEmail] || {advance: 0, penalty: 0};
+        setAdjustments(userAdj);
+      }
+    } catch (error) {
+      console.error('Failed to load adjustments:', error);
+    }
+  };
+
+
+
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Доброе утро';
@@ -171,7 +199,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
     return 'Добрый вечер';
   };
 
-  const salaryInRubles = salaryData ? Math.round(salaryData.total * exchangeRate) : 0;
+  const salaryInRubles = salaryData ? Math.round((salaryData.total * exchangeRate) - adjustments.advance - adjustments.penalty) : 0;
   const salaryInDollars = salaryData ? Math.round(salaryData.total * 100) / 100 : 0;
 
   return (
@@ -211,7 +239,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             </div>
           </div>
           
-          <div className="space-y-2 mb-4">
+          <div className="space-y-3 mb-4">
             {isLoading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-muted rounded w-32 mb-2"></div>
@@ -219,8 +247,33 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
               </div>
             ) : salaryData ? (
               <>
-                <p className="text-3xl font-bold text-green-600">{salaryInRubles.toLocaleString()}₽</p>
-                <p className="text-lg text-muted-foreground">${salaryInDollars.toLocaleString()}</p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Начислено</p>
+                  <p className="text-2xl font-bold text-foreground">{Math.round(salaryData.total * exchangeRate).toLocaleString()}₽</p>
+                  <p className="text-sm text-muted-foreground">${salaryInDollars.toLocaleString()}</p>
+                </div>
+                
+                {(adjustments.advance > 0 || adjustments.penalty > 0) && (
+                  <div className="space-y-1 pt-2 border-t">
+                    {adjustments.advance > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Аванс:</span>
+                        <span className="text-red-600 font-medium">-{adjustments.advance.toLocaleString()}₽</span>
+                      </div>
+                    )}
+                    {adjustments.penalty > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Штраф:</span>
+                        <span className="text-red-600 font-medium">-{adjustments.penalty.toLocaleString()}₽</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="pt-2 border-t">
+                  <p className="text-sm text-muted-foreground mb-1">К выплате</p>
+                  <p className="text-3xl font-bold text-green-600">{salaryInRubles.toLocaleString()}₽</p>
+                </div>
               </>
             ) : (
               <p className="text-lg text-muted-foreground">Нет данных за период</p>
@@ -288,6 +341,46 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
           </Card>
         )}
       </div>
+
+      {userRole === 'content_maker' && salaryData && salaryData.details && salaryData.details.length > 0 && (() => {
+        const details = salaryData.details;
+        const totalIncome = salaryData.total;
+        const shiftsCount = details.filter((d: any) => d.amount > 0).length;
+        const avgIncome = shiftsCount > 0 ? totalIncome / shiftsCount : 0;
+        const bestDay = Math.max(...details.map((d: any) => d.amount || 0));
+        const bestDayData = details.find((d: any) => d.amount === bestDay);
+
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icon name="BarChart3" size={20} className="text-primary" />
+              Статистика за период {currentPeriod.label}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Всего за период</p>
+                <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Средний доход</p>
+                <p className="text-2xl font-bold text-blue-600">${avgIncome.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">за смену</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Лучший день</p>
+                <p className="text-2xl font-bold text-purple-600">${bestDay.toFixed(2)}</p>
+                {bestDayData && (
+                  <p className="text-xs text-muted-foreground">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
+                )}
+              </div>
+              <div className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Смен</p>
+                <p className="text-2xl font-bold text-orange-600">{shiftsCount}</p>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
 
       {salaryData && salaryData.details && salaryData.details.length > 0 && (
         <Card className="p-6">
