@@ -278,7 +278,13 @@ const Dashboard = () => {
           userRole={userRole || undefined}
         />;
       case 'finances':
-        return <FinancesTab transactions={transactions} monthlyRevenue={monthlyRevenue} modelPerformance={modelPerformance} />;
+        return <FinancesTab 
+          transactions={transactions} 
+          monthlyRevenue={monthlyRevenue} 
+          modelPerformance={modelPerformance}
+          userEmail={userEmail}
+          userRole={userRole || undefined}
+        />;
       case 'checks':
         return <ChecksTab />;
       case 'schedule':

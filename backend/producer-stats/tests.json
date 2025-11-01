@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get producer stats",
+      "method": "GET",
+      "path": "/?user_email=producer@example.com&role=producer&period_start=2024-10-01&period_end=2024-10-15",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "models": "array",
+        "operators": "array",
+        "adjustments": "object"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get director stats",
+      "method": "GET",
+      "path": "/?user_email=director@example.com&role=director&period_start=2024-10-01&period_end=2024-10-15",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "producers": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

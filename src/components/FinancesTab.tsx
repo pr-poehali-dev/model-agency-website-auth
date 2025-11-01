@@ -3,6 +3,7 @@ import FinancesHeader from './finances/FinancesHeader';
 import StatsCards from './finances/StatsCards';
 import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
+import ProductionMonitoring from './finances/ProductionMonitoring';
 import { getCurrentPeriod, Period } from '@/utils/periodUtils';
 
 interface Transaction {
@@ -29,9 +30,11 @@ interface FinancesTabProps {
   transactions: Transaction[];
   monthlyRevenue: MonthlyRevenue[];
   modelPerformance: ModelPerformance[];
+  userEmail?: string;
+  userRole?: string;
 }
 
-const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: FinancesTabProps) => {
+const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail = '', userRole = '' }: FinancesTabProps) => {
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [currentPeriod] = useState<Period>(getCurrentPeriod());
@@ -45,6 +48,18 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance }: Finance
   const totalRevenue = filteredTransactions.reduce((sum, t) => sum + (t.status === 'Paid' ? t.amount : 0), 0);
   const pendingPayments = filteredTransactions.filter(t => t.status === 'Pending').length;
   const currentMonthRevenue = monthlyRevenue[monthlyRevenue.length - 1]?.revenue || 0;
+
+  if (userRole === 'producer' || userRole === 'director') {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <ProductionMonitoring 
+          userEmail={userEmail}
+          userRole={userRole}
+          period={currentPeriod}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
