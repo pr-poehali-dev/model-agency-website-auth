@@ -183,58 +183,104 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       // Получаем даты для текущей недели
       const weekDates = getWeekDates(currentWeekOffset);
+      console.log('Week dates for offset', currentWeekOffset, ':', weekDates);
       
-      // Создаем расписание с правильными датами для 2 локаций
-      const newSchedule = {
-        apartments: defaultSchedule.apartments.map(apt => ({
-          ...apt,
-          weeks: [
-            {
-              weekNumber: '1 лк',
-              dates: weekDates.map(wd => ({
-                day: wd.day,
-                date: wd.date,
-                times: { '10:00': '', '17:00': '', '00:00': '' }
-              }))
-            },
-            {
-              weekNumber: '2 лк',
-              dates: weekDates.map(wd => ({
-                day: wd.day,
-                date: wd.date,
-                times: { '10:00': '', '17:00': '', '00:00': '' }
-              }))
-            }
-          ]
-        }))
-      };
-      
-      // Загружаем данные из API для этих дат
+      // Если в базе есть данные, используем их
       if (Object.keys(data).length > 0) {
-        Object.values(data).forEach((aptData: any) => {
-          const apt = newSchedule.apartments.find(
-            a => a.name === aptData.name && a.address === aptData.address
-          );
-          
-          if (apt && aptData.weeks) {
-            Object.entries(aptData.weeks).forEach(([locationKey, dates]: [string, any]) => {
-              const location = apt.weeks.find(w => w.weekNumber === locationKey);
-              
-              if (location && Array.isArray(dates)) {
-                dates.forEach((dateData: any) => {
-                  // Ищем эту дату в текущей неделе
-                  const dateEntry = location.dates.find(d => d.date === dateData.date);
-                  if (dateEntry && dateData.times) {
-                    dateEntry.times = dateData.times;
+        const newSchedule = {
+          apartments: defaultSchedule.apartments.map(apt => {
+            const aptData: any = Object.values(data).find((a: any) => 
+              a.name === apt.name && a.address === apt.address
+            );
+            
+            if (aptData && aptData.weeks) {
+              // Для каждой локации находим данные для текущей недели
+              return {
+                ...apt,
+                weeks: [
+                  {
+                    weekNumber: '1 лк',
+                    dates: weekDates.map(wd => {
+                      // Ищем эту дату в данных из API для локации 1
+                      const savedDate = aptData.weeks['1 лк']?.find((d: any) => d.date === wd.date);
+                      return {
+                        day: wd.day,
+                        date: wd.date,
+                        times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
+                      };
+                    })
+                  },
+                  {
+                    weekNumber: '2 лк',
+                    dates: weekDates.map(wd => {
+                      // Ищем эту дату в данных из API для локации 2
+                      const savedDate = aptData.weeks['2 лк']?.find((d: any) => d.date === wd.date);
+                      return {
+                        day: wd.day,
+                        date: wd.date,
+                        times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
+                      };
+                    })
                   }
-                });
+                ]
+              };
+            }
+            
+            // Если для этой квартиры нет данных, возвращаем пустое расписание
+            return {
+              ...apt,
+              weeks: [
+                {
+                  weekNumber: '1 лк',
+                  dates: weekDates.map(wd => ({
+                    day: wd.day,
+                    date: wd.date,
+                    times: { '10:00': '', '17:00': '', '00:00': '' }
+                  }))
+                },
+                {
+                  weekNumber: '2 лк',
+                  dates: weekDates.map(wd => ({
+                    day: wd.day,
+                    date: wd.date,
+                    times: { '10:00': '', '17:00': '', '00:00': '' }
+                  }))
+                }
+              ]
+            };
+          })
+        };
+        
+        setScheduleData(newSchedule);
+      } else {
+        // Если база пустая, создаем пустое расписание
+        const newSchedule = {
+          apartments: defaultSchedule.apartments.map(apt => ({
+            ...apt,
+            weeks: [
+              {
+                weekNumber: '1 лк',
+                dates: weekDates.map(wd => ({
+                  day: wd.day,
+                  date: wd.date,
+                  times: { '10:00': '', '17:00': '', '00:00': '' }
+                }))
+              },
+              {
+                weekNumber: '2 лк',
+                dates: weekDates.map(wd => ({
+                  day: wd.day,
+                  date: wd.date,
+                  times: { '10:00': '', '17:00': '', '00:00': '' }
+                }))
               }
-            });
-          }
-        });
+            ]
+          }))
+        };
+        
+        setScheduleData(newSchedule);
       }
       
-      setScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
