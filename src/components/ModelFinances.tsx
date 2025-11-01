@@ -731,7 +731,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
           <Card key={platform.platform} className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{platform.platform}</h3>
-              <Badge variant="outline">{platform.tokens.toFixed(platform.platform === 'Cam4' ? 1 : 0)} токенов</Badge>
+              {platform.platform !== 'Cam4' && (
+                <Badge variant="outline">{platform.tokens.toFixed(0)} токенов</Badge>
+              )}
             </div>
             <div className="text-3xl font-bold text-primary">
               ${platform.income.toFixed(2)}
