@@ -184,20 +184,28 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       // Получаем даты для текущей недели
       const weekDates = getWeekDates(currentWeekOffset);
       
-      // Создаем расписание с правильными датами
+      // Создаем расписание с правильными датами для 2 локаций
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => ({
           ...apt,
-          weeks: [{
-            weekNumber: currentWeekOffset === 0 ? 'Текущая неделя' : 
-                        currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : 
-                        `${currentWeekOffset} нед.`,
-            dates: weekDates.map(wd => ({
-              day: wd.day,
-              date: wd.date,
-              times: { '10:00': '', '17:00': '', '00:00': '' }
-            }))
-          }]
+          weeks: [
+            {
+              weekNumber: '1 лк',
+              dates: weekDates.map(wd => ({
+                day: wd.day,
+                date: wd.date,
+                times: { '10:00': '', '17:00': '', '00:00': '' }
+              }))
+            },
+            {
+              weekNumber: '2 лк',
+              dates: weekDates.map(wd => ({
+                day: wd.day,
+                date: wd.date,
+                times: { '10:00': '', '17:00': '', '00:00': '' }
+              }))
+            }
+          ]
         }))
       };
       
@@ -209,11 +217,13 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           );
           
           if (apt && aptData.weeks) {
-            Object.values(aptData.weeks).forEach((dates: any) => {
-              if (Array.isArray(dates)) {
+            Object.entries(aptData.weeks).forEach(([locationKey, dates]: [string, any]) => {
+              const location = apt.weeks.find(w => w.weekNumber === locationKey);
+              
+              if (location && Array.isArray(dates)) {
                 dates.forEach((dateData: any) => {
                   // Ищем эту дату в текущей неделе
-                  const dateEntry = apt.weeks[0].dates.find(d => d.date === dateData.date);
+                  const dateEntry = location.dates.find(d => d.date === dateData.date);
                   if (dateEntry && dateData.times) {
                     dateEntry.times = dateData.times;
                   }
@@ -324,7 +334,54 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
+  const handleCopyWeek = async (aptIndex: number, weekIndex: number) => {
+    const targetWeekIndex = weekIndex === 0 ? 1 : 0;
+    const apartment = scheduleData.apartments[aptIndex];
+    const sourceWeek = apartment.weeks[weekIndex];
+    const targetWeek = apartment.weeks[targetWeekIndex];
 
+    try {
+      for (let dateIndex = 0; dateIndex < sourceWeek.dates.length; dateIndex++) {
+        const sourceDate = sourceWeek.dates[dateIndex];
+        const targetDate = targetWeek.dates[dateIndex];
+        
+        for (const time of ['10:00', '17:00', '00:00']) {
+          await fetch(SCHEDULE_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apartment_name: apartment.name,
+              apartment_address: apartment.address,
+              week_number: targetWeek.weekNumber,
+              date: targetDate.date,
+              time_slot: time,
+              value: sourceDate.times[time]
+            })
+          });
+        }
+      }
+
+      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
+      newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates = 
+        newSchedule.apartments[aptIndex].weeks[targetWeekIndex].dates.map((date: any, idx: number) => ({
+          ...date,
+          times: { ...sourceWeek.dates[idx].times }
+        }));
+      
+      setScheduleData(newSchedule);
+
+      toast({
+        title: 'Локация скопирована',
+        description: `Расписание "${sourceWeek.weekNumber}" скопировано в "${targetWeek.weekNumber}"`,
+      });
+    } catch (err) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось скопировать локацию',
+        variant: 'destructive'
+      });
+    }
+  };
 
   const handleCellClick = (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => {
     if (!canEdit) return;
@@ -475,7 +532,20 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
                           <thead>
                             <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
                               <th className="p-2 text-left font-semibold text-foreground w-20">
-                                <span>Лок. {weekIndex + 1}</span>
+                                <div className="flex items-center gap-2">
+                                  <span>Лок. {weekIndex + 1}</span>
+                                  {canEdit && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => handleCopyWeek(aptIndex, weekIndex)}
+                                      title="Скопировать локацию"
+                                    >
+                                      <Icon name="Copy" size={14} />
+                                    </Button>
+                                  )}
+                                </div>
                               </th>
                               {currentDates.map((dateInfo, dateIndex) => (
                                 <th key={dateIndex} className="p-2 text-center font-medium text-foreground border-l border-border">
