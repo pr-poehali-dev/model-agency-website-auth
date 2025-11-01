@@ -17,7 +17,7 @@ const FinancialTable = ({ onlineData, operators, isReadOnly, onCellChange }: Fin
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="p-3 text-left font-semibold whitespace-nowrap sticky left-0 bg-muted/50 z-10">Дата</th>
+            <th className="p-3 text-left font-semibold whitespace-nowrap">Дата</th>
             <th className="p-3 text-center font-semibold whitespace-nowrap">Online CB</th>
             <th className="p-3 text-center font-semibold whitespace-nowrap">CB</th>
             <th className="p-3 text-center font-semibold whitespace-nowrap">Online SP</th>
@@ -33,7 +33,7 @@ const FinancialTable = ({ onlineData, operators, isReadOnly, onCellChange }: Fin
         <tbody>
           {onlineData.map((day, index) => (
             <tr key={day.date} className="border-b hover:bg-muted/30 transition-colors">
-              <td className="p-3 font-medium sticky left-0 bg-card z-10 whitespace-nowrap">
+              <td className="p-3 font-medium whitespace-nowrap">
                 {formatDate(day.date)}
               </td>
               <td className="p-2">
