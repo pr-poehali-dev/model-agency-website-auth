@@ -459,6 +459,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
               variant="ghost" 
               size="sm"
               onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
+              disabled={currentWeekOffset <= -1}
             >
               <Icon name="ChevronLeft" size={16} />
             </Button>
@@ -472,6 +473,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
               variant="ghost" 
               size="sm"
               onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
+              disabled={currentWeekOffset >= 1}
             >
               <Icon name="ChevronRight" size={16} />
             </Button>
