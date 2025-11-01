@@ -279,13 +279,13 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
   const totalCbIncomeTokens = onlineData.reduce((sum, d) => sum + d.cbIncome, 0);
   const totalSpIncomeTokens = onlineData.reduce((sum, d) => sum + d.spIncome, 0);
   const totalSodaIncomeTokens = onlineData.reduce((sum, d) => sum + d.sodaIncome, 0);
-  const totalCam4 = onlineData.reduce((sum, d) => sum + d.cam4, 0);
+  const totalCam4Income = onlineData.reduce((sum, d) => sum + d.cam4Income, 0);
   
   const platformSummary = [
     { platform: 'Chaturbate', tokens: totalCbIncomeTokens, income: totalCbIncomeTokens * 0.05 * 0.6 },
     { platform: 'Stripchat', tokens: totalSpIncomeTokens, income: totalSpIncomeTokens * 0.05 * 0.6 },
     { platform: 'CamSoda', tokens: totalSodaIncomeTokens, income: totalSodaIncomeTokens * 0.05 * 0.6 },
-    { platform: 'Cam4', tokens: totalCam4, income: totalCam4 * 0.6 },
+    { platform: 'Cam4', tokens: totalCam4Income, income: totalCam4Income * 0.6 },
   ];
 
   const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
