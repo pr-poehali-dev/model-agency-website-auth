@@ -1,42 +1,40 @@
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { getCurrentWeekNumber } from './utils';
 
 interface WeekNavigationProps {
   currentWeekOffset: number;
-  onPrevWeek: () => void;
-  onNextWeek: () => void;
-  onCurrentWeek: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  weekDates: Array<{ day: string; date: string }>;
 }
 
-const WeekNavigation = ({
+export const WeekNavigation = ({
   currentWeekOffset,
-  onPrevWeek,
-  onNextWeek,
-  onCurrentWeek
+  onPrevious,
+  onNext,
+  weekDates
 }: WeekNavigationProps) => {
-  const currentWeekNum = getCurrentWeekNumber();
-  const displayWeekNum = currentWeekNum + currentWeekOffset;
-
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <Button onClick={onPrevWeek} variant="outline" size="sm">
+    <div className="flex items-center gap-2 border border-border rounded-lg p-1">
+      <Button 
+        variant="ghost" 
+        size="sm"
+        onClick={onPrevious}
+        disabled={currentWeekOffset <= -1}
+      >
         <Icon name="ChevronLeft" size={16} />
       </Button>
-      <div className="text-sm font-medium px-4">
-        Неделя {displayWeekNum}
-        {currentWeekOffset === 0 && ' (текущая)'}
-      </div>
-      <Button onClick={onNextWeek} variant="outline" size="sm">
+      <span className="text-sm font-medium px-2 min-w-[160px] text-center">
+        {weekDates[0]?.date} - {weekDates[6]?.date}
+      </span>
+      <Button 
+        variant="ghost" 
+        size="sm"
+        onClick={onNext}
+        disabled={currentWeekOffset >= 1}
+      >
         <Icon name="ChevronRight" size={16} />
       </Button>
-      {currentWeekOffset !== 0 && (
-        <Button onClick={onCurrentWeek} variant="outline" size="sm">
-          Текущая неделя
-        </Button>
-      )}
     </div>
   );
 };
-
-export default WeekNavigation;

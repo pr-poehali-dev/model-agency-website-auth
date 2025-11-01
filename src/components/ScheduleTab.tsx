@@ -104,8 +104,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         <div className="flex flex-wrap items-center gap-3">
           <WeekNavigation
             currentWeekOffset={currentWeekOffset}
-            onPrevious={() => setCurrentWeekOffset(currentWeekOffset - 1)}
-            onNext={() => setCurrentWeekOffset(currentWeekOffset + 1)}
+            onPrevious={() => setCurrentWeekOffset(Math.max(-1, currentWeekOffset - 1))}
+            onNext={() => setCurrentWeekOffset(Math.min(1, currentWeekOffset + 1))}
             weekDates={weekDates}
           />
           

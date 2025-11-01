@@ -36,9 +36,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         if method == 'GET':
             cur.execute("""
+                DELETE FROM t_p35405502_model_agency_website.schedule
+                WHERE TO_DATE(date, 'DD.MM.YYYY') < CURRENT_DATE - INTERVAL '7 days'
+            """)
+            conn.commit()
+            
+            cur.execute("""
                 SELECT apartment_name, apartment_address, week_number, date, day_name, 
                        time_10, time_17, time_00
                 FROM t_p35405502_model_agency_website.schedule
+                WHERE TO_DATE(date, 'DD.MM.YYYY') BETWEEN CURRENT_DATE - INTERVAL '7 days' AND CURRENT_DATE + INTERVAL '14 days'
                 ORDER BY apartment_name, week_number, date
             """)
             rows = cur.fetchall()
