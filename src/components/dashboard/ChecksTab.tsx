@@ -327,18 +327,18 @@ const ChecksTab = () => {
     });
   }
 
-  const totalModelSum = contentMakers.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
-  let totalOperatorSum = operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0);
+  const totalModelSum = Math.round(contentMakers.reduce((sum, e) => sum + (e.sumRubles || 0), 0));
+  let totalOperatorSum = Math.round(operators.reduce((sum, e) => sum + (e.sumRubles || 0), 0));
   
   if (userRole === 'producer') {
     const producerSalary = salaries.producers[userEmail] || { total: 0, details: [] };
-    const producerTotalSum = producerSalary.total * exchangeRate;
+    const producerTotalSum = Math.round(producerSalary.total * exchangeRate);
     totalOperatorSum += producerTotalSum;
   } else if (userRole === 'director') {
     const producerUsers = users.filter(u => u.role === 'producer');
     producerUsers.forEach(prod => {
       const salary = salaries.producers[prod.email] || { total: 0, details: [] };
-      const producerTotalSum = salary.total * exchangeRate;
+      const producerTotalSum = Math.round(salary.total * exchangeRate);
       totalOperatorSum += producerTotalSum;
     });
   }
