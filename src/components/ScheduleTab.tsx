@@ -184,50 +184,49 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       
       console.log('Schedule API response:', data);
       
-      // Получаем даты для текущей недели
       const weekDates = getWeekDates(currentWeekOffset);
-      console.log('Week dates for offset', currentWeekOffset, ':', weekDates);
+      const weekDateStrings = weekDates.map(wd => wd.date);
       
-      // Создаем расписание с датами текущей недели для обеих локаций
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => {
           const aptData: any = Object.values(data).find((a: any) => 
             a.name === apt.name && a.address === apt.address
           );
           
+          if (!aptData?.weeks) {
+            return {
+              ...apt,
+              weeks: [
+                { weekNumber: '1 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
+                { weekNumber: '2 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
+              ]
+            };
+          }
+          
           return {
             ...apt,
             weeks: [
               {
                 weekNumber: '1 лк',
-                dates: weekDates.map(wd => {
-                  // Ищем сохраненные данные для этой даты в локации 1
-                  const savedDate = aptData?.weeks?.['1 лк']?.find((d: any) => d.date === wd.date);
-                  return {
-                    day: wd.day,
-                    date: wd.date,
-                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
-                  };
-                })
+                dates: (aptData.weeks['1 лк'] || [])
+                  .filter((d: any) => weekDateStrings.includes(d.date))
+                  .length > 0
+                    ? (aptData.weeks['1 лк'] || []).filter((d: any) => weekDateStrings.includes(d.date))
+                    : weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } }))
               },
               {
                 weekNumber: '2 лк',
-                dates: weekDates.map(wd => {
-                  // Ищем сохраненные данные для этой даты в локации 2
-                  const savedDate = aptData?.weeks?.['2 лк']?.find((d: any) => d.date === wd.date);
-                  return {
-                    day: wd.day,
-                    date: wd.date,
-                    times: savedDate?.times || { '10:00': '', '17:00': '', '00:00': '' }
-                  };
-                })
+                dates: (aptData.weeks['2 лк'] || [])
+                  .filter((d: any) => weekDateStrings.includes(d.date))
+                  .length > 0
+                    ? (aptData.weeks['2 лк'] || []).filter((d: any) => weekDateStrings.includes(d.date))
+                    : weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } }))
               }
             ]
           };
         })
       };
       
-      console.log('Generated schedule with week offset', currentWeekOffset, ':', newSchedule);
       setScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
