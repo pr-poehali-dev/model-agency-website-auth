@@ -6,18 +6,16 @@ export const generateInitialData = (period: Period): DayData[] => {
   
   return dates.map(date => ({
     date,
-    cb: 0,
-    sp: 0,
-    soda: 0,
+    onlineCB: 0,
+    chaturbate: 0,
+    onlineSP: 0,
+    stripchat: 0,
+    onlineSoda: 0,
+    camSoda: 0,
     cam4: 0,
-    cbIncome: 0,
-    spIncome: 0,
-    sodaIncome: 0,
-    cam4Income: 0,
-    stripchatTokens: 0,
     transfers: 0,
     operator: '',
-    shift: false
+    isShift: false
   }));
 };
 
@@ -27,7 +25,7 @@ export const formatDate = (dateStr: string) => {
 };
 
 export const calculateDailyIncome = (day: DayData): number => {
-  return (day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income + day.transfers) * 0.6;
+  return (day.onlineCB || 0) + (day.chaturbate || 0) + (day.onlineSP || 0) + (day.stripchat || 0) + (day.onlineSoda || 0) + (day.camSoda || 0) + (day.cam4 || 0) + (day.transfers || 0);
 };
 
 export const calculateTotalIncome = (data: DayData[]): number => {
@@ -35,16 +33,24 @@ export const calculateTotalIncome = (data: DayData[]): number => {
 };
 
 export const calculatePlatformSummary = (data: DayData[]) => {
-  const totalCbIncome = data.reduce((sum, d) => sum + d.cbIncome, 0);
-  const totalSpIncome = data.reduce((sum, d) => sum + d.spIncome, 0);
-  const totalSodaIncome = data.reduce((sum, d) => sum + d.sodaIncome, 0);
-  const totalCam4 = data.reduce((sum, d) => sum + d.cam4, 0);
+  const totalOnlineCB = data.reduce((sum, d) => sum + (d.onlineCB || 0), 0);
+  const totalChaturbate = data.reduce((sum, d) => sum + (d.chaturbate || 0), 0);
+  const totalOnlineSP = data.reduce((sum, d) => sum + (d.onlineSP || 0), 0);
+  const totalStripchat = data.reduce((sum, d) => sum + (d.stripchat || 0), 0);
+  const totalOnlineSoda = data.reduce((sum, d) => sum + (d.onlineSoda || 0), 0);
+  const totalCamSoda = data.reduce((sum, d) => sum + (d.camSoda || 0), 0);
+  const totalCam4 = data.reduce((sum, d) => sum + (d.cam4 || 0), 0);
+  const totalTransfers = data.reduce((sum, d) => sum + (d.transfers || 0), 0);
   
   return [
-    { platform: 'Chaturbate', tokens: totalCbIncome, income: totalCbIncome * 0.6 },
-    { platform: 'Stripchat', tokens: totalSpIncome, income: totalSpIncome * 0.6 },
-    { platform: 'CamSoda', tokens: totalSodaIncome, income: totalSodaIncome * 0.6 },
-    { platform: 'Cam4', tokens: totalCam4, income: totalCam4 * 0.6 },
+    { platform: 'Online CB', amount: totalOnlineCB },
+    { platform: 'Chaturbate', amount: totalChaturbate },
+    { platform: 'Online SP', amount: totalOnlineSP },
+    { platform: 'Stripchat', amount: totalStripchat },
+    { platform: 'Online Soda', amount: totalOnlineSoda },
+    { platform: 'CamSoda', amount: totalCamSoda },
+    { platform: 'Cam4', amount: totalCam4 },
+    { platform: 'Переводы', amount: totalTransfers },
   ];
 };
 

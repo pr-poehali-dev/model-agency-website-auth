@@ -1,17 +1,15 @@
 export interface DayData {
   date: string;
-  cb: number;
-  sp: number;
-  soda: number;
+  onlineCB: number;
+  chaturbate: number;
+  onlineSP: number;
+  stripchat: number;
+  onlineSoda: number;
+  camSoda: number;
   cam4: number;
-  cbIncome: number;
-  spIncome: number;
-  sodaIncome: number;
-  cam4Income: number;
-  stripchatTokens: number;
   transfers: number;
   operator: string;
-  shift: boolean;
+  isShift: boolean;
 }
 
 export interface ModelFinancesProps {

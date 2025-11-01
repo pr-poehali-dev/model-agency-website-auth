@@ -8,8 +8,12 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ onlineData }: StatsCardsProps) => {
+  if (!onlineData || onlineData.length === 0) {
+    return null;
+  }
+
   const totalIncome = onlineData.reduce((sum, d) => sum + calculateDailyIncome(d), 0);
-  const totalShifts = onlineData.filter(d => d.shift).length;
+  const totalShifts = onlineData.filter(d => d.isShift).length;
   const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
   
   const bestDay = onlineData.reduce((best, current) => {
