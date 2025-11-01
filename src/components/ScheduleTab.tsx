@@ -399,19 +399,26 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     const week = apartment.weeks[editCell.weekIndex];
     const date = week.dates[editCell.dateIndex];
 
+    const payload = {
+      apartment_name: apartment.name,
+      apartment_address: apartment.address,
+      week_number: week.weekNumber,
+      date: date.date,
+      time_slot: editCell.time,
+      value: selectedTeam
+    };
+
+    console.log('Saving cell:', payload);
+
     try {
-      await fetch(SCHEDULE_API_URL, {
+      const response = await fetch(SCHEDULE_API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apartment_name: apartment.name,
-          apartment_address: apartment.address,
-          week_number: week.weekNumber,
-          date: date.date,
-          time_slot: editCell.time,
-          value: selectedTeam
-        })
+        body: JSON.stringify(payload)
       });
+
+      const result = await response.json();
+      console.log('Save response:', result);
 
       const newSchedule = JSON.parse(JSON.stringify(scheduleData));
       newSchedule.apartments[editCell.aptIndex].weeks[editCell.weekIndex].dates[editCell.dateIndex].times[editCell.time] = selectedTeam;
@@ -426,6 +433,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       setEditCell(null);
       setSelectedTeam('');
     } catch (err) {
+      console.error('Save error:', err);
       toast({
         title: 'Ошибка',
         description: 'Не удалось сохранить изменения',
