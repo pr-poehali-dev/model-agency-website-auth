@@ -187,13 +187,19 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       const weekDates = getWeekDates(currentWeekOffset);
       const weekDateStrings = weekDates.map(wd => wd.date);
       
+      console.log('Current week offset:', currentWeekOffset);
+      console.log('Week dates:', weekDateStrings);
+      
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => {
           const aptData: any = Object.values(data).find((a: any) => 
             a.name === apt.name && a.address === apt.address
           );
           
+          console.log(`Processing ${apt.name}:`, aptData);
+          
           if (!aptData?.weeks) {
+            console.log(`No data for ${apt.name}, using empty schedule`);
             return {
               ...apt,
               weeks: [
@@ -203,30 +209,33 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             };
           }
           
+          const loc1Dates = aptData.weeks['1 лк'] || [];
+          const loc2Dates = aptData.weeks['2 лк'] || [];
+          
+          console.log(`${apt.name} - Location 1 dates:`, loc1Dates.map((d: any) => d.date));
+          console.log(`${apt.name} - Location 2 dates:`, loc2Dates.map((d: any) => d.date));
+          
+          const loc1Filtered = weekDates.map(wd => {
+            const savedDate = loc1Dates.find((d: any) => d.date === wd.date);
+            return savedDate || { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+          });
+          
+          const loc2Filtered = weekDates.map(wd => {
+            const savedDate = loc2Dates.find((d: any) => d.date === wd.date);
+            return savedDate || { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+          });
+          
           return {
             ...apt,
             weeks: [
-              {
-                weekNumber: '1 лк',
-                dates: (aptData.weeks['1 лк'] || [])
-                  .filter((d: any) => weekDateStrings.includes(d.date))
-                  .length > 0
-                    ? (aptData.weeks['1 лк'] || []).filter((d: any) => weekDateStrings.includes(d.date))
-                    : weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } }))
-              },
-              {
-                weekNumber: '2 лк',
-                dates: (aptData.weeks['2 лк'] || [])
-                  .filter((d: any) => weekDateStrings.includes(d.date))
-                  .length > 0
-                    ? (aptData.weeks['2 лк'] || []).filter((d: any) => weekDateStrings.includes(d.date))
-                    : weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } }))
-              }
+              { weekNumber: '1 лк', dates: loc1Filtered },
+              { weekNumber: '2 лк', dates: loc2Filtered }
             ]
           };
         })
       };
       
+      console.log('Final schedule:', newSchedule);
       setScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
