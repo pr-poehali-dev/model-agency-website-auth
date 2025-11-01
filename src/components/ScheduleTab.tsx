@@ -133,6 +133,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [allScheduleData, setAllScheduleData] = useState<typeof defaultSchedule | null>(null);
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
@@ -173,6 +175,12 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     loadSchedule();
   }, []);
 
+  useEffect(() => {
+    if (allScheduleData) {
+      filterScheduleByWeek();
+    }
+  }, [currentWeekOffset, allScheduleData]);
+
   const loadSchedule = async () => {
     try {
       const response = await fetch(SCHEDULE_API_URL);
@@ -181,12 +189,12 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       console.log('Schedule API response:', data);
       
       if (Object.keys(data).length === 0) {
+        setAllScheduleData(defaultSchedule);
         setScheduleData(defaultSchedule);
         setLoading(false);
         return;
       }
       
-      // Просто загружаем все данные из API как есть
       const newSchedule = {
         apartments: defaultSchedule.apartments.map(apt => {
           const aptData: any = Object.values(data).find((a: any) => 
@@ -213,13 +221,32 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         })
       };
       
-      console.log('Loaded schedule:', newSchedule);
-      setScheduleData(newSchedule);
+      console.log('Loaded all schedule data:', newSchedule);
+      setAllScheduleData(newSchedule);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
       setLoading(false);
     }
+  };
+
+  const filterScheduleByWeek = () => {
+    if (!allScheduleData) return;
+
+    const currentWeekDates = getWeekDates(currentWeekOffset);
+    const weekDateStrings = currentWeekDates.map(d => d.date);
+    
+    const filteredSchedule = {
+      apartments: allScheduleData.apartments.map(apt => ({
+        ...apt,
+        weeks: apt.weeks.map(week => ({
+          ...week,
+          dates: week.dates.filter(d => weekDateStrings.includes(d.date))
+        }))
+      }))
+    };
+    
+    setScheduleData(filteredSchedule);
   };
 
   const initializeSchedule = async () => {
@@ -431,6 +458,29 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           <p className="text-muted-foreground">График работы по квартирам</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 border border-border rounded-lg p-1">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
+            >
+              <Icon name="ChevronLeft" size={16} />
+            </Button>
+            <span className="text-sm font-medium px-2 min-w-[160px] text-center">
+              {(() => {
+                const dates = getWeekDates(currentWeekOffset);
+                return `${dates[0].date} - ${dates[6].date}`;
+              })()}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
+            >
+              <Icon name="ChevronRight" size={16} />
+            </Button>
+          </div>
+          
           <Select value={filterTeam || "all"} onValueChange={(val) => setFilterTeam(val === "all" ? "" : val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Все команды" />
