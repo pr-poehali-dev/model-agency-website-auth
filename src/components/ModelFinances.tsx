@@ -608,7 +608,7 @@ const ModelFinances = ({
                     value={d.cam4Income || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, "");
+                      const val = e.target.value.replace(/[^0-9.,]/g, "").replace(',', '.');
                       handleCellChange(
                         idx,
                         "cam4Income",
@@ -843,7 +843,7 @@ const ModelFinances = ({
                       inputMode="decimal"
                       value={d.cam4Income || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        const val = e.target.value.replace(/[^0-9.,]/g, "").replace(',', '.');
                         handleCellChange(
                           idx,
                           "cam4Income",
