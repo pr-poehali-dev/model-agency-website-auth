@@ -1,14 +1,37 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import Icon from '@/components/ui/icon';
-import { getCurrentPeriod, getDatesInPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import Icon from "@/components/ui/icon";
+import {
+  getCurrentPeriod,
+  getDatesInPeriod,
+  getPreviousPeriod,
+  getNextPeriod,
+  Period,
+} from "@/utils/periodUtils";
 
 interface ModelFinancesProps {
   modelId: number;
@@ -36,8 +59,8 @@ interface DayData {
 
 const generateInitialData = (period: Period): DayData[] => {
   const dates = getDatesInPeriod(period);
-  
-  return dates.map(date => ({
+
+  return dates.map((date) => ({
     date,
     cb: 0,
     sp: 0,
@@ -49,27 +72,42 @@ const generateInitialData = (period: Period): DayData[] => {
     cam4Income: 0,
     stripchatTokens: 0,
     transfers: 0,
-    operator: '',
-    shift: false
+    operator: "",
+    shift: false,
   }));
 };
 
-const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
-const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
-const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+const API_URL =
+  "https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e";
+const ASSIGNMENTS_API_URL =
+  "https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30";
+const USERS_API_URL =
+  "https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066";
+const PRODUCER_API_URL =
+  "https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6";
 
-const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack }: ModelFinancesProps) => {
-  const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
-  const [onlineData, setOnlineData] = useState<DayData[]>(generateInitialData(currentPeriod));
+const ModelFinances = ({
+  modelId,
+  modelName,
+  currentUserEmail,
+  userRole,
+  onBack,
+}: ModelFinancesProps) => {
+  const [currentPeriod, setCurrentPeriod] =
+    useState<Period>(getCurrentPeriod());
+  const [onlineData, setOnlineData] = useState<DayData[]>(
+    generateInitialData(currentPeriod),
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [operators, setOperators] = useState<Array<{email: string, name: string}>>([]);
+  const [operators, setOperators] = useState<
+    Array<{ email: string; name: string }>
+  >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
-  
-  const isReadOnly = userRole === 'content_maker';
+
+  const isReadOnly = userRole === "content_maker";
 
   useEffect(() => {
     loadFinancialData();
@@ -81,66 +119,80 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
       // Load all users
       const usersResponse = await fetch(USERS_API_URL);
       const users = await usersResponse.json();
-      
+
       // Load ALL assignments
       const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
       const allAssignments = await assignmentsResponse.json();
-      
+
       // Load producer assignments
       const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
       const producerAssignments = await producerResponse.json();
-      
+
       // Filter assignments for this specific model by modelId
-      const modelAssignments = allAssignments.filter((a: any) => a.modelId === modelId);
-      
+      const modelAssignments = allAssignments.filter(
+        (a: any) => a.modelId === modelId,
+      );
+
       // Get operator emails from filtered assignments
       const operatorEmails = modelAssignments.map((a: any) => a.operatorEmail);
-      
+
       // Filter users to get assigned operators (include operators)
       const assignedOperators = users
-        .filter((u: any) => operatorEmails.includes(u.email) && u.role === 'operator')
+        .filter(
+          (u: any) => operatorEmails.includes(u.email) && u.role === "operator",
+        )
         .map((u: any) => ({
           email: u.email,
-          name: u.fullName || u.email
+          name: u.fullName || u.email,
         }));
-      
+
       // If current user is producer, add them to the list
-      if (userRole === 'producer' && currentUserEmail) {
-        const currentUser = users.find((u: any) => u.email === currentUserEmail);
-        if (currentUser && !assignedOperators.some(op => op.email === currentUserEmail)) {
+      if (userRole === "producer" && currentUserEmail) {
+        const currentUser = users.find(
+          (u: any) => u.email === currentUserEmail,
+        );
+        if (
+          currentUser &&
+          !assignedOperators.some((op) => op.email === currentUserEmail)
+        ) {
           assignedOperators.push({
             email: currentUser.email,
-            name: currentUser.fullName || currentUser.email
+            name: currentUser.fullName || currentUser.email,
           });
         }
       }
-      
+
       // If current user is director, find producer assigned to this model
-      if (userRole === 'director') {
+      if (userRole === "director") {
         // Get model email from users by modelId
         const modelUser = users.find((u: any) => u.id === modelId);
         if (modelUser) {
           // Find producer assignment for this model
           const producerAssignment = producerAssignments.find(
-            (pa: any) => pa.modelEmail === modelUser.email
+            (pa: any) => pa.modelEmail === modelUser.email,
           );
-          
+
           if (producerAssignment) {
             // Find the producer user
-            const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
-            if (producer && !assignedOperators.some(op => op.email === producer.email)) {
+            const producer = users.find(
+              (u: any) => u.email === producerAssignment.producerEmail,
+            );
+            if (
+              producer &&
+              !assignedOperators.some((op) => op.email === producer.email)
+            ) {
               assignedOperators.push({
                 email: producer.email,
-                name: producer.fullName || producer.email
+                name: producer.fullName || producer.email,
               });
             }
           }
         }
       }
-      
+
       setOperators(assignedOperators);
     } catch (error) {
-      console.error('Failed to load operators:', error);
+      console.error("Failed to load operators:", error);
     }
   };
 
@@ -148,70 +200,81 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}?modelId=${modelId}`);
-      console.log('📡 Response status:', response.status);
-      
+      console.log("📡 Response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        console.log('📡 Server data length:', data.length);
-        console.log('📡 Server data:', data);
-        
+        console.log("📡 Server data length:", data.length);
+        console.log("📡 Server data:", data);
+
         // Always start with full period data
         const initialData = generateInitialData(currentPeriod);
-        
+
         if (data.length > 0) {
           // Merge server data into generated data by matching dates
-          const mergedData = initialData.map(dayData => {
-            const serverRecord = data.find((d: DayData) => d.date === dayData.date);
+          const mergedData = initialData.map((dayData) => {
+            const serverRecord = data.find(
+              (d: DayData) => d.date === dayData.date,
+            );
             return serverRecord ? { ...dayData, ...serverRecord } : dayData;
           });
           setOnlineData(mergedData);
-          console.log('✅ Merged server data with generated data');
+          console.log("✅ Merged server data with generated data");
         } else {
           setOnlineData(initialData);
-          console.log('✅ Using generated initial data (server returned empty)');
+          console.log(
+            "✅ Using generated initial data (server returned empty)",
+          );
         }
       } else {
         const initialData = generateInitialData(currentPeriod);
         setOnlineData(initialData);
-        console.log('✅ Using generated initial data (server error)');
+        console.log("✅ Using generated initial data (server error)");
       }
     } catch (error) {
-      console.error('❌ Failed to load financial data:', error);
+      console.error("❌ Failed to load financial data:", error);
       const initialData = generateInitialData(currentPeriod);
       setOnlineData(initialData);
-      console.log('✅ Using generated initial data (network error)');
+      console.log("✅ Using generated initial data (network error)");
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const autoSave = useCallback(async (data: DayData[]) => {
-    if (isReadOnly) return;
-    
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelId, data })
-      });
 
-      if (response.ok) {
-        setLastSaved(new Date());
+  const autoSave = useCallback(
+    async (data: DayData[]) => {
+      if (isReadOnly) return;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modelId, data }),
+        });
+
+        if (response.ok) {
+          setLastSaved(new Date());
+        }
+      } catch (error) {
+        console.error("Auto-save error:", error);
       }
-    } catch (error) {
-      console.error('Auto-save error:', error);
-    }
-  }, [modelId, isReadOnly]);
+    },
+    [modelId, isReadOnly],
+  );
 
-  const handleCellChange = (index: number, field: keyof DayData, value: string | number | boolean) => {
+  const handleCellChange = (
+    index: number,
+    field: keyof DayData,
+    value: string | number | boolean,
+  ) => {
     const newData = [...onlineData];
     newData[index] = { ...newData[index], [field]: value };
     setOnlineData(newData);
-    
+
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
-    
+
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSave(newData);
     }, 2000);
@@ -219,35 +282,37 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     try {
       const response = await fetch(API_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           modelId,
-          data: onlineData
-        })
+          data: onlineData,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save data');
+        throw new Error("Failed to save data");
       }
 
       const result = await response.json();
-      
+
       toast({
-        title: 'Данные сохранены',
-        description: result.message || `Финансовые данные для ${modelName} успешно обновлены`,
+        title: "Данные сохранены",
+        description:
+          result.message ||
+          `Финансовые данные для ${modelName} успешно обновлены`,
       });
     } catch (error) {
-      console.error('Save error:', error);
+      console.error("Save error:", error);
       toast({
-        title: 'Ошибка сохранения',
-        description: 'Не удалось сохранить данные. Попробуйте снова.',
-        variant: 'destructive',
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить данные. Попробуйте снова.",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -256,51 +321,99 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
   const formatDate = (dateStr: string) => {
     // Convert "2024-10-16" to "16.10"
-    const [, month, day] = dateStr.split('-');
+    const [, month, day] = dateStr.split("-");
     return `${day}.${month}`;
   };
 
   const totalCbTokens = onlineData.reduce((sum, d) => sum + d.cb, 0);
-  const totalSpTokens = onlineData.reduce((sum, d) => sum + d.stripchatTokens, 0);
+  const totalSpTokens = onlineData.reduce(
+    (sum, d) => sum + d.stripchatTokens,
+    0,
+  );
   const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
   const totalIncome = onlineData.reduce((sum, d) => {
-    const dailyIncome = ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4Income + d.transfers) * 0.6;
+    const dailyIncome =
+      ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
+        d.cam4Income +
+        d.transfers) *
+      0.6;
     return sum + dailyIncome;
   }, 0);
-  const totalShifts = onlineData.filter(d => d.shift).length;
+  const totalShifts = onlineData.filter((d) => d.shift).length;
 
-  const graphOnlineData = onlineData.map(d => ({
+  const graphOnlineData = onlineData.map((d) => ({
     date: formatDate(d.date),
     onlineSP: d.sp,
     onlineCB: d.cb,
     onlineSoda: d.soda,
   }));
 
-  const totalCbIncomeTokens = onlineData.reduce((sum, d) => sum + d.cbIncome, 0);
-  const totalSpIncomeTokens = onlineData.reduce((sum, d) => sum + d.spIncome, 0);
-  const totalSodaIncomeTokens = onlineData.reduce((sum, d) => sum + d.sodaIncome, 0);
+  const totalCbIncomeTokens = onlineData.reduce(
+    (sum, d) => sum + d.cbIncome,
+    0,
+  );
+  const totalSpIncomeTokens = onlineData.reduce(
+    (sum, d) => sum + d.spIncome,
+    0,
+  );
+  const totalSodaIncomeTokens = onlineData.reduce(
+    (sum, d) => sum + d.sodaIncome,
+    0,
+  );
   const totalCam4Income = onlineData.reduce((sum, d) => sum + d.cam4Income, 0);
-  
+
   const platformSummary = [
-    { platform: 'Chaturbate', tokens: totalCbIncomeTokens, income: totalCbIncomeTokens * 0.05 * 0.6 },
-    { platform: 'Stripchat', tokens: totalSpIncomeTokens, income: totalSpIncomeTokens * 0.05 * 0.6 },
-    { platform: 'CamSoda', tokens: totalSodaIncomeTokens, income: totalSodaIncomeTokens * 0.05 * 0.6 },
-    { platform: 'Cam4', tokens: totalCam4Income, income: totalCam4Income * 0.6 },
+    {
+      platform: "Chaturbate",
+      tokens: totalCbIncomeTokens,
+      income: totalCbIncomeTokens * 0.05 * 0.6,
+    },
+    {
+      platform: "Stripchat",
+      tokens: totalSpIncomeTokens,
+      income: totalSpIncomeTokens * 0.05 * 0.6,
+    },
+    {
+      platform: "CamSoda",
+      tokens: totalSodaIncomeTokens,
+      income: totalSodaIncomeTokens * 0.05 * 0.6,
+    },
+    {
+      platform: "Cam4",
+      tokens: totalCam4Income,
+      income: totalCam4Income * 0.6,
+    },
   ];
 
   const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
   const bestDay = onlineData.reduce((best, current) => {
-    const currentIncome = ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 + current.cam4Income + current.transfers) * 0.6;
-    const bestIncome = ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 + best.cam4Income + best.transfers) * 0.6;
+    const currentIncome =
+      ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 +
+        current.cam4Income +
+        current.transfers) *
+      0.6;
+    const bestIncome =
+      ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 +
+        best.cam4Income +
+        best.transfers) *
+      0.6;
     return currentIncome > bestIncome ? current : best;
   }, onlineData[0]);
-  const bestDayIncome = ((bestDay.cbIncome + bestDay.spIncome + bestDay.sodaIncome) * 0.05 + bestDay.cam4Income + bestDay.transfers) * 0.6;
+  const bestDayIncome =
+    ((bestDay.cbIncome + bestDay.spIncome + bestDay.sodaIncome) * 0.05 +
+      bestDay.cam4Income +
+      bestDay.transfers) *
+    0.6;
 
   if (isLoading) {
     return (
       <div className="animate-fade-in space-y-6">
         <div className="flex items-center justify-center py-12">
-          <Icon name="Loader2" size={48} className="animate-spin text-primary" />
+          <Icon
+            name="Loader2"
+            size={48}
+            className="animate-spin text-primary"
+          />
         </div>
       </div>
     );
@@ -319,7 +432,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-2">
               Финансы — {modelName}
             </h2>
-            <p className="text-sm text-muted-foreground">Статистика доходов по платформам</p>
+            <p className="text-sm text-muted-foreground">
+              Статистика доходов по платформам
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -328,7 +443,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
+                onClick={() =>
+                  setCurrentPeriod(getPreviousPeriod(currentPeriod))
+                }
               >
                 <Icon name="ChevronLeft" size={16} />
               </Button>
@@ -347,7 +464,11 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
           {!isReadOnly && lastSaved && (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <Icon name="Check" size={14} className="text-green-500" />
-              Сохранено {lastSaved.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+              Сохранено{" "}
+              {lastSaved.toLocaleTimeString("ru-RU", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           )}
         </div>
@@ -359,8 +480,12 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <p className="text-sm text-muted-foreground">Всего за период</p>
             <Icon name="DollarSign" size={20} className="text-green-600" />
           </div>
-          <p className="text-3xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{totalShifts} смен</p>
+          <p className="text-3xl font-bold text-green-600">
+            ${totalIncome.toFixed(2)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {totalShifts} смен
+          </p>
         </Card>
 
         <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
@@ -368,7 +493,9 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <p className="text-sm text-muted-foreground">Средний доход</p>
             <Icon name="TrendingUp" size={20} className="text-blue-600" />
           </div>
-          <p className="text-3xl font-bold text-blue-600">${averageDaily.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-blue-600">
+            ${averageDaily.toFixed(2)}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">за смену</p>
         </Card>
 
@@ -377,8 +504,12 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <p className="text-sm text-muted-foreground">Лучший день</p>
             <Icon name="Star" size={20} className="text-purple-600" />
           </div>
-          <p className="text-3xl font-bold text-purple-600">${bestDayIncome.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground mt-1">{formatDate(bestDay.date)}</p>
+          <p className="text-3xl font-bold text-purple-600">
+            ${bestDayIncome.toFixed(2)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {formatDate(bestDay.date)}
+          </p>
         </Card>
       </div>
 
@@ -392,37 +523,44 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <Card key={d.date} className="p-4 mb-3 bg-muted/30">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold">{formatDate(d.date)}</p>
-                <Badge variant="outline" className={d.shift ? 'bg-green-500/20' : ''}>
-                  {d.shift ? 'Смена' : 'Нет смены'}
+                <Badge
+                  variant="outline"
+                  className={d.shift ? "bg-green-500/20" : ""}
+                >
+                  {d.shift ? "Смена" : "Нет смены"}
                 </Badge>
               </div>
-              
+
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">CB:</span>
-                  <Input 
+                  <Input
                     type="text"
                     inputMode="numeric"
-                    value={d.cb || ''}
+                    value={d.cb || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '');
-                      handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      handleCellChange(idx, "cb", val === "" ? 0 : Number(val));
                     }}
                     className="w-20 h-8 text-right"
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Chaturbate $:</span>
-                  <Input 
+                  <Input
                     type="text"
                     inputMode="decimal"
-                    value={d.cbIncome || ''}
+                    value={d.cbIncome || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, '');
-                      handleCellChange(idx, 'cbIncome', val === '' ? 0 : Number(val));
+                      const val = e.target.value.replace(/[^0-9.]/g, "");
+                      handleCellChange(
+                        idx,
+                        "cbIncome",
+                        val === "" ? 0 : Number(val),
+                      );
                     }}
                     className="w-20 h-8 text-right"
                   />
@@ -430,14 +568,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">SP:</span>
-                  <Input 
+                  <Input
                     type="text"
                     inputMode="numeric"
-                    value={d.sp || ''}
+                    value={d.sp || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '');
-                      handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      handleCellChange(idx, "sp", val === "" ? 0 : Number(val));
                     }}
                     className="w-20 h-8 text-right"
                   />
@@ -445,14 +583,18 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Stripchat $:</span>
-                  <Input 
+                  <Input
                     type="text"
                     inputMode="decimal"
-                    value={d.spIncome || ''}
+                    value={d.spIncome || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, '');
-                      handleCellChange(idx, 'spIncome', val === '' ? 0 : Number(val));
+                      const val = e.target.value.replace(/[^0-9.]/g, "");
+                      handleCellChange(
+                        idx,
+                        "spIncome",
+                        val === "" ? 0 : Number(val),
+                      );
                     }}
                     className="w-20 h-8 text-right"
                   />
@@ -460,14 +602,18 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
 
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Cam4 $:</span>
-                  <Input 
+                  <Input
                     type="text"
                     inputMode="decimal"
-                    value={d.cam4Income || ''}
+                    value={d.cam4Income || ""}
                     disabled={isReadOnly}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, '');
-                      handleCellChange(idx, 'cam4Income', val === '' ? 0 : Number(val));
+                      const val = e.target.value.replace(/[^0-9.]/g, "");
+                      handleCellChange(
+                        idx,
+                        "cam4Income",
+                        val === "" ? 0 : Number(val),
+                      );
                     }}
                     className="w-20 h-8 text-right"
                   />
@@ -476,7 +622,15 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between font-semibold text-green-600">
                     <span>Доход:</span>
-                    <span>${(((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4Income + d.transfers) * 0.6).toFixed(2)}</span>
+                    <span>
+                      $
+                      {(
+                        ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
+                          d.cam4Income +
+                          d.transfers) *
+                        0.6
+                      ).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -490,9 +644,14 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
           <table className="w-full text-sm border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-border">
-                <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">Настоящий период</th>
+                <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">
+                  Настоящий период
+                </th>
                 {onlineData.map((d) => (
-                  <th key={d.date} className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50">
+                  <th
+                    key={d.date}
+                    className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50"
+                  >
                     {formatDate(d.date)}
                   </th>
                 ))}
@@ -503,17 +662,23 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             </thead>
             <tbody>
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online CB</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Online CB
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={d.cb || ''}
+                      value={d.cb || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        handleCellChange(idx, 'cb', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        handleCellChange(
+                          idx,
+                          "cb",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
@@ -524,37 +689,53 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               </tr>
 
               <tr className="border-b bg-amber-400/20">
-                <td className="p-2 font-medium sticky left-0 bg-amber-400/20">Chaturbate ($)</td>
+                <td className="p-2 font-medium sticky left-0 bg-amber-400/20">
+                  Chaturbate
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="decimal"
-                      value={d.cbIncome || ''}
+                      value={d.cbIncome || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'cbIncome', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        handleCellChange(
+                          idx,
+                          "cbIncome",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-amber-400/30">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-amber-400/30">
+                  {onlineData
+                    .reduce((sum, d) => sum + d.cbIncome, 0)
+                    .toFixed(2)}
+                </td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online SP</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Online SP
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={d.sp || ''}
+                      value={d.sp || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        handleCellChange(idx, 'sp', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        handleCellChange(
+                          idx,
+                          "sp",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
@@ -565,37 +746,53 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               </tr>
 
               <tr className="border-b bg-red-500/20">
-                <td className="p-2 font-medium sticky left-0 bg-red-500/20">Stripchat ($)</td>
+                <td className="p-2 font-medium sticky left-0 bg-red-500/20">
+                  Stripchat
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="decimal"
-                      value={d.spIncome || ''}
+                      value={d.spIncome || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'spIncome', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        handleCellChange(
+                          idx,
+                          "spIncome",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-red-500/30">{onlineData.reduce((sum, d) => sum + d.spIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-red-500/30">
+                  {onlineData
+                    .reduce((sum, d) => sum + d.spIncome, 0)
+                    .toFixed(2)}
+                </td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Online Soda</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Online Soda
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={d.soda || ''}
+                      value={d.soda || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        handleCellChange(idx, 'soda', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        handleCellChange(
+                          idx,
+                          "soda",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
@@ -606,36 +803,52 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               </tr>
 
               <tr className="border-b bg-cyan-400/20">
-                <td className="p-2 font-medium sticky left-0 bg-cyan-400/20">CamSoda ($)</td>
+                <td className="p-2 font-medium sticky left-0 bg-cyan-400/20">
+                  CamSoda
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="decimal"
-                      value={d.sodaIncome || ''}
+                      value={d.sodaIncome || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'sodaIncome', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        handleCellChange(
+                          idx,
+                          "sodaIncome",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-cyan-400/30">{onlineData.reduce((sum, d) => sum + d.sodaIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-cyan-400/30">
+                  {onlineData
+                    .reduce((sum, d) => sum + d.sodaIncome, 0)
+                    .toFixed(2)}
+                </td>
               </tr>
 
               <tr className="border-b bg-pink-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-pink-500/5">Cam4</td>
+                <td className="p-2 font-medium sticky left-0 bg-pink-500/5">
+                  Cam4 ($)
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="decimal"
-                      value={d.cam4Income || ''}
+                      value={d.cam4Income || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'cam4Income', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        handleCellChange(
+                          idx,
+                          "cam4Income",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
@@ -643,37 +856,57 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                   </td>
                 ))}
                 <td className="p-2 text-center font-bold bg-pink-500/10">
-                  {onlineData.reduce((sum, d) => sum + d.cam4Income, 0).toFixed(2)}
+                  {onlineData
+                    .reduce((sum, d) => sum + d.cam4Income, 0)
+                    .toFixed(2)}
                 </td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Переводы</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Переводы
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Input 
+                    <Input
                       type="text"
                       inputMode="decimal"
-                      value={d.transfers || ''}
+                      value={d.transfers || ""}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, '');
-                        handleCellChange(idx, 'transfers', val === '' ? 0 : Number(val));
+                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                        handleCellChange(
+                          idx,
+                          "transfers",
+                          val === "" ? 0 : Number(val),
+                        );
                       }}
                       className="w-14 h-8 text-center text-xs p-1"
                       disabled={isReadOnly}
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">{onlineData.reduce((sum, d) => sum + d.transfers, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-accent/5">
+                  {onlineData
+                    .reduce((sum, d) => sum + d.transfers, 0)
+                    .toFixed(2)}
+                </td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Оператор (Имя)</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Оператор (Имя)
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Select 
-                      value={d.operator || 'none'} 
-                      onValueChange={(value) => handleCellChange(idx, 'operator', value === 'none' ? '' : value)}
+                    <Select
+                      value={d.operator || "none"}
+                      onValueChange={(value) =>
+                        handleCellChange(
+                          idx,
+                          "operator",
+                          value === "none" ? "" : value,
+                        )
+                      }
                       disabled={isReadOnly}
                     >
                       <SelectTrigger className="w-24 h-8 text-xs">
@@ -694,25 +927,40 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">Смены</td>
+                <td className="p-2 font-medium sticky left-0 bg-background">
+                  Смены
+                </td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
-                    <Checkbox 
+                    <Checkbox
                       checked={d.shift}
-                      onCheckedChange={(checked) => handleCellChange(idx, 'shift', checked === true)}
+                      onCheckedChange={(checked) =>
+                        handleCellChange(idx, "shift", checked === true)
+                      }
                       disabled={isReadOnly}
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-accent/5">{totalShifts}</td>
+                <td className="p-2 text-center font-bold bg-accent/5">
+                  {totalShifts}
+                </td>
               </tr>
 
               <tr className="border-b bg-green-500/10">
-                <td className="p-2 font-bold sticky left-0 bg-green-500/10">Income</td>
+                <td className="p-2 font-bold sticky left-0 bg-green-500/10">
+                  Income
+                </td>
                 {onlineData.map((d) => {
-                  const dailyIncome = ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 + d.cam4Income + d.transfers) * 0.6;
+                  const dailyIncome =
+                    ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
+                      d.cam4Income +
+                      d.transfers) *
+                    0.6;
                   return (
-                    <td key={d.date} className="p-2 text-center font-semibold text-green-600">
+                    <td
+                      key={d.date}
+                      className="p-2 text-center font-semibold text-green-600"
+                    >
                       ${dailyIncome.toFixed(2)}
                     </td>
                   );
@@ -731,8 +979,10 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
           <Card key={platform.platform} className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{platform.platform}</h3>
-              {platform.platform !== 'Cam4' && (
-                <Badge variant="outline">{platform.tokens.toFixed(0)} токенов</Badge>
+              {platform.platform !== "Cam4" && (
+                <Badge variant="outline">
+                  {platform.tokens.toFixed(0)} токенов
+                </Badge>
               )}
             </div>
             <div className="text-3xl font-bold text-primary">
@@ -749,17 +999,35 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis dataKey="date" className="text-xs" />
             <YAxis className="text-xs" />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
               }}
             />
             <Legend />
-            <Line type="monotone" dataKey="onlineSP" stroke="#ef4444" name="Stripchat" strokeWidth={2} />
-            <Line type="monotone" dataKey="onlineCB" stroke="#f97316" name="Chaturbate" strokeWidth={2} />
-            <Line type="monotone" dataKey="onlineSoda" stroke="#3b82f6" name="CamSoda" strokeWidth={2} />
+            <Line
+              type="monotone"
+              dataKey="onlineSP"
+              stroke="#ef4444"
+              name="Stripchat"
+              strokeWidth={2}
+            />
+            <Line
+              type="monotone"
+              dataKey="onlineCB"
+              stroke="#f97316"
+              name="Chaturbate"
+              strokeWidth={2}
+            />
+            <Line
+              type="monotone"
+              dataKey="onlineSoda"
+              stroke="#3b82f6"
+              name="CamSoda"
+              strokeWidth={2}
+            />
           </LineChart>
         </ResponsiveContainer>
       </Card>
@@ -767,22 +1035,24 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Доходы по дням</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={onlineData.map(d => ({ 
-            date: formatDate(d.date), 
-            CB: d.cbIncome * 0.05 * 0.6, 
-            SP: d.spIncome * 0.05 * 0.6, 
-            Soda: d.sodaIncome * 0.05 * 0.6,
-            Cam4: d.cam4 * 0.6,
-            Transfers: d.transfers * 0.6
-          }))}>
+          <BarChart
+            data={onlineData.map((d) => ({
+              date: formatDate(d.date),
+              CB: d.cbIncome * 0.05 * 0.6,
+              SP: d.spIncome * 0.05 * 0.6,
+              Soda: d.sodaIncome * 0.05 * 0.6,
+              Cam4: d.cam4 * 0.6,
+              Transfers: d.transfers * 0.6,
+            }))}
+          >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis dataKey="date" className="text-xs" />
             <YAxis className="text-xs" />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
               }}
             />
             <Legend />
