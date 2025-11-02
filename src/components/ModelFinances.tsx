@@ -523,8 +523,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <td className="p-2 text-center"></td>
               </tr>
 
-              <tr className="border-b bg-amber-500/10">
-                <td className="p-2 font-medium sticky left-0 bg-amber-500/10">Chaturbate ($)</td>
+              <tr className="border-b bg-amber-400/20">
+                <td className="p-2 font-medium sticky left-0 bg-amber-400/20">Chaturbate ($)</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -540,7 +540,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-amber-500/15">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-amber-400/30">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
@@ -564,8 +564,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <td className="p-2 text-center"></td>
               </tr>
 
-              <tr className="border-b bg-red-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-red-500/5">Stripchat ($)</td>
+              <tr className="border-b bg-red-500/20">
+                <td className="p-2 font-medium sticky left-0 bg-red-500/20">Stripchat ($)</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -581,7 +581,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-red-500/15">{onlineData.reduce((sum, d) => sum + d.spIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-red-500/30">{onlineData.reduce((sum, d) => sum + d.spIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b hover:bg-muted/30">
@@ -605,8 +605,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <td className="p-2 text-center"></td>
               </tr>
 
-              <tr className="border-b bg-cyan-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-cyan-500/5">CamSoda ($)</td>
+              <tr className="border-b bg-cyan-400/20">
+                <td className="p-2 font-medium sticky left-0 bg-cyan-400/20">CamSoda ($)</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -622,7 +622,7 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-cyan-500/15">{onlineData.reduce((sum, d) => sum + d.sodaIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-cyan-400/30">{onlineData.reduce((sum, d) => sum + d.sodaIncome, 0).toFixed(2)}</td>
               </tr>
 
               <tr className="border-b bg-pink-500/5">
