@@ -29,7 +29,7 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
     }
   };
 
-  const total = producerData.sumRubles - expenses - advance - penalty;
+  const total = producerData.sumRubles + expenses - advance - penalty;
   return (
     <Card className="overflow-hidden max-w-2xl mx-auto border-2 border-red-500/30 shadow-lg">
       <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 p-4 text-center border-b-2 border-red-500/30">

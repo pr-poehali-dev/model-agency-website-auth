@@ -232,7 +232,7 @@ const ChecksTab = () => {
       expenses: adj.expenses,
       advance: adj.advance,
       penalty: adj.penalty,
-      total: Math.round(sumRubles - adj.expenses - adj.advance - adj.penalty)
+      total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty)
     };
   }) : [];
   
@@ -435,7 +435,7 @@ const ChecksTab = () => {
               expenses: adj.expenses,
               advance: adj.advance,
               penalty: adj.penalty,
-              total: Math.round(sumRubles - adj.expenses - adj.advance - adj.penalty),
+              total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty),
               employees: []
             }} 
             period={currentPeriod}
