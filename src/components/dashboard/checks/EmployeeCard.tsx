@@ -50,7 +50,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
       </div>
       
       <div className="p-6 space-y-3">
-        {employee.week && (
+        {employee.week > 0 && (
           <div className="flex justify-between items-center py-2 border-b">
             <span className="text-muted-foreground">Неделя</span>
             <span className="font-semibold text-lg">{employee.week}</span>
