@@ -523,8 +523,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <td className="p-2 text-center"></td>
               </tr>
 
-              <tr className="border-b bg-red-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-red-500/5">Chaturbate</td>
+              <tr className="border-b bg-amber-500/10">
+                <td className="p-2 font-medium sticky left-0 bg-amber-500/10">Chaturbate ($)</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -540,11 +540,11 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                     />
                   </td>
                 ))}
-                <td className="p-2 text-center font-bold bg-red-500/10">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
+                <td className="p-2 text-center font-bold bg-amber-500/15">{onlineData.reduce((sum, d) => sum + d.cbIncome, 0).toFixed(2)}</td>
               </tr>
 
-              <tr className="border-b bg-red-500/10">
-                <td className="p-2 font-medium sticky left-0 bg-red-500/10">Online SP</td>
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Online SP</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
@@ -584,8 +584,8 @@ const ModelFinances = ({ modelId, modelName, currentUserEmail, userRole, onBack 
                 <td className="p-2 text-center font-bold bg-red-500/15">{onlineData.reduce((sum, d) => sum + d.spIncome, 0).toFixed(2)}</td>
               </tr>
 
-              <tr className="border-b bg-cyan-500/10">
-                <td className="p-2 font-medium sticky left-0 bg-cyan-500/10">Online Soda</td>
+              <tr className="border-b hover:bg-muted/30">
+                <td className="p-2 font-medium sticky left-0 bg-background">Online Soda</td>
                 {onlineData.map((d, idx) => (
                   <td key={d.date} className="p-2 text-center">
                     <Input 
