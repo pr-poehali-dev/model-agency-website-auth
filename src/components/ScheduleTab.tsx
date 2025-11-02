@@ -217,12 +217,12 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           
           const loc1Filtered = weekDates.map(wd => {
             const savedDate = loc1Dates.find((d: any) => d.date === wd.date);
-            return savedDate || { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+            return savedDate ? { ...savedDate, day: wd.day } : { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
           });
           
           const loc2Filtered = weekDates.map(wd => {
             const savedDate = loc2Dates.find((d: any) => d.date === wd.date);
-            return savedDate || { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+            return savedDate ? { ...savedDate, day: wd.day } : { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
           });
           
           return {
