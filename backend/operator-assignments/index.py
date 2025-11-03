@@ -148,47 +148,46 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Access denied'})
                 }
             
-            path = event.get('path', '')
-            if '/percentage' in path:
-                body_data = json.loads(event.get('body', '{}'))
-                operator_email = body_data.get('operatorEmail')
-                model_email = body_data.get('modelEmail')
-                operator_percentage = body_data.get('operatorPercentage', 20)
-                
-                if operator_percentage < 0 or operator_percentage > 30:
-                    return {
-                        'statusCode': 400,
-                        'headers': {
-                            'Content-Type': 'application/json',
-                            'Access-Control-Allow-Origin': '*'
-                        },
-                        'body': json.dumps({'error': 'Percentage must be between 0 and 30'})
-                    }
-                
-                cur.execute(f"""
-                    UPDATE t_p35405502_model_agency_website.operator_model_assignments 
-                    SET operator_percentage = {operator_percentage}
-                    WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
-                """)
-                
-                conn.commit()
-                
+            body_data = json.loads(event.get('body', '{}'))
+            operator_email = body_data.get('operatorEmail')
+            model_email = body_data.get('modelEmail')
+            operator_percentage = body_data.get('operatorPercentage')
+            
+            if operator_percentage is None:
                 return {
-                    'statusCode': 200,
+                    'statusCode': 400,
                     'headers': {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     },
-                    'body': json.dumps({'message': 'Percentage updated successfully'})
+                    'body': json.dumps({'error': 'Missing operatorPercentage'})
                 }
             
+            if operator_percentage < 0 or operator_percentage > 30:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'Percentage must be between 0 and 30'})
+                }
+            
+            cur.execute(f"""
+                UPDATE t_p35405502_model_agency_website.operator_model_assignments 
+                SET operator_percentage = {operator_percentage}
+                WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
+            """)
+            
+            conn.commit()
+            
             return {
-                'statusCode': 400,
+                'statusCode': 200,
                 'headers': {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'error': 'Invalid PUT request'})
+                'body': json.dumps({'message': 'Percentage updated successfully'})
             }
         
         elif method == 'DELETE':
