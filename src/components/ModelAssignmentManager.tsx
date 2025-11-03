@@ -311,13 +311,15 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
                             <select
                               value={currentPercentage}
                               onChange={(e) => {
-                                const val = parseInt(e.target.value);
+                                const val = parseFloat(e.target.value);
                                 handlePercentageChange(selectedOperator, model.email, val);
                               }}
                               className="px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-sm font-medium"
                             >
                               <option value={15}>15%</option>
+                              <option value={17.5}>17,5%</option>
                               <option value={20}>20%</option>
+                              <option value={22.5}>22,5%</option>
                               <option value={25}>25%</option>
                             </select>
                           </div>
