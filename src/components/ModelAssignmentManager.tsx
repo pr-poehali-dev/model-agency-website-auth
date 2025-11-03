@@ -308,29 +308,18 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
                             Процент оператора (продюсер получит {producerPercentage}%)
                           </label>
                           <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max="30"
+                            <select
                               value={currentPercentage}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value);
-                                if (!isNaN(val)) {
-                                  const key = getPercentageKey(selectedOperator, model.email);
-                                  setPercentages(prev => ({ ...prev, [key]: val }));
-                                }
+                                handlePercentageChange(selectedOperator, model.email, val);
                               }}
-                              onBlur={() => handlePercentageChange(selectedOperator, model.email, currentPercentage)}
-                              className="w-20 px-2 py-1 border border-border rounded bg-background text-foreground text-sm"
-                            />
-                            <span className="text-sm text-muted-foreground">%</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handlePercentageChange(selectedOperator, model.email, currentPercentage)}
+                              className="px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-sm font-medium"
                             >
-                              Применить
-                            </Button>
+                              <option value={15}>15%</option>
+                              <option value={20}>20%</option>
+                              <option value={25}>25%</option>
+                            </select>
                           </div>
                         </div>
                         <div className="text-right">
