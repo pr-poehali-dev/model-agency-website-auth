@@ -275,9 +275,15 @@ const ChecksTab = () => {
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       
-      const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
-      const operatorPercentage = assignment?.operatorPercentage || 20;
-      const producerPercentage = 30 - operatorPercentage;
+      const operatorAssignments = allAssignments.filter(a => a.operatorEmail === op.email);
+      let avgOperatorPercentage = 20;
+      if (operatorAssignments.length > 0) {
+        const totalOperatorPercentage = operatorAssignments.reduce((sum: number, a: any) => {
+          return sum + (a.operatorPercentage || 20);
+        }, 0);
+        avgOperatorPercentage = Math.round((totalOperatorPercentage / operatorAssignments.length) * 10) / 10;
+      }
+      const avgProducerPercentage = 30 - avgOperatorPercentage;
       
       return {
         name: op.fullName || op.email,
@@ -291,8 +297,8 @@ const ChecksTab = () => {
         advance: adj.advance,
         penalty: adj.penalty,
         total: Math.round(sumRubles - adj.advance - adj.penalty),
-        operatorPercentage,
-        producerPercentage,
+        operatorPercentage: avgOperatorPercentage,
+        producerPercentage: avgProducerPercentage,
         role: 'operator'
       };
     });
