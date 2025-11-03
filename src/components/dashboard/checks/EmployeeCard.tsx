@@ -64,6 +64,24 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
           </div>
         )}
         
+        {employee.role === 'operator' && employee.operatorPercentage !== undefined && (
+          <div className="flex justify-between items-center py-2 border-b bg-blue-500/5 px-3 rounded">
+            <span className="text-muted-foreground font-medium">Распределение</span>
+            <span className="font-semibold text-sm">
+              Оп: {employee.operatorPercentage}% | Пр: {employee.producerPercentage}%
+            </span>
+          </div>
+        )}
+        
+        {!employee.role && color === 'purple' && (
+          <div className="flex justify-between items-center py-2 border-b bg-purple-500/5 px-3 rounded">
+            <span className="text-muted-foreground font-medium">Процент модели</span>
+            <span className="font-semibold text-lg text-purple-600 dark:text-purple-400">
+              30%
+            </span>
+          </div>
+        )}
+        
         <div className="flex justify-between items-center py-2 border-b">
           <span className="text-muted-foreground">Сумма $</span>
           <span className="font-semibold text-lg">${employee.sumDollars.toFixed(2)}</span>

@@ -18,6 +18,7 @@ const ChecksTab = () => {
   const [userEmail, setUserEmail] = useState('');
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
+  const [allAssignments, setAllAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
   const [adjustments, setAdjustments] = useState<any>({});
@@ -33,6 +34,7 @@ const ChecksTab = () => {
     loadUserRole(email);
     loadExchangeRate();
     loadUsers();
+    loadAllAssignments();
     if (email) {
       loadProducerAssignments(email);
     }
@@ -79,6 +81,16 @@ const ChecksTab = () => {
       setUsers(data);
     } catch (err) {
       console.error('Failed to load users', err);
+    }
+  };
+
+  const loadAllAssignments = async () => {
+    try {
+      const response = await fetch(`${ASSIGNMENTS_API_URL}`);
+      const assignments = await response.json();
+      setAllAssignments(assignments);
+    } catch (err) {
+      console.error('Failed to load all assignments', err);
     }
   };
 
@@ -223,6 +235,22 @@ const ChecksTab = () => {
     const adj = adjustments[p.email] || { expenses: 0, advance: 0, penalty: 0 };
     const sumDollars = salary.total;
     const sumRubles = sumDollars * exchangeRate;
+    
+    const producerModelEmails = salary.details.map((d: any) => d.model_email).filter((e: string) => e);
+    const producerAssignmentsForThisProducer = allAssignments.filter((a: any) => 
+      producerModelEmails.includes(a.modelEmail)
+    );
+    
+    let averageProducerPercentage = 10;
+    if (producerAssignmentsForThisProducer.length > 0) {
+      const totalProducerPercentage = producerAssignmentsForThisProducer.reduce((sum: number, assignment: any) => {
+        const operatorPercentage = assignment.operatorPercentage || 20;
+        const producerPercentage = 30 - operatorPercentage;
+        return sum + producerPercentage;
+      }, 0);
+      averageProducerPercentage = Math.round((totalProducerPercentage / producerAssignmentsForThisProducer.length) * 10) / 10;
+    }
+    
     return {
       name: p.fullName || p.email,
       email: p.email,
@@ -232,7 +260,8 @@ const ChecksTab = () => {
       expenses: adj.expenses,
       advance: adj.advance,
       penalty: adj.penalty,
-      total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty)
+      total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty),
+      averageProducerPercentage
     };
   }) : [];
   
@@ -245,6 +274,11 @@ const ChecksTab = () => {
       const adj = adjustments[op.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
+      
+      const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
+      const operatorPercentage = assignment?.operatorPercentage || 20;
+      const producerPercentage = 30 - operatorPercentage;
+      
       return {
         name: op.fullName || op.email,
         email: op.email,
@@ -256,7 +290,10 @@ const ChecksTab = () => {
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
-        total: Math.round(sumRubles - adj.advance - adj.penalty)
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        operatorPercentage,
+        producerPercentage,
+        role: 'operator'
       };
     });
     
@@ -292,6 +329,10 @@ const ChecksTab = () => {
       const adj = adjustments[op.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
+      
+      const operatorPercentage = assignment?.operatorPercentage || 20;
+      const producerPercentage = 30 - operatorPercentage;
+      
       return {
         name: op.fullName || op.email,
         email: op.email,
@@ -303,7 +344,10 @@ const ChecksTab = () => {
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
-        total: Math.round(sumRubles - adj.advance - adj.penalty)
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        operatorPercentage,
+        producerPercentage,
+        role: 'operator'
       };
     });
     

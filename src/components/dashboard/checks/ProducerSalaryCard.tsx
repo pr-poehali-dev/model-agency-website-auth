@@ -42,6 +42,15 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
       </div>
       
       <div className="p-6 space-y-3">
+        {producerData.averageProducerPercentage !== undefined && (
+          <div className="flex justify-between items-center py-2 border-b bg-red-500/5 px-3 rounded">
+            <span className="text-muted-foreground font-medium">Средний процент</span>
+            <span className="font-semibold text-lg text-red-600 dark:text-red-400">
+              {producerData.averageProducerPercentage}%
+            </span>
+          </div>
+        )}
+        
         <div className="flex justify-between items-center py-2 border-b">
           <span className="text-muted-foreground">Сумма $</span>
           <span className="font-semibold text-lg">${producerData.sumDollars.toFixed(2)}</span>

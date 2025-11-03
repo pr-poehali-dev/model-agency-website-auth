@@ -10,6 +10,9 @@ export interface Employee {
   advance: number;
   penalty: number;
   total: number;
+  operatorPercentage?: number;
+  producerPercentage?: number;
+  role?: string;
 }
 
 export interface ProducerData {
@@ -24,4 +27,5 @@ export interface ProducerData {
   penalty: number;
   total: number;
   employees: Employee[];
+  averageProducerPercentage?: number;
 }
