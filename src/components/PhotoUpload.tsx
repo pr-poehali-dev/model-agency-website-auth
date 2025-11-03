@@ -23,6 +23,46 @@ const PhotoUpload = ({ currentPhotoUrl, onPhotoUploaded }: PhotoUploadProps) => 
     onPhotoUploaded(newUrl);
   };
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const maxDimension = 800;
+          if (width > height && width > maxDimension) {
+            height = (height / width) * maxDimension;
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = (width / height) * maxDimension;
+            height = maxDimension;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(compressedBase64);
+        };
+        
+        img.onerror = reject;
+      };
+      
+      reader.onerror = reject;
+    });
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -36,42 +76,31 @@ const PhotoUpload = ({ currentPhotoUrl, onPhotoUploaded }: PhotoUploadProps) => 
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: 'Ошибка',
-        description: 'Размер файла не должен превышать 2 МБ',
-        variant: 'destructive'
-      });
-      return;
-    }
-
     setUploading(true);
 
     try {
-      const reader = new FileReader();
+      const compressedImage = await compressImage(file);
       
-      reader.onload = (event) => {
-        const base64String = event.target?.result as string;
-        setPhotoUrl(base64String);
-        onPhotoUploaded(base64String);
-        setUploading(false);
-        
-        toast({
-          title: 'Успешно',
-          description: 'Фотография загружена'
-        });
-      };
-
-      reader.onerror = () => {
-        setUploading(false);
+      const sizeInKB = Math.round((compressedImage.length * 0.75) / 1024);
+      
+      if (sizeInKB > 500) {
         toast({
           title: 'Ошибка',
-          description: 'Не удалось загрузить файл',
+          description: `Изображение слишком большое (${sizeInKB} КБ). Выберите другое фото или уменьшите качество.`,
           variant: 'destructive'
         });
-      };
-
-      reader.readAsDataURL(file);
+        setUploading(false);
+        return;
+      }
+      
+      setPhotoUrl(compressedImage);
+      onPhotoUploaded(compressedImage);
+      setUploading(false);
+      
+      toast({
+        title: 'Успешно',
+        description: `Фотография загружена (${sizeInKB} КБ)`
+      });
     } catch (error) {
       console.error('Upload error:', error);
       setUploading(false);
