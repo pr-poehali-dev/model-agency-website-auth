@@ -17,6 +17,7 @@ interface Assignment {
   modelEmail: string;
   assignedBy: string;
   assignedAt: string;
+  operatorPercentage?: number;
 }
 
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
@@ -36,6 +37,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
+  const [percentages, setPercentages] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -109,6 +111,13 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
       const response = await fetch(ASSIGNMENTS_API_URL);
       const data = await response.json();
       setAssignments(data);
+      
+      const percentageMap: { [key: string]: number } = {};
+      data.forEach((a: Assignment) => {
+        const key = `${a.operatorEmail}_${a.modelEmail}`;
+        percentageMap[key] = a.operatorPercentage || 20;
+      });
+      setPercentages(percentageMap);
     } catch (err) {
       console.error('Failed to load assignments', err);
     }
@@ -128,6 +137,59 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
   const isAssigned = (operatorEmail: string, modelEmail: string) => {
     return assignments.some(a => a.operatorEmail === operatorEmail && a.modelEmail === modelEmail);
+  };
+
+  const getPercentageKey = (operatorEmail: string, modelEmail: string) => {
+    return `${operatorEmail}_${modelEmail}`;
+  };
+
+  const handlePercentageChange = async (operatorEmail: string, modelEmail: string, newPercentage: number) => {
+    if (newPercentage < 0 || newPercentage > 30) {
+      toast({ 
+        title: 'Ошибка', 
+        description: 'Процент оператора должен быть от 0 до 30', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    const key = getPercentageKey(operatorEmail, modelEmail);
+    setPercentages(prev => ({ ...prev, [key]: newPercentage }));
+
+    try {
+      const response = await fetch(`${ASSIGNMENTS_API_URL}/percentage`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail,
+          'X-User-Role': currentUserRole
+        },
+        body: JSON.stringify({ 
+          operatorEmail, 
+          modelEmail, 
+          operatorPercentage: newPercentage 
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update percentage');
+      }
+
+      const producerPercentage = 30 - newPercentage;
+      toast({ 
+        title: 'Процент обновлен', 
+        description: `Оператор: ${newPercentage}%, Продюсер: ${producerPercentage}%` 
+      });
+      
+      await loadAssignments();
+    } catch (err) {
+      console.error('Percentage update error:', err);
+      toast({ 
+        title: 'Ошибка', 
+        description: 'Не удалось обновить процент', 
+        variant: 'destructive' 
+      });
+    }
   };
 
   const handleToggleAssignment = async (operatorEmail: string, modelEmail: string) => {
@@ -218,19 +280,68 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
       {selectedOperator && (
         <Card className="p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4">Модели для {selectedOperator}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {models.map(model => {
               const assigned = isAssigned(selectedOperator, model.email);
+              const percentageKey = getPercentageKey(selectedOperator, model.email);
+              const currentPercentage = percentages[percentageKey] || 20;
+              const producerPercentage = 30 - currentPercentage;
+              
               return (
-                <div key={model.email} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
-                  <span className="text-foreground font-medium">{model.email}</span>
-                  <Button
-                    onClick={() => handleToggleAssignment(selectedOperator, model.email)}
-                    variant={assigned ? 'destructive' : 'default'}
-                    size="sm">
-                    <Icon name={assigned ? 'UserMinus' : 'UserPlus'} size={16} className="mr-2" />
-                    {assigned ? 'Открепить' : 'Назначить'}
-                  </Button>
+                <div key={model.email} className="p-4 border border-border rounded-lg bg-card/50">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-foreground font-medium">{model.email}</span>
+                    <Button
+                      onClick={() => handleToggleAssignment(selectedOperator, model.email)}
+                      variant={assigned ? 'destructive' : 'default'}
+                      size="sm">
+                      <Icon name={assigned ? 'UserMinus' : 'UserPlus'} size={16} className="mr-2" />
+                      {assigned ? 'Открепить' : 'Назначить'}
+                    </Button>
+                  </div>
+                  
+                  {assigned && (currentUserRole === 'producer' || currentUserRole === 'director') && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <label className="text-xs text-muted-foreground mb-1 block">
+                            Процент оператора (продюсер получит {producerPercentage}%)
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="30"
+                              value={currentPercentage}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val)) {
+                                  const key = getPercentageKey(selectedOperator, model.email);
+                                  setPercentages(prev => ({ ...prev, [key]: val }));
+                                }
+                              }}
+                              onBlur={() => handlePercentageChange(selectedOperator, model.email, currentPercentage)}
+                              className="w-20 px-2 py-1 border border-border rounded bg-background text-foreground text-sm"
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePercentageChange(selectedOperator, model.email, currentPercentage)}
+                            >
+                              Применить
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">Распределение:</div>
+                          <div className="text-sm font-medium text-foreground">
+                            Оператор: {currentPercentage}% | Продюсер: {producerPercentage}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

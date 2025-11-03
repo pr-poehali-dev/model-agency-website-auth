@@ -148,9 +148,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income_dollars}, transfers={transfers_dollars}, total_check={total_check}")
             
             model_salary = total_check * 0.3
-            producer_salary = total_check * 0.1
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
+            operator_percentage = model_assignment.get('operator_percentage', 20) if model_assignment else 20
+            producer_percentage = 30 - operator_percentage
             model_email = model_assignment['model_email'] if model_assignment else None
             
             if not model_assignment:
@@ -195,7 +196,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, role={operator_user['role']}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
             
             if producer_operator_email:
-                operator_salary = total_check * 0.2
+                operator_salary = total_check * (operator_percentage / 100)
+                producer_salary = total_check * (producer_percentage / 100)
                 combined_salary = operator_salary + producer_salary
                 if producer_operator_email not in producer_salaries:
                     producer_salaries[producer_operator_email] = {
@@ -210,10 +212,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'model_email': model_email,
                     'amount': combined_salary,
                     'check': total_check,
-                    'note': 'operator_20%_+_producer_10%'
+                    'note': f'operator_{operator_percentage}%_+_producer_{producer_percentage}%'
                 })
             elif operator_email:
-                operator_salary = total_check * 0.2
+                operator_salary = total_check * (operator_percentage / 100)
                 if operator_email not in operator_salaries:
                     operator_salaries[operator_email] = {
                         'email': operator_email,
@@ -247,22 +249,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}")
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
+                        producer_salary_amount = total_check * (producer_percentage / 100)
                         if producer_email == producer_operator_email:
                             print(f"DEBUG: Skipping producer salary for {producer_email} - already paid as operator")
                         else:
-                            print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary}")
+                            print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary_amount}")
                             if producer_email not in producer_salaries:
                                 producer_salaries[producer_email] = {
                                     'email': producer_email,
                                     'total': 0,
                                     'details': []
                                 }
-                            producer_salaries[producer_email]['total'] += producer_salary
+                            producer_salaries[producer_email]['total'] += producer_salary_amount
                             producer_salaries[producer_email]['details'].append({
                                 'date': finance['date'].isoformat(),
                                 'model_id': model_id,
                                 'model_email': model_email,
-                                'amount': producer_salary,
+                                'amount': producer_salary_amount,
                                 'check': total_check
                             })
         

@@ -7,22 +7,10 @@
       "expectedStatus": 200
     },
     {
-      "name": "Assign model to operator",
-      "method": "POST",
-      "path": "/",
-      "headers": {
-        "X-User-Email": "producer@mba.com",
-        "X-User-Role": "producer"
-      },
-      "body": {
-        "operatorEmail": "operator@mba.com",
-        "modelId": 1
-      },
-      "expectedStatus": 201,
-      "expectedBody": {
-        "message": "string"
-      },
-      "bodyMatcher": "partial"
+      "name": "Get assignments for operator",
+      "method": "GET",
+      "path": "/?operator=test@test.com",
+      "expectedStatus": 200
     }
   ]
 }

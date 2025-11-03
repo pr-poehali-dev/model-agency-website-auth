@@ -24,7 +24,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Email, X-User-Role',
                 'Access-Control-Max-Age': '86400'
             },
@@ -47,13 +47,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if operator_email:
                 cur.execute(f"""
-                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at 
+                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 
                     FROM t_p35405502_model_agency_website.operator_model_assignments 
                     WHERE operator_email = '{escape_sql_string(operator_email)}'
                 """)
             else:
                 cur.execute("""
-                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at 
+                    SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 
                     FROM t_p35405502_model_agency_website.operator_model_assignments
                 """)
             
@@ -64,7 +64,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'modelEmail': r[2],
                 'modelId': r[3],
                 'assignedBy': r[4],
-                'assignedAt': r[5].isoformat() if r[5] else None
+                'assignedAt': r[5].isoformat() if r[5] else None,
+                'operatorPercentage': r[6] if len(r) > 6 else 20
             } for r in rows]
             
             return {
@@ -133,6 +134,61 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Access-Control-Allow-Origin': '*'
                 },
                 'body': json.dumps({'id': assignment_id, 'message': 'Assigned successfully'})
+            }
+        
+        elif method == 'PUT':
+            # Обновить процент оператора (только продюсер/директор)
+            if user_role not in ['producer', 'director']:
+                return {
+                    'statusCode': 403,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'Access denied'})
+                }
+            
+            path = event.get('path', '')
+            if '/percentage' in path:
+                body_data = json.loads(event.get('body', '{}'))
+                operator_email = body_data.get('operatorEmail')
+                model_email = body_data.get('modelEmail')
+                operator_percentage = body_data.get('operatorPercentage', 20)
+                
+                if operator_percentage < 0 or operator_percentage > 30:
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({'error': 'Percentage must be between 0 and 30'})
+                    }
+                
+                cur.execute(f"""
+                    UPDATE t_p35405502_model_agency_website.operator_model_assignments 
+                    SET operator_percentage = {operator_percentage}
+                    WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
+                """)
+                
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'message': 'Percentage updated successfully'})
+                }
+            
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Invalid PUT request'})
             }
         
         elif method == 'DELETE':
