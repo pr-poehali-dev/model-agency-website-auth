@@ -72,6 +72,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 oma.operator_email,
                 oma.model_email,
                 oma.model_id,
+                oma.operator_percentage,
                 u.id as model_user_id
             FROM operator_model_assignments oma
             JOIN users u ON u.email = oma.model_email
@@ -150,7 +151,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_salary = total_check * 0.3
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
-            operator_percentage = model_assignment.get('operator_percentage', 20) if model_assignment else 20
+            operator_percentage = float(model_assignment.get('operator_percentage', 20)) if model_assignment else 20
             producer_percentage = 30 - operator_percentage
             model_email = model_assignment['model_email'] if model_assignment else None
             
