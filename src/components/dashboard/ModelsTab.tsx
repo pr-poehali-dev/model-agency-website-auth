@@ -228,7 +228,7 @@ const ModelsTab = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Наши модели</h2>
-          <p className="text-muted-foreground">Управление портфолио талантов</p>
+          <p className="text-muted-foreground"></p>
           {operatorAssignments.length > 0 && (
             <Badge variant="secondary" className="mt-2">
               Назначено вам: {operatorAssignments.length} {operatorAssignments.length === 1 ? 'модель' : 'моделей'}
