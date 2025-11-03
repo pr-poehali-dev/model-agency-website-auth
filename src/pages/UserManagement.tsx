@@ -42,6 +42,7 @@ const UserManagement = () => {
   const [editFullName, setEditFullName] = useState('');
   const [editRole, setEditRole] = useState<UserRole>('content_maker');
   const [editIsActive, setEditIsActive] = useState(true);
+  const [editPhotoUrl, setEditPhotoUrl] = useState('');
   
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
 
@@ -167,6 +168,10 @@ const UserManagement = () => {
         updateData.password = editPassword;
       }
 
+      if (editPhotoUrl !== selectedUser.photoUrl) {
+        updateData.photoUrl = editPhotoUrl;
+      }
+
       if (editRole !== selectedUser.role) {
         const defaultPermissions = [...ROLE_PERMISSIONS[editRole]];
         
@@ -273,6 +278,7 @@ const UserManagement = () => {
     setEditRole(user.role);
     setEditIsActive(user.isActive);
     setEditPassword('');
+    setEditPhotoUrl(user.photoUrl || '');
     setIsEditDialogOpen(true);
   };
 
@@ -406,6 +412,8 @@ const UserManagement = () => {
         setEditRole={setEditRole}
         editIsActive={editIsActive}
         setEditIsActive={setEditIsActive}
+        editPhotoUrl={editPhotoUrl}
+        setEditPhotoUrl={setEditPhotoUrl}
         onSubmit={handleEditUser}
         loading={loading}
       />

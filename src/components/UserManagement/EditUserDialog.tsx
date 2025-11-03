@@ -41,6 +41,8 @@ interface EditUserDialogProps {
   setEditRole: (role: UserRole) => void;
   editIsActive: boolean;
   setEditIsActive: (active: boolean) => void;
+  editPhotoUrl: string;
+  setEditPhotoUrl: (url: string) => void;
   onSubmit: () => void;
   loading: boolean;
 }
@@ -57,6 +59,8 @@ const EditUserDialog = ({
   setEditRole,
   editIsActive,
   setEditIsActive,
+  editPhotoUrl,
+  setEditPhotoUrl,
   onSubmit,
   loading,
 }: EditUserDialogProps) => {
@@ -72,8 +76,8 @@ const EditUserDialog = ({
         <div className="space-y-4 py-4">
           {selectedUser && (
             <PhotoUpload
-              currentPhotoUrl={selectedUser.photoUrl}
-              onPhotoUploaded={() => {}}
+              currentPhotoUrl={editPhotoUrl}
+              onPhotoUploaded={setEditPhotoUrl}
               userId={selectedUser.id}
             />
           )}
