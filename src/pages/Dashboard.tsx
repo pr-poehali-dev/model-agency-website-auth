@@ -79,6 +79,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [userPhotoUrl, setUserPhotoUrl] = useState('');
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
   const [assignedProducer, setAssignedProducer] = useState('');
@@ -149,6 +150,7 @@ const Dashboard = () => {
         setUserRole(currentUser.role);
         setUserName(currentUser.fullName || '');
         setUserPermissions(currentUser.permissions || []);
+        setUserPhotoUrl(currentUser.photoUrl || '');
         
         if (currentUser.role === 'operator') {
           loadOperatorAssignments(email);
@@ -326,6 +328,7 @@ const Dashboard = () => {
         userEmail={userEmail}
         userName={userName}
         userRole={userRole}
+        userPhotoUrl={userPhotoUrl}
         theme={theme}
         mobileMenuOpen={mobileMenuOpen}
         onTabChange={handleTabChange}

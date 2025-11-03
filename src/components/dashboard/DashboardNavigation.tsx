@@ -19,6 +19,7 @@ interface DashboardNavigationProps {
   userEmail: string;
   userName: string;
   userRole: UserRole | null;
+  userPhotoUrl?: string;
   theme: 'light' | 'dark';
   mobileMenuOpen: boolean;
   onTabChange: (tabId: string) => void;
@@ -34,6 +35,7 @@ const DashboardNavigation = ({
   userEmail,
   userName,
   userRole,
+  userPhotoUrl,
   theme,
   mobileMenuOpen,
   onTabChange,
@@ -55,7 +57,7 @@ const DashboardNavigation = ({
           </div>
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${userName || userEmail}`} />
+              <AvatarImage src={userPhotoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${userName || userEmail}`} />
               <AvatarFallback>{(userName || userEmail).slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
