@@ -65,7 +65,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'modelId': r[3],
                 'assignedBy': r[4],
                 'assignedAt': r[5].isoformat() if r[5] else None,
-                'operatorPercentage': r[6] if len(r) > 6 else 20
+                'operatorPercentage': float(r[6]) if len(r) > 6 and r[6] is not None else 20
             } for r in rows]
             
             return {
