@@ -157,7 +157,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     setPercentages(prev => ({ ...prev, [key]: newPercentage }));
 
     try {
-      const response = await fetch(`${ASSIGNMENTS_API_URL}/percentage`, {
+      const response = await fetch(ASSIGNMENTS_API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
