@@ -153,46 +153,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             operator_percentage = float(model_assignment.get('operator_percentage', 20)) if model_assignment else 20
             model_email = model_assignment['model_email'] if model_assignment else None
+            if not model_email:
+                model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
             
             operator_email = None
             producer_operator_email = None
             assigned_operator_email = None
             operator_user = None
             
-            if model_assignment:
-                assigned_operator_email = model_assignment['operator_email']
-                operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
-                
-                if not operator_user:
-                    print(f"DEBUG: operator {assigned_operator_email} not found in users")
-                elif operator_name and operator_name != operator_user.get('full_name', ''):
-                    override_user = next((u for u in users if u['full_name'] == operator_name), None)
-                    if override_user:
-                        print(f"DEBUG: Override operator from assignment {operator_user['full_name']} to operator_name {operator_name}")
-                        operator_user = override_user
-                        assigned_operator_email = override_user['email']
-                else:
-                    print(f"DEBUG: Using assigned operator {assigned_operator_email} for model_id={model_id}")
-            else:
-                print(f"DEBUG: No assignment found for model_id={model_id}, checking operator_name field")
-                model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
-                
-                if operator_name:
-                    operator_user = next((u for u in users if u['full_name'] == operator_name), None)
-                    if operator_user:
-                        assigned_operator_email = operator_user['email']
+            if operator_name:
+                print(f"DEBUG: operator_name '{operator_name}' found in finance row for model_id={model_id}")
+                operator_user = next((u for u in users if u['full_name'] == operator_name), None)
+                if operator_user:
+                    assigned_operator_email = operator_user['email']
+                    print(f"DEBUG: Found operator user {assigned_operator_email} with role {operator_user['role']}")
+                    
+                    if operator_user['role'] == 'operator':
+                        operator_email = assigned_operator_email
+                    elif operator_user['role'] == 'producer':
+                        producer_operator_email = assigned_operator_email
                     else:
-                        print(f"DEBUG: operator_name '{operator_name}' not found in users")
+                        print(f"DEBUG: operator {assigned_operator_email} has wrong role {operator_user['role']}")
                 else:
-                    print(f"DEBUG: No operator assignment and no operator_name for model_id={model_id}, producer will get 10%")
-            
-            if operator_user:
-                if operator_user['role'] == 'operator':
-                    operator_email = assigned_operator_email
-                elif operator_user['role'] == 'producer':
-                    producer_operator_email = assigned_operator_email
-                else:
-                    print(f"DEBUG: operator {assigned_operator_email} has wrong role {operator_user['role']}")
+                    print(f"DEBUG: operator_name '{operator_name}' not found in users")
+            else:
+                print(f"DEBUG: No operator_name for model_id={model_id}, no operator salary will be calculated")
             
             print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
             
