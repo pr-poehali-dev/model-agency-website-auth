@@ -152,52 +152,51 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             operator_percentage = float(model_assignment.get('operator_percentage', 20)) if model_assignment else 20
-            producer_percentage = 30 - operator_percentage
             model_email = model_assignment['model_email'] if model_assignment else None
+            
+            operator_email = None
+            producer_operator_email = None
+            assigned_operator_email = None
+            operator_user = None
             
             if not model_assignment:
                 print(f"DEBUG: No assignment found for model_id={model_id}, checking operator_name field")
-                if not operator_name:
-                    print(f"DEBUG: Skipping model_id={model_id} - no operator assignment and no operator_name")
-                    continue
-                
-                operator_user = next((u for u in users if u['full_name'] == operator_name), None)
-                if not operator_user:
-                    print(f"DEBUG: Skipping model_id={model_id} - operator_name '{operator_name}' not found in users")
-                    continue
-                
-                assigned_operator_email = operator_user['email']
-                model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
+                if operator_name:
+                    operator_user = next((u for u in users if u['full_name'] == operator_name), None)
+                    if operator_user:
+                        assigned_operator_email = operator_user['email']
+                        model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
+                    else:
+                        print(f"DEBUG: operator_name '{operator_name}' not found in users")
+                else:
+                    print(f"DEBUG: No operator assigned for model_id={model_id}, producer will get 10%")
+                    model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
             else:
                 assigned_operator_email = model_assignment['operator_email']
                 operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
                 
                 if not operator_user:
-                    print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} not found in users")
-                    continue
-                
-                if operator_name and operator_name != operator_user['full_name']:
+                    print(f"DEBUG: operator {assigned_operator_email} not found in users")
+                elif operator_name and operator_name != operator_user['full_name']:
                     override_user = next((u for u in users if u['full_name'] == operator_name), None)
                     if override_user:
                         print(f"DEBUG: Override operator from assignment {operator_user['full_name']} to operator_name {operator_name}")
                         operator_user = override_user
                         assigned_operator_email = override_user['email']
             
-            operator_email = None
-            producer_operator_email = None
+            if operator_user:
+                if operator_user['role'] == 'operator':
+                    operator_email = assigned_operator_email
+                elif operator_user['role'] == 'producer':
+                    producer_operator_email = assigned_operator_email
+                else:
+                    print(f"DEBUG: operator {assigned_operator_email} has wrong role {operator_user['role']}")
             
-            if operator_user['role'] == 'operator':
-                operator_email = assigned_operator_email
-            elif operator_user['role'] == 'producer':
-                producer_operator_email = assigned_operator_email
-            else:
-                print(f"DEBUG: Skipping model_id={model_id} - operator {assigned_operator_email} has wrong role {operator_user['role']}")
-                continue
-            
-            print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, role={operator_user['role']}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
+            print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
             
             if producer_operator_email:
                 operator_salary = total_check * (operator_percentage / 100)
+                producer_percentage = 30 - operator_percentage
                 producer_salary = total_check * (producer_percentage / 100)
                 combined_salary = operator_salary + producer_salary
                 if producer_operator_email not in producer_salaries:
@@ -230,6 +229,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'amount': operator_salary,
                     'check': total_check
                 })
+            else:
+                print(f"DEBUG: No operator assigned for model_id={model_id}, producer gets 10%")
             
             if model_email:
                 if model_email not in model_salaries:
@@ -250,11 +251,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}")
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
+                        
+                        if operator_email or producer_operator_email:
+                            producer_percentage = 30 - operator_percentage
+                        else:
+                            producer_percentage = 10
+                            print(f"DEBUG: No operator for model_id={model_id}, producer gets 10%")
+                        
                         producer_salary_amount = total_check * (producer_percentage / 100)
                         if producer_email == producer_operator_email:
                             print(f"DEBUG: Skipping producer salary for {producer_email} - already paid as operator")
                         else:
-                            print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary_amount}")
+                            print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary_amount}, percentage={producer_percentage}%")
                             if producer_email not in producer_salaries:
                                 producer_salaries[producer_email] = {
                                     'email': producer_email,
