@@ -159,30 +159,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             assigned_operator_email = None
             operator_user = None
             
-            if not model_assignment:
-                print(f"DEBUG: No assignment found for model_id={model_id}, checking operator_name field")
-                if operator_name:
-                    operator_user = next((u for u in users if u['full_name'] == operator_name), None)
-                    if operator_user:
-                        assigned_operator_email = operator_user['email']
-                        model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
-                    else:
-                        print(f"DEBUG: operator_name '{operator_name}' not found in users")
-                else:
-                    print(f"DEBUG: No operator assigned for model_id={model_id}, producer will get 10%")
-                    model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
-            else:
+            if model_assignment:
                 assigned_operator_email = model_assignment['operator_email']
                 operator_user = next((u for u in users if u['email'] == assigned_operator_email), None)
                 
                 if not operator_user:
                     print(f"DEBUG: operator {assigned_operator_email} not found in users")
-                elif operator_name and operator_name != operator_user['full_name']:
+                elif operator_name and operator_name != operator_user.get('full_name', ''):
                     override_user = next((u for u in users if u['full_name'] == operator_name), None)
                     if override_user:
                         print(f"DEBUG: Override operator from assignment {operator_user['full_name']} to operator_name {operator_name}")
                         operator_user = override_user
                         assigned_operator_email = override_user['email']
+                else:
+                    print(f"DEBUG: Using assigned operator {assigned_operator_email} for model_id={model_id}")
+            else:
+                print(f"DEBUG: No assignment found for model_id={model_id}, checking operator_name field")
+                model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
+                
+                if operator_name:
+                    operator_user = next((u for u in users if u['full_name'] == operator_name), None)
+                    if operator_user:
+                        assigned_operator_email = operator_user['email']
+                    else:
+                        print(f"DEBUG: operator_name '{operator_name}' not found in users")
+                else:
+                    print(f"DEBUG: No operator assignment and no operator_name for model_id={model_id}, producer will get 10%")
             
             if operator_user:
                 if operator_user['role'] == 'operator':
