@@ -274,7 +274,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     try {
       const response = await fetch(USERS_API_URL);
       const users = await response.json();
-      const operators = users.filter((u: any) => u.role === 'operator' || u.role === 'content_maker');
+      const operators = users.filter((u: any) => u.role === 'operator' || u.role === 'content_maker' || u.role === 'solo_maker');
       setTeamMembers(operators);
     } catch (err) {
       console.error('Failed to load team members', err);

@@ -63,7 +63,7 @@ const CalculationTab = () => {
       const response = await fetch(USERS_API_URL);
       const data = await response.json();
       const employees = data.filter((u: User) => 
-        u.role === 'operator' || u.role === 'content_maker' || u.role === 'producer'
+        u.role === 'operator' || u.role === 'content_maker' || u.role === 'producer' || u.role === 'solo_maker'
       );
       setUsers(employees);
       
