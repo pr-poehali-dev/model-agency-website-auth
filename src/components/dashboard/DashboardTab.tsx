@@ -311,7 +311,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Текущий курс</p>
-                <p className="text-xs text-muted-foreground">ЦБ РФ</p>
+                <p className="text-xs text-muted-foreground"></p>
               </div>
               <div className="p-2 bg-accent/10 rounded-lg">
                 <Icon name="TrendingUp" size={24} className="text-accent" />
