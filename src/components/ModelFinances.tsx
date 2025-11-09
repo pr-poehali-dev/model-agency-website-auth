@@ -190,6 +190,22 @@ const ModelFinances = ({
         }
       }
 
+      // If current user is solo_maker, add themselves to the list
+      if (userRole === "solo_maker" && currentUserEmail) {
+        const currentUser = users.find(
+          (u: any) => u.email === currentUserEmail,
+        );
+        if (
+          currentUser &&
+          !assignedOperators.some((op) => op.email === currentUserEmail)
+        ) {
+          assignedOperators.push({
+            email: currentUser.email,
+            name: currentUser.fullName || currentUser.email,
+          });
+        }
+      }
+
       setOperators(assignedOperators);
     } catch (error) {
       console.error("Failed to load operators:", error);
