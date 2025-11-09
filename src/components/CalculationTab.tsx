@@ -650,25 +650,25 @@ const CalculationTab = () => {
                   </div>
 
                   <div className="space-y-1.5 border-t pt-2">
-                    <Input
-                      type="text"
-                      placeholder="Процент (50-70)"
-                      value={solo.percentage}
-                      onChange={(e) => {
-                        let numValue = e.target.value.replace(/[^0-9]/g, '');
-                        if (numValue) {
-                          const num = parseInt(numValue);
-                          if (num > 70) numValue = '70';
-                          if (num < 50) numValue = '50';
-                        }
-                        const updated = soloModels.map(s => 
-                          s.id === solo.id ? { ...s, percentage: numValue || '50' } : s
-                        );
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="text-center text-xs h-8 bg-purple-500/10 text-purple-600 font-semibold"
-                    />
+                    <div className="grid grid-cols-4 gap-1">
+                      {['50', '60', '65', '70'].map(pct => (
+                        <Button
+                          key={pct}
+                          size="sm"
+                          variant={solo.percentage === pct ? 'default' : 'outline'}
+                          onClick={() => {
+                            const updated = soloModels.map(s => 
+                              s.id === solo.id ? { ...s, percentage: pct } : s
+                            );
+                            setSoloModels(updated);
+                            localStorage.setItem('soloModels', JSON.stringify(updated));
+                          }}
+                          className="h-8 text-xs"
+                        >
+                          {pct}%
+                        </Button>
+                      ))}
+                    </div>
                     <Input
                       type="text"
                       placeholder="StripChat"
