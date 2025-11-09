@@ -363,7 +363,7 @@ const ModelsTab = ({
                     </Button>
                   )}
 
-                  {(userRole === 'operator' || userRole === 'producer' || userRole === 'director') && (
+                  {(userRole === 'operator' || userRole === 'producer' || userRole === 'director' || userRole === 'solo_maker') && (
                     <Button 
                       variant="outline" 
                       onClick={async () => {
