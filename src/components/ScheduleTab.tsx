@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
-import ScheduleHistory from './ScheduleHistory';
 
 interface TeamMember {
   id: number;
