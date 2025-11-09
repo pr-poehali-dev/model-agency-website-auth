@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, type UserRole } from '@/lib/permissions';
-import { addAuditLog } from '@/lib/auditLog';
+
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
 import ModelsTab from '@/components/dashboard/ModelsTab';
@@ -9,7 +9,7 @@ import ChecksTab from '@/components/dashboard/ChecksTab';
 import DashboardTab from '@/components/dashboard/DashboardTab';
 
 import UserManagement from './UserManagement';
-import AuditLog from './AuditLog';
+
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
@@ -215,18 +215,6 @@ const Dashboard = () => {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    const tabLabels: Record<string, string> = {
-      home: 'Главная',
-      models: 'Модели',
-      finances: 'Финансы',
-      checks: 'Чеки',
-      schedule: 'Расписание',
-      files: 'Файлы',
-      users: 'Пользователи',
-      audit: 'История действий'
-    };
-    const category = ['models', 'finances'].includes(tabId) ? tabId as any : 'system';
-    addAuditLog(userEmail, `Просмотр раздела`, `Открыт раздел "${tabLabels[tabId] || tabId}"`, category);
   };
 
   const navigationItems = [
@@ -239,18 +227,12 @@ const Dashboard = () => {
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
     { id: 'producer-assignments', label: 'Продюсеры', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_PRODUCERS },
-    { id: 'audit', label: 'История действий', icon: 'FileText', permission: PERMISSIONS.VIEW_AUDIT },
+
   ];
 
   const handleViewModelFinances = (modelId: number, modelName: string) => {
     setSelectedModelId(modelId);
     setActiveTab('model-finances');
-    addAuditLog(
-      userEmail, 
-      'Просмотр финансов модели',
-      `Открыта страница финансов для модели: ${modelName}`,
-      'finances'
-    );
   };
 
   const renderTabContent = () => {
@@ -306,8 +288,7 @@ const Dashboard = () => {
         />;
       case 'producer-assignments':
         return <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
-      case 'audit':
-        return <AuditLog />;
+
       default:
         return <DashboardHome 
           models={models} 
