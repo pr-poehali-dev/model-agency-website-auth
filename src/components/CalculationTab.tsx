@@ -49,9 +49,12 @@ const CalculationTab = () => {
       );
       setUsers(employees);
       
+      const savedCalculations = localStorage.getItem('calculationTabData');
+      const savedData = savedCalculations ? JSON.parse(savedCalculations) : {};
+      
       const initialCalc: Record<string, any> = {};
       employees.forEach((user: User) => {
-        initialCalc[user.email] = {
+        initialCalc[user.email] = savedData[user.email] || {
           stripchat: '0',
           chaturbate: '0',
           advance: '0',
@@ -134,13 +137,17 @@ const CalculationTab = () => {
 
   const handleInputChange = (email: string, field: string, value: string) => {
     const numValue = value.replace(/[^0-9]/g, '');
-    setCalculations(prev => ({
-      ...prev,
-      [email]: {
-        ...prev[email],
-        [field]: numValue
-      }
-    }));
+    setCalculations(prev => {
+      const updated = {
+        ...prev,
+        [email]: {
+          ...prev[email],
+          [field]: numValue
+        }
+      };
+      localStorage.setItem('calculationTabData', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const calculateSalary = (email: string, role: string) => {
