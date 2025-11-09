@@ -324,20 +324,20 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             </div>
           </Card>
         ) : (
-          <Card className="p-6 border-2 border-purple-500/20 bg-gradient-to-br from-background to-purple-500/5">
+          <Card className="p-6 border-2 border-amber-500/20 bg-gradient-to-br from-background to-amber-500/5">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Ваш продюсер</p>
               </div>
-              <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Icon name="UserCheck" size={24} className="text-purple-600" />
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <Icon name="UserCheck" size={24} className="text-amber-500" />
               </div>
             </div>
             
             <div className="space-y-2">
               {producerName ? (
                 <>
-                  <p className="text-2xl font-bold text-purple-600">{producerName}</p>
+                  <p className="text-2xl font-bold text-amber-500">{producerName}</p>
                   <p className="text-sm text-muted-foreground">По любым вопросам обращайтесь к вашему продюсеру</p>
                 </>
               ) : (
@@ -375,10 +375,10 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                 <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground relative z-10">за смену</p>
               </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-purple-600/20 rounded-xl border border-purple-500/30 animate-gradient group hover:scale-105 transition-transform">
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 rounded-xl border border-amber-500/30 animate-gradient group hover:scale-105 transition-transform">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
                 <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
-                <p className="text-3xl font-bold text-purple-400 relative z-10">${bestDay.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-amber-400 relative z-10">${bestDay.toFixed(2)}</p>
                 {bestDayData && (
                   <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
                 )}
@@ -419,10 +419,10 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                 <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground relative z-10">за смену</p>
               </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-purple-600/20 rounded-xl border border-purple-500/30 animate-gradient group hover:scale-105 transition-transform">
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 rounded-xl border border-amber-500/30 animate-gradient group hover:scale-105 transition-transform">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
                 <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
-                <p className="text-3xl font-bold text-purple-400 relative z-10">${bestDay.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-amber-400 relative z-10">${bestDay.toFixed(2)}</p>
                 {bestDayData && (
                   <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
                 )}
