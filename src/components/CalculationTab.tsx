@@ -9,6 +9,7 @@ interface User {
   email: string;
   fullName: string;
   role: string;
+  soloPercentage?: string;
 }
 
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
@@ -16,6 +17,7 @@ const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-96
 
 interface SoloModel {
   id: string;
+  email: string;
   name: string;
   stripchat: string;
   chaturbate: string;
@@ -563,27 +565,40 @@ const CalculationTab = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-purple-400">Соло</h3>
-            <Button
-              onClick={() => {
+            <select
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const user = users.find(u => u.email === e.target.value);
+                if (!user) return;
+                
+                if (soloModels.find(s => s.email === user.email)) {
+                  alert('Этот соло-мейкер уже добавлен');
+                  e.target.value = '';
+                  return;
+                }
+                
                 const newSolo: SoloModel = {
                   id: `solo-${Date.now()}`,
-                  name: '',
+                  email: user.email,
+                  name: user.fullName,
                   stripchat: '0',
                   chaturbate: '0',
                   advance: '0',
                   penalty: '0',
-                  percentage: '50'
+                  percentage: user.soloPercentage || '50'
                 };
                 const updated = [...soloModels, newSolo];
                 setSoloModels(updated);
                 localStorage.setItem('soloModels', JSON.stringify(updated));
+                e.target.value = '';
               }}
-              size="sm"
-              className="h-8"
+              className="px-3 py-1.5 text-sm rounded-md border border-border bg-background"
             >
-              <Icon name="Plus" size={16} className="mr-1" />
-              Добавить
-            </Button>
+              <option value="">+ Добавить соло-мейкера</option>
+              {users.filter(u => u.role === 'solo_maker').map(u => (
+                <option key={u.email} value={u.email}>{u.fullName}</option>
+              ))}
+            </select>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {soloModels.map(solo => {
@@ -602,19 +617,9 @@ const CalculationTab = () => {
               return (
                 <Card key={solo.id} className="p-3 bg-purple-500/5 border-purple-500/20">
                   <div className="flex items-center justify-between mb-2">
-                    <Input
-                      type="text"
-                      placeholder="Имя"
-                      value={solo.name}
-                      onChange={(e) => {
-                        const updated = soloModels.map(s => 
-                          s.id === solo.id ? { ...s, name: e.target.value } : s
-                        );
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="text-center text-sm font-semibold h-8 bg-transparent border-0 p-0"
-                    />
+                    <div className="text-sm font-semibold text-purple-600 flex-1">
+                      {solo.name}
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -650,24 +655,8 @@ const CalculationTab = () => {
                   </div>
 
                   <div className="space-y-1.5 border-t pt-2">
-                    <div className="grid grid-cols-4 gap-1">
-                      {['50', '60', '65', '70'].map(pct => (
-                        <Button
-                          key={pct}
-                          size="sm"
-                          variant={solo.percentage === pct ? 'default' : 'outline'}
-                          onClick={() => {
-                            const updated = soloModels.map(s => 
-                              s.id === solo.id ? { ...s, percentage: pct } : s
-                            );
-                            setSoloModels(updated);
-                            localStorage.setItem('soloModels', JSON.stringify(updated));
-                          }}
-                          className="h-8 text-xs"
-                        >
-                          {pct}%
-                        </Button>
-                      ))}
+                    <div className="text-center text-xs text-muted-foreground mb-1">
+                      Процент: <span className="font-semibold text-purple-600">{solo.percentage}%</span>
                     </div>
                     <Input
                       type="text"
