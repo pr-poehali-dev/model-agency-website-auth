@@ -65,22 +65,17 @@ const ChecksTab = () => {
   };
 
   const loadUserRole = async (email: string) => {
-    console.log('Loading role for email:', email);
     try {
       const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
       const users = await response.json();
-      console.log('All users:', users);
       const user = users.find((u: any) => u.email === email);
-      console.log('Found user:', user);
       if (user) {
         setUserRole(user.role);
-        console.log('Set role:', user.role);
       }
     } catch (err) {
       console.error('Failed to load user role', err);
     } finally {
       setIsLoadingRole(false);
-      console.log('Loading finished, isLoadingRole set to false');
     }
   };
 
@@ -239,40 +234,6 @@ const ChecksTab = () => {
     }
   };
 
-  const handleUpdateSoloPercentage = async (email: string, percentage: string) => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      await fetch(ADJUSTMENTS_API_URL, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-User-Email': userEmail
-        },
-        body: JSON.stringify({
-          email,
-          role: 'solo_maker',
-          period_start: periodStart,
-          period_end: periodEnd,
-          field: 'percentage',
-          value: percentage
-        })
-      });
-      
-      await loadAdjustments();
-    } catch (err) {
-      console.error('Failed to update solo maker percentage', err);
-    }
-  };
-
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
   let soloMakers: any[] = [];
@@ -384,7 +345,9 @@ const ChecksTab = () => {
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
-        total: Math.round(sumRubles - adj.advance - adj.penalty)
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        role: 'solo_maker',
+        soloPercentage: sm.soloPercentage || '50'
       };
     });
   } else if (userRole === 'producer' && producerModels.length > 0 && users.length > 0) {
@@ -599,7 +562,6 @@ const ChecksTab = () => {
             period={currentPeriod} 
             canEdit={true}
             onUpdate={handleUpdateEmployee}
-            onPercentageUpdate={handleUpdateSoloPercentage}
           />
         )}
       </div>

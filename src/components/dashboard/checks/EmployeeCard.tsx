@@ -89,32 +89,11 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
         )}
         
         {employee.role === 'solo_maker' && color === 'purple' && (
-          <div className="py-2 border-b bg-purple-500/5 px-3 rounded space-y-2">
-            <span className="text-muted-foreground font-medium block">Процент соло-мейкера</span>
-            {canEdit ? (
-              <div className="grid grid-cols-4 gap-1">
-                {['50', '60', '65', '70'].map(pct => (
-                  <Button
-                    key={pct}
-                    size="sm"
-                    variant={percentage === pct ? 'default' : 'outline'}
-                    onClick={() => {
-                      setPercentage(pct);
-                      if (onPercentageUpdate && employee.email) {
-                        onPercentageUpdate(employee.email, pct);
-                      }
-                    }}
-                    className="h-8 text-xs"
-                  >
-                    {pct}%
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <span className="font-semibold text-lg text-purple-600 dark:text-purple-400">
-                {percentage}%
-              </span>
-            )}
+          <div className="flex justify-between items-center py-2 border-b bg-purple-500/5 px-3 rounded">
+            <span className="text-muted-foreground font-medium">Процент соло-мейкера</span>
+            <span className="font-semibold text-lg text-purple-600 dark:text-purple-400">
+              {percentage}%
+            </span>
           </div>
         )}
         

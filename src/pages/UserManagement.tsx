@@ -21,6 +21,7 @@ interface User {
   permissions: string[];
   createdAt?: string;
   photoUrl?: string;
+  soloPercentage?: string;
 }
 
 const UserManagement = () => {
@@ -43,6 +44,7 @@ const UserManagement = () => {
   const [editRole, setEditRole] = useState<UserRole>('content_maker');
   const [editIsActive, setEditIsActive] = useState(true);
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
+  const [editSoloPercentage, setEditSoloPercentage] = useState('50');
   
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
 
@@ -172,6 +174,10 @@ const UserManagement = () => {
         updateData.photoUrl = editPhotoUrl;
       }
 
+      if (editRole === 'solo_maker') {
+        updateData.soloPercentage = editSoloPercentage;
+      }
+
       if (editRole !== selectedUser.role) {
         const defaultPermissions = [...ROLE_PERMISSIONS[editRole]];
         
@@ -279,6 +285,7 @@ const UserManagement = () => {
     setEditIsActive(user.isActive);
     setEditPassword('');
     setEditPhotoUrl(user.photoUrl || '');
+    setEditSoloPercentage(user.soloPercentage || '50');
     setIsEditDialogOpen(true);
   };
 
@@ -414,6 +421,8 @@ const UserManagement = () => {
         setEditIsActive={setEditIsActive}
         editPhotoUrl={editPhotoUrl}
         setEditPhotoUrl={setEditPhotoUrl}
+        editSoloPercentage={editSoloPercentage}
+        setEditSoloPercentage={setEditSoloPercentage}
         onSubmit={handleEditUser}
         loading={loading}
       />

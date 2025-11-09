@@ -27,6 +27,7 @@ interface User {
   permissions: string[];
   createdAt?: string;
   photoUrl?: string;
+  soloPercentage?: string;
 }
 
 interface EditUserDialogProps {
@@ -43,6 +44,8 @@ interface EditUserDialogProps {
   setEditIsActive: (active: boolean) => void;
   editPhotoUrl: string;
   setEditPhotoUrl: (url: string) => void;
+  editSoloPercentage: string;
+  setEditSoloPercentage: (percentage: string) => void;
   onSubmit: () => void;
   loading: boolean;
 }
@@ -61,6 +64,8 @@ const EditUserDialog = ({
   setEditIsActive,
   editPhotoUrl,
   setEditPhotoUrl,
+  editSoloPercentage,
+  setEditSoloPercentage,
   onSubmit,
   loading,
 }: EditUserDialogProps) => {
@@ -116,6 +121,22 @@ const EditUserDialog = ({
               </SelectContent>
             </Select>
           </div>
+          {editRole === 'solo_maker' && (
+            <div className="space-y-2">
+              <Label htmlFor="editSoloPercentage">Процент соло-мейкера</Label>
+              <Select value={editSoloPercentage} onValueChange={setEditSoloPercentage}>
+                <SelectTrigger className="bg-input border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="50">50%</SelectItem>
+                  <SelectItem value="60">60%</SelectItem>
+                  <SelectItem value="65">65%</SelectItem>
+                  <SelectItem value="70">70%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
