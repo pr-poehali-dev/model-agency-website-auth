@@ -167,38 +167,50 @@ const ModelFinances = ({
         // Get model email from users by modelId
         const modelUser = users.find((u: any) => u.id === modelId);
         if (modelUser) {
-          // Find producer assignment for this model
-          const producerAssignment = producerAssignments.find(
-            (pa: any) => pa.modelEmail === modelUser.email,
-          );
-
-          if (producerAssignment) {
-            // Find the producer user
-            const producer = users.find(
-              (u: any) => u.email === producerAssignment.producerEmail,
-            );
-            if (
-              producer &&
-              !assignedOperators.some((op) => op.email === producer.email)
-            ) {
+          // Check if this model is a solo maker - if so, only add this solo maker
+          if (modelUser.role === "solo_maker") {
+            // Add only this solo maker
+            if (!assignedOperators.some((op) => op.email === modelUser.email)) {
               assignedOperators.push({
-                email: producer.email,
-                name: producer.fullName || producer.email,
+                email: modelUser.email,
+                name: `${modelUser.fullName || modelUser.email} (Соло)`,
               });
             }
-          }
-        }
+          } else {
+            // For regular models, add producer and all solo makers
+            // Find producer assignment for this model
+            const producerAssignment = producerAssignments.find(
+              (pa: any) => pa.modelEmail === modelUser.email,
+            );
 
-        // Add all solo makers to the list for director
-        const soloMakers = users.filter((u: any) => u.role === "solo_maker");
-        soloMakers.forEach((sm: any) => {
-          if (!assignedOperators.some((op) => op.email === sm.email)) {
-            assignedOperators.push({
-              email: sm.email,
-              name: `${sm.fullName || sm.email} (Соло)`,
+            if (producerAssignment) {
+              // Find the producer user
+              const producer = users.find(
+                (u: any) => u.email === producerAssignment.producerEmail,
+              );
+              if (
+                producer &&
+                !assignedOperators.some((op) => op.email === producer.email)
+              ) {
+                assignedOperators.push({
+                  email: producer.email,
+                  name: producer.fullName || producer.email,
+                });
+              }
+            }
+
+            // Add all solo makers to the list for regular models
+            const soloMakers = users.filter((u: any) => u.role === "solo_maker");
+            soloMakers.forEach((sm: any) => {
+              if (!assignedOperators.some((op) => op.email === sm.email)) {
+                assignedOperators.push({
+                  email: sm.email,
+                  name: `${sm.fullName || sm.email} (Соло)`,
+                });
+              }
             });
           }
-        });
+        }
       }
 
       // If current user is solo_maker, add themselves to the list
