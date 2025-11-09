@@ -65,17 +65,22 @@ const ChecksTab = () => {
   };
 
   const loadUserRole = async (email: string) => {
+    console.log('Loading role for email:', email);
     try {
       const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
       const users = await response.json();
+      console.log('All users:', users);
       const user = users.find((u: any) => u.email === email);
+      console.log('Found user:', user);
       if (user) {
         setUserRole(user.role);
+        console.log('Set role:', user.role);
       }
     } catch (err) {
       console.error('Failed to load user role', err);
     } finally {
       setIsLoadingRole(false);
+      console.log('Loading finished, isLoadingRole set to false');
     }
   };
 
