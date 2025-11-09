@@ -307,14 +307,17 @@ const CalculationTab = () => {
                   
                   <div className="space-y-2 mb-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground">Сумма $</div>
-                      <div className="font-semibold text-right">{salary.dollars}</div>
+                      <div className="text-muted-foreground">Общий чек $</div>
+                      <div className="font-semibold text-right">${salary.totalCheck}</div>
+                      
+                      <div className="text-muted-foreground">Процент 20%</div>
+                      <div className="font-semibold text-right">${salary.dollars}</div>
                       
                       <div className="text-muted-foreground">Курс</div>
                       <div className="font-semibold text-right">{exchangeRate}</div>
                       
                       <div className="text-muted-foreground">Сумма ₽</div>
-                      <div className="font-semibold text-right">{salary.rubles} ₽</div>
+                      <div className="font-semibold text-right">{Math.round(salary.dollars * exchangeRate)} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
                       <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
@@ -397,14 +400,17 @@ const CalculationTab = () => {
                   
                   <div className="space-y-2 mb-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground">Сумма $</div>
-                      <div className="font-semibold text-right">{salary.dollars}</div>
+                      <div className="text-muted-foreground">Общий чек $</div>
+                      <div className="font-semibold text-right">${salary.totalCheck}</div>
+                      
+                      <div className="text-muted-foreground">Процент 30%</div>
+                      <div className="font-semibold text-right">${salary.dollars}</div>
                       
                       <div className="text-muted-foreground">Курс</div>
                       <div className="font-semibold text-right">{exchangeRate}</div>
                       
                       <div className="text-muted-foreground">Сумма ₽</div>
-                      <div className="font-semibold text-right">{salary.rubles} ₽</div>
+                      <div className="font-semibold text-right">{Math.round(salary.dollars * exchangeRate)} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
                       <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
@@ -487,14 +493,17 @@ const CalculationTab = () => {
                   
                   <div className="space-y-2 mb-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground">Сумма $</div>
-                      <div className="font-semibold text-right">{salary.dollars}</div>
+                      <div className="text-muted-foreground">Общий чек $</div>
+                      <div className="font-semibold text-right">${salary.totalCheck}</div>
+                      
+                      <div className="text-muted-foreground">Процент 10%</div>
+                      <div className="font-semibold text-right">${salary.dollars}</div>
                       
                       <div className="text-muted-foreground">Курс</div>
                       <div className="font-semibold text-right">{exchangeRate}</div>
                       
                       <div className="text-muted-foreground">Сумма ₽</div>
-                      <div className="font-semibold text-right">{salary.rubles} ₽</div>
+                      <div className="font-semibold text-right">{Math.round(salary.dollars * exchangeRate)} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
                       <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
