@@ -364,25 +364,29 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
               Статистика за период {currentPeriod.label}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Всего за период</p>
-                <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-emerald-600/20 rounded-xl border border-emerald-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Всего за период</p>
+                <p className="text-3xl font-bold text-emerald-400 relative z-10">${totalIncome.toFixed(2)}</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Средний доход</p>
-                <p className="text-2xl font-bold text-blue-600">${avgIncome.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">за смену</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-blue-600/20 rounded-xl border border-blue-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '1s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Средний доход</p>
+                <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground relative z-10">за смену</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Лучший день</p>
-                <p className="text-2xl font-bold text-purple-600">${bestDay.toFixed(2)}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-purple-600/20 rounded-xl border border-purple-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
+                <p className="text-3xl font-bold text-purple-400 relative z-10">${bestDay.toFixed(2)}</p>
                 {bestDayData && (
-                  <p className="text-xs text-muted-foreground">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
+                  <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
                 )}
               </div>
-              <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Моделей</p>
-                <p className="text-2xl font-bold text-cyan-600">{modelsCount}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-cyan-500/20 via-teal-500/10 to-cyan-600/20 rounded-xl border border-cyan-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '3s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Моделей</p>
+                <p className="text-3xl font-bold text-cyan-400 relative z-10">{modelsCount}</p>
               </div>
             </div>
           </Card>
@@ -404,25 +408,29 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
               Статистика за период {currentPeriod.label}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Всего за период</p>
-                <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-emerald-600/20 rounded-xl border border-emerald-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Всего за период</p>
+                <p className="text-3xl font-bold text-emerald-400 relative z-10">${totalIncome.toFixed(2)}</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Средний доход</p>
-                <p className="text-2xl font-bold text-blue-600">${avgIncome.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">за смену</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-blue-600/20 rounded-xl border border-blue-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '1s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Средний доход</p>
+                <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground relative z-10">за смену</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Лучший день</p>
-                <p className="text-2xl font-bold text-purple-600">${bestDay.toFixed(2)}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-purple-600/20 rounded-xl border border-purple-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
+                <p className="text-3xl font-bold text-purple-400 relative z-10">${bestDay.toFixed(2)}</p>
                 {bestDayData && (
-                  <p className="text-xs text-muted-foreground">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
+                  <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
                 )}
               </div>
-              <div className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20">
-                <p className="text-sm text-muted-foreground mb-1">Смен</p>
-                <p className="text-2xl font-bold text-orange-600">{shiftsCount}</p>
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-orange-500/20 via-amber-500/10 to-orange-600/20 rounded-xl border border-orange-500/30 animate-gradient group hover:scale-105 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '3s'}}></div>
+                <p className="text-sm text-muted-foreground mb-1 relative z-10">Смен</p>
+                <p className="text-3xl font-bold text-orange-400 relative z-10">{shiftsCount}</p>
               </div>
             </div>
           </Card>
