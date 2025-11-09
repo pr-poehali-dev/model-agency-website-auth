@@ -21,6 +21,7 @@ interface SoloModel {
   chaturbate: string;
   advance: string;
   penalty: string;
+  percentage: string;
 }
 
 const CalculationTab = () => {
@@ -253,10 +254,11 @@ const CalculationTab = () => {
     const chaturbate = parseInt(solo.chaturbate || '0');
     const advance = parseInt(solo.advance || '0');
     const penalty = parseInt(solo.penalty || '0');
+    const percentage = parseInt(solo.percentage || '50');
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
     const totalCheck = stripchatDollars + chaturbateDollars;
-    const salaryDollars = totalCheck * 0.5;
+    const salaryDollars = totalCheck * (percentage / 100);
     const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
     return sum + salaryRubles;
   }, 0);
@@ -569,7 +571,8 @@ const CalculationTab = () => {
                   stripchat: '0',
                   chaturbate: '0',
                   advance: '0',
-                  penalty: '0'
+                  penalty: '0',
+                  percentage: '50'
                 };
                 const updated = [...soloModels, newSolo];
                 setSoloModels(updated);
@@ -588,11 +591,12 @@ const CalculationTab = () => {
               const chaturbate = parseInt(solo.chaturbate || '0');
               const advance = parseInt(solo.advance || '0');
               const penalty = parseInt(solo.penalty || '0');
+              const percentage = parseInt(solo.percentage || '50');
               
               const stripchatDollars = stripchat * 0.05;
               const chaturbateDollars = chaturbate * 0.05;
               const totalCheck = stripchatDollars + chaturbateDollars;
-              const salaryDollars = totalCheck * 0.5;
+              const salaryDollars = totalCheck * (percentage / 100);
               const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
               
               return (
@@ -627,7 +631,7 @@ const CalculationTab = () => {
                   
                   <div className="space-y-1.5 mb-2">
                     <div className="grid grid-cols-2 gap-1 text-xs">
-                      <div className="text-muted-foreground">Чек $ / 50%</div>
+                      <div className="text-muted-foreground">Чек $ / {percentage}%</div>
                       <div className="font-semibold text-right">${Math.round(totalCheck * 100) / 100} / ${Math.round(salaryDollars * 100) / 100}</div>
                       
                       <div className="text-muted-foreground">Курс / ₽</div>
@@ -646,6 +650,25 @@ const CalculationTab = () => {
                   </div>
 
                   <div className="space-y-1.5 border-t pt-2">
+                    <Input
+                      type="text"
+                      placeholder="Процент (50-70)"
+                      value={solo.percentage}
+                      onChange={(e) => {
+                        let numValue = e.target.value.replace(/[^0-9]/g, '');
+                        if (numValue) {
+                          const num = parseInt(numValue);
+                          if (num > 70) numValue = '70';
+                          if (num < 50) numValue = '50';
+                        }
+                        const updated = soloModels.map(s => 
+                          s.id === solo.id ? { ...s, percentage: numValue || '50' } : s
+                        );
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="text-center text-xs h-8 bg-purple-500/10 text-purple-600 font-semibold"
+                    />
                     <Input
                       type="text"
                       placeholder="StripChat"
