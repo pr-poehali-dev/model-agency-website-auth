@@ -36,7 +36,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   const [exchangeRate, setExchangeRate] = useState(72.47);
   const [isLoading, setIsLoading] = useState(true);
   const [producerName, setProducerName] = useState('');
-  const [adjustments, setAdjustments] = useState<{advance: number, penalty: number}>({advance: 0, penalty: 0});
+  const [adjustments, setAdjustments] = useState<{advance: number, penalty: number, expenses?: number}>({advance: 0, penalty: 0, expenses: 0});
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -182,7 +182,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
       const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
-        const userAdj = data[userEmail] || {advance: 0, penalty: 0};
+        const userAdj = data[userEmail] || {advance: 0, penalty: 0, expenses: 0};
         setAdjustments(userAdj);
       }
     } catch (error) {
@@ -199,7 +199,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
     return 'Добрый вечер';
   };
 
-  const salaryInRubles = salaryData ? Math.round((salaryData.total * exchangeRate) - adjustments.advance - adjustments.penalty) : 0;
+  const salaryInRubles = salaryData ? Math.round((salaryData.total * exchangeRate) + (adjustments.expenses || 0) - adjustments.advance - adjustments.penalty) : 0;
   const salaryInDollars = salaryData ? Math.round(salaryData.total * 100) / 100 : 0;
 
   return (
@@ -253,8 +253,14 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                   <p className="text-sm text-muted-foreground">${salaryInDollars.toLocaleString()}</p>
                 </div>
                 
-                {(adjustments.advance > 0 || adjustments.penalty > 0) && (
+                {((adjustments.expenses || 0) > 0 || adjustments.advance > 0 || adjustments.penalty > 0) && (
                   <div className="space-y-1 pt-2 border-t">
+                    {(adjustments.expenses || 0) > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Затраты:</span>
+                        <span className="text-green-600 font-medium">+{(adjustments.expenses || 0).toLocaleString()}₽</span>
+                      </div>
+                    )}
                     {adjustments.advance > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Аванс:</span>
