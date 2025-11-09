@@ -162,7 +162,7 @@ const ModelFinances = ({
         }
       }
 
-      // If current user is director, find producer assigned to this model
+      // If current user is director, find producer assigned to this model AND add all solo makers
       if (userRole === "director") {
         // Get model email from users by modelId
         const modelUser = users.find((u: any) => u.id === modelId);
@@ -188,6 +188,17 @@ const ModelFinances = ({
             }
           }
         }
+
+        // Add all solo makers to the list for director
+        const soloMakers = users.filter((u: any) => u.role === "solo_maker");
+        soloMakers.forEach((sm: any) => {
+          if (!assignedOperators.some((op) => op.email === sm.email)) {
+            assignedOperators.push({
+              email: sm.email,
+              name: `${sm.fullName || sm.email} (Соло)`,
+            });
+          }
+        });
       }
 
       // If current user is solo_maker, add themselves to the list
