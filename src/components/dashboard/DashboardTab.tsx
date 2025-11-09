@@ -429,7 +429,54 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
         );
       })()}
 
-      {salaryData && salaryData.details && salaryData.details.length > 0 && (
+      {salaryData && salaryData.details && salaryData.details.length > 0 && userRole === 'producer' && (() => {
+        const modelStats = salaryData.details.reduce((acc: any, detail: any) => {
+          if (!detail.model_email) return acc;
+          if (!acc[detail.model_email]) {
+            acc[detail.model_email] = 0;
+          }
+          acc[detail.model_email] += detail.amount;
+          return acc;
+        }, {});
+
+        const modelList = Object.entries(modelStats)
+          .map(([email, amount]) => ({ email, amount: amount as number }))
+          .sort((a, b) => b.amount - a.amount);
+
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icon name="Users" size={20} className="text-primary" />
+              Доход по моделям за период {currentPeriod.label}
+            </h3>
+            <div className="space-y-3">
+              {modelList.map((model, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon name="User" size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{model.email}</p>
+                      <p className="text-xs text-muted-foreground">Модель</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-green-600">
+                      {Math.round(model.amount * exchangeRate).toLocaleString()}₽
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      ${model.amount.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
+
+      {salaryData && salaryData.details && salaryData.details.length > 0 && userRole !== 'producer' && (
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Icon name="FileText" size={20} className="text-primary" />
@@ -446,12 +493,6 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                     <p className="font-medium">{new Date(detail.date).toLocaleDateString('ru-RU')}</p>
                     {detail.model_email && (
                       <p className="text-sm text-muted-foreground">{detail.model_email}</p>
-                    )}
-                    {detail.note && userRole === 'producer' && (
-                      <p className="text-xs text-muted-foreground mt-1">{detail.note}</p>
-                    )}
-                    {detail.check && userRole === 'producer' && (
-                      <p className="text-xs text-blue-600">Чек: ${detail.check.toFixed(2)}</p>
                     )}
                   </div>
                 </div>
