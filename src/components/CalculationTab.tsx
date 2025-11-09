@@ -135,6 +135,23 @@ const CalculationTab = () => {
     setRefreshing(false);
   };
 
+  const handleClearData = () => {
+    if (confirm('Очистить все введенные токены? Аванс и штраф останутся без изменений.')) {
+      setCalculations(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(email => {
+          updated[email] = {
+            ...updated[email],
+            stripchat: '0',
+            chaturbate: '0'
+          };
+        });
+        localStorage.setItem('calculationTabData', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  };
+
   const handleInputChange = (email: string, field: string, value: string) => {
     const numValue = value.replace(/[^0-9]/g, '');
     setCalculations(prev => {
@@ -224,16 +241,27 @@ const CalculationTab = () => {
           <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
           <p className="text-muted-foreground">Ручной расчёт по токенам для проверки</p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <Icon name={refreshing ? "Loader2" : "RefreshCw"} size={16} className={refreshing ? "animate-spin" : ""} />
-          {refreshing ? "Обновление..." : "Обновить данные"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleClearData}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Icon name="Trash2" size={16} />
+            Очистить токены
+          </Button>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Icon name={refreshing ? "Loader2" : "RefreshCw"} size={16} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Обновление..." : "Обновить данные"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
