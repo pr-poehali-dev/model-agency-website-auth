@@ -494,7 +494,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
               ))}
             </SelectContent>
           </Select>
-          <ScheduleHistory />
           {canEdit && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Icon name="Info" size={16} />
