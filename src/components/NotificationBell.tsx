@@ -199,7 +199,7 @@ const NotificationBell = () => {
                 <div className="flex gap-3 w-full">
                   <div className={`p-2 rounded-lg ${
                     notification.type === 'assignment' ? 'bg-blue-500/10' : 
-                    notification.type === 'producer' ? 'bg-purple-500/10' : 
+                    notification.type === 'producer' ? 'bg-amber-500/10' : 
                     'bg-gray-500/10'
                   }`}>
                     <Icon 
@@ -207,7 +207,7 @@ const NotificationBell = () => {
                       size={16} 
                       className={
                         notification.type === 'assignment' ? 'text-blue-600' : 
-                        notification.type === 'producer' ? 'text-purple-600' : 
+                        notification.type === 'producer' ? 'text-amber-600' : 
                         'text-gray-600'
                       }
                     />

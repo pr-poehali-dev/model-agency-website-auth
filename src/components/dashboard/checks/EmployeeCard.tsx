@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 interface EmployeeCardProps {
   employee: Employee;
-  color: 'blue' | 'purple' | 'red';
+  color: 'blue' | 'amber' | 'red';
   icon?: string;
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
@@ -30,13 +30,13 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
   const total = employee.sumRubles - advance - penalty;
   const colorClasses = {
     blue: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
-    purple: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
+    amber: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30',
     red: 'from-red-500/20 to-orange-500/20 border-red-500/30'
   };
 
   const iconClasses = {
     blue: 'text-blue-500',
-    purple: 'text-purple-500',
+    amber: 'text-amber-500',
     red: 'text-red-500'
   };
 
@@ -73,10 +73,10 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
           </div>
         )}
         
-        {!employee.role && color === 'purple' && (
-          <div className="flex justify-between items-center py-2 border-b bg-purple-500/5 px-3 rounded">
+        {!employee.role && color === 'amber' && (
+          <div className="flex justify-between items-center py-2 border-b bg-amber-500/5 px-3 rounded">
             <span className="text-muted-foreground font-medium">Процент модели</span>
-            <span className="font-semibold text-lg text-purple-600 dark:text-purple-400">
+            <span className="font-semibold text-lg text-amber-600 dark:text-amber-400">
               30%
             </span>
           </div>

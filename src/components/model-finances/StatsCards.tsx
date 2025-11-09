@@ -44,12 +44,12 @@ const StatsCards = ({ onlineData }: StatsCardsProps) => {
         <p className="text-xs text-muted-foreground mt-1">за смену</p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+      <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground">Лучший день</p>
-          <Icon name="Star" size={20} className="text-purple-600" />
+          <Icon name="Star" size={20} className="text-amber-600" />
         </div>
-        <p className="text-3xl font-bold text-purple-600">${bestDayIncome.toFixed(2)}</p>
+        <p className="text-3xl font-bold text-amber-600">${bestDayIncome.toFixed(2)}</p>
         <p className="text-xs text-muted-foreground mt-1">{bestDay ? formatDate(bestDay.date) : '-'}</p>
       </Card>
     </div>
