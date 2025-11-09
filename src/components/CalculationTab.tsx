@@ -218,7 +218,7 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      salaryDollars = totalCheck * 0.3;
+      salaryDollars = (stripchatDollars * 0.1) + (chaturbateDollars * 0.3);
     }
 
     let salaryRubles = 0;
