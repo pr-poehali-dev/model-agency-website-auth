@@ -174,8 +174,12 @@ const UserManagement = () => {
         updateData.photoUrl = editPhotoUrl;
       }
 
+      // Always update solo percentage if role is solo_maker (even if it was already solo_maker)
       if (editRole === 'solo_maker') {
         updateData.soloPercentage = editSoloPercentage;
+      } else if (selectedUser.role === 'solo_maker' && editRole !== 'solo_maker') {
+        // If changing FROM solo_maker to another role, remove the percentage
+        updateData.soloPercentage = null;
       }
 
       if (editRole !== selectedUser.role) {
