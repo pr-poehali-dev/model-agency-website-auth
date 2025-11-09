@@ -118,7 +118,7 @@ const ModelsTab = ({
 
   const getProducerName = (modelEmail: string): string => {
     const assignment = producerAssignmentsData.find(a => a.modelEmail === modelEmail);
-    if (!assignment) return 'Не назначен';
+    if (!assignment) return 'MBA Production';
     
     const producer = users.find(u => u.email === assignment.producerEmail);
     return producer?.fullName || assignment.producerEmail;
