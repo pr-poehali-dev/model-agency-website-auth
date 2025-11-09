@@ -218,7 +218,7 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      salaryDollars = totalCheck * 0.1;
+      salaryDollars = totalCheck * 0.3;
     }
 
     let salaryRubles = 0;
