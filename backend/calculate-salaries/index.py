@@ -246,16 +246,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             print(f"DEBUG: No operator for model_id={model_id}, producer gets 10%")
                         
                         producer_salary_amount = total_check * (producer_percentage / 100)
+                        
+                        if producer_email not in producer_salaries:
+                            producer_salaries[producer_email] = {
+                                'email': producer_email,
+                                'total': 0,
+                                'details': []
+                            }
+                        
                         if producer_email == producer_operator_email:
-                            print(f"DEBUG: Skipping producer salary for {producer_email} - already paid as operator")
+                            print(f"DEBUG: Producer {producer_email} already paid as operator, adding to details with 0 amount")
+                            producer_salaries[producer_email]['details'].append({
+                                'date': finance['date'].isoformat(),
+                                'model_id': model_id,
+                                'model_email': model_email,
+                                'amount': 0,
+                                'check': total_check,
+                                'note': 'already_paid_as_operator'
+                            })
                         else:
                             print(f"DEBUG: Adding salary for producer {producer_email}, amount={producer_salary_amount}, percentage={producer_percentage}%")
-                            if producer_email not in producer_salaries:
-                                producer_salaries[producer_email] = {
-                                    'email': producer_email,
-                                    'total': 0,
-                                    'details': []
-                                }
                             producer_salaries[producer_email]['total'] += producer_salary_amount
                             producer_salaries[producer_email]['details'].append({
                                 'date': finance['date'].isoformat(),
