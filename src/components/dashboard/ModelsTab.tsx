@@ -202,9 +202,25 @@ const ModelsTab = ({
       
       if (response.ok) {
         setModelAccounts({ ...modelAccounts, [selectedModel.id]: accounts });
+        toast({
+          title: 'Успешно',
+          description: 'Аккаунты сохранены',
+        });
+        setAccountsDialogOpen(false);
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось сохранить аккаунты',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error saving accounts:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить аккаунты',
+        variant: 'destructive',
+      });
     }
   };
 

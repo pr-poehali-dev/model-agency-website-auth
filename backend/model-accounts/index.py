@@ -46,7 +46,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     headers = event.get('headers', {})
     user_role = headers.get('x-user-role', headers.get('X-User-Role', '')).lower()
     
-    if user_role not in ['director', 'producer', 'operator']:
+    if user_role not in ['director', 'producer', 'operator', 'solo_maker']:
         return {
             'statusCode': 403,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -91,11 +91,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'PUT':
-            if user_role not in ['director', 'producer']:
+            if user_role not in ['director', 'producer', 'solo_maker']:
                 return {
                     'statusCode': 403,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Only director and producer can edit accounts'})
+                    'body': json.dumps({'error': 'Only director, producer and solo_maker can edit accounts'})
                 }
             
             body_data = json.loads(event.get('body', '{}'))
