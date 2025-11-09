@@ -120,6 +120,8 @@ const CalculationTab = () => {
               if (user?.role === 'producer') {
                 updated[email] = {
                   ...updated[email],
+                  advance: String(data[email].advance || 0),
+                  penalty: String(data[email].penalty || 0),
                   expenses: String(data[email].expenses || 0)
                 };
               } else {
@@ -202,7 +204,7 @@ const CalculationTab = () => {
 
     let salaryRubles = 0;
     if (role === 'producer') {
-      salaryRubles = (salaryDollars * exchangeRate) + expenses;
+      salaryRubles = (salaryDollars * exchangeRate) + expenses - advance - penalty;
     } else {
       salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
     }
@@ -523,6 +525,12 @@ const CalculationTab = () => {
                       
                       <div className="text-muted-foreground">Затраты</div>
                       <div className="font-semibold text-right text-green-600">+{calc.expenses || 0} ₽</div>
+                      
+                      <div className="text-muted-foreground">Аванс</div>
+                      <div className="font-semibold text-right text-red-600">-{calc.advance || 0} ₽</div>
+                      
+                      <div className="text-muted-foreground">Штраф</div>
+                      <div className="font-semibold text-right text-red-600">-{calc.penalty || 0} ₽</div>
                     </div>
                     
                     <div className="border-t pt-2 mt-2">
@@ -558,14 +566,30 @@ const CalculationTab = () => {
                       className="text-center"
                     />
 
-                    <div className="mt-3">
+                    <div className="space-y-2 mt-3">
                       <Input
                         type="text"
                         placeholder="Затраты"
                         value={calc.expenses || ''}
-                        disabled
+                        onChange={(e) => handleInputChange(user.email, 'expenses', e.target.value)}
                         className="text-center bg-green-500/10 text-green-600 font-semibold"
                       />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="text"
+                          placeholder="Аванс"
+                          value={calc.advance || ''}
+                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
+                          className="text-center bg-red-500/10 text-red-600 font-semibold"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Штраф"
+                          value={calc.penalty || ''}
+                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
+                          className="text-center bg-red-500/10 text-red-600 font-semibold"
+                        />
+                      </div>
                     </div>
                   </div>
                 </Card>
