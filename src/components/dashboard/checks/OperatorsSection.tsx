@@ -14,7 +14,7 @@ const OperatorsSection = ({ operators, period, canEdit, onUpdate }: OperatorsSec
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
-        <Icon name="Users" size={24} className="text-blue-500" />
+        <Icon name="Users" size={24} className="text-emerald-500" />
         <h3 className="text-2xl font-serif font-bold">Операторы</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -22,7 +22,7 @@ const OperatorsSection = ({ operators, period, canEdit, onUpdate }: OperatorsSec
           <EmployeeCard 
             key={index} 
             employee={employee} 
-            color="blue"
+            color="emerald"
             icon="Headphones"
             canEdit={canEdit}
             onUpdate={onUpdate}

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 interface EmployeeCardProps {
   employee: Employee;
-  color: 'blue' | 'amber' | 'red';
+  color: 'emerald' | 'amber' | 'red';
   icon?: string;
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
@@ -29,13 +29,13 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
 
   const total = employee.sumRubles - advance - penalty;
   const colorClasses = {
-    blue: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
+    emerald: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30',
     amber: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30',
     red: 'from-red-500/20 to-orange-500/20 border-red-500/30'
   };
 
   const iconClasses = {
-    blue: 'text-blue-500',
+    emerald: 'text-emerald-500',
     amber: 'text-amber-500',
     red: 'text-red-500'
   };
@@ -65,7 +65,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
         )}
         
         {employee.role === 'operator' && employee.operatorPercentage !== undefined && (
-          <div className="flex justify-between items-center py-2 border-b bg-blue-500/5 px-3 rounded">
+          <div className="flex justify-between items-center py-2 border-b bg-emerald-500/5 px-3 rounded">
             <span className="text-muted-foreground font-medium">Распределение</span>
             <span className="font-semibold text-sm">
               Оп: {employee.operatorPercentage}% | Пр: {employee.producerPercentage}%

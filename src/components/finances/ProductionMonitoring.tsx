@@ -174,7 +174,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
 
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Icon name="Calendar" size={20} className="text-blue-600" />
+              <Icon name="Calendar" size={20} className="text-emerald-600" />
               <span className="text-sm font-medium text-muted-foreground">Смены</span>
             </div>
             <div className="text-2xl font-bold">{totalCurrentShifts}</div>

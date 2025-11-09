@@ -383,10 +383,10 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                   <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
                 )}
               </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-cyan-500/20 via-teal-500/10 to-cyan-600/20 rounded-xl border border-cyan-500/30 animate-gradient group hover:scale-105 transition-transform">
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-lime-500/20 via-green-500/10 to-lime-600/20 rounded-xl border border-lime-500/30 animate-gradient group hover:scale-105 transition-transform">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '3s'}}></div>
                 <p className="text-sm text-muted-foreground mb-1 relative z-10">Моделей</p>
-                <p className="text-3xl font-bold text-cyan-400 relative z-10">{modelsCount}</p>
+                <p className="text-3xl font-bold text-lime-400 relative z-10">{modelsCount}</p>
               </div>
             </div>
           </Card>
@@ -413,10 +413,10 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                 <p className="text-sm text-muted-foreground mb-1 relative z-10">Всего за период</p>
                 <p className="text-3xl font-bold text-emerald-400 relative z-10">${totalIncome.toFixed(2)}</p>
               </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-blue-600/20 rounded-xl border border-blue-500/30 animate-gradient group hover:scale-105 transition-transform">
+              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-teal-600/20 rounded-xl border border-teal-500/30 animate-gradient group hover:scale-105 transition-transform">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '1s'}}></div>
                 <p className="text-sm text-muted-foreground mb-1 relative z-10">Средний доход</p>
-                <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-teal-400 relative z-10">${avgIncome.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground relative z-10">за смену</p>
               </div>
               <div className="relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 rounded-xl border border-amber-500/30 animate-gradient group hover:scale-105 transition-transform">

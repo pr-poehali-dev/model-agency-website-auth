@@ -35,12 +35,12 @@ const StatsCards = ({ onlineData }: StatsCardsProps) => {
         <p className="text-xs text-muted-foreground mt-1">{totalShifts} смен</p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+      <Card className="p-6 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground">Средний доход</p>
-          <Icon name="TrendingUp" size={20} className="text-blue-600" />
+          <Icon name="TrendingUp" size={20} className="text-emerald-600" />
         </div>
-        <p className="text-3xl font-bold text-blue-600">${averageDaily.toFixed(2)}</p>
+        <p className="text-3xl font-bold text-emerald-600">${averageDaily.toFixed(2)}</p>
         <p className="text-xs text-muted-foreground mt-1">за смену</p>
       </Card>
 
