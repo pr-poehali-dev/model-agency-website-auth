@@ -91,11 +91,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'PUT':
-            if user_role not in ['director', 'producer', 'solo_maker']:
+            if user_role not in ['director', 'producer']:
                 return {
                     'statusCode': 403,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Only director, producer and solo_maker can edit accounts'})
+                    'body': json.dumps({'error': 'Only director and producer can edit accounts'})
                 }
             
             body_data = json.loads(event.get('body', '{}'))
