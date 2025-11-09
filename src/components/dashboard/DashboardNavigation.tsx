@@ -57,7 +57,7 @@ const DashboardNavigation = ({
           </div>
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={userPhotoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${userName || userEmail}`} />
+              <AvatarImage loading="lazy" src={userPhotoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${userName || userEmail}`} />
               <AvatarFallback>{(userName || userEmail).slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

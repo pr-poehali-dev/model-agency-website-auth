@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import FinancesHeader from './finances/FinancesHeader';
 import StatsCards from './finances/StatsCards';
 import ChartsSection from './finances/ChartsSection';
@@ -86,4 +86,4 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
   );
 };
 
-export default FinancesTab;
+export default memo(FinancesTab);

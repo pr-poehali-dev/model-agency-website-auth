@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -293,6 +293,7 @@ const ModelsTab = ({
                 <img
                   src={model.image}
                   alt={model.name}
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -376,4 +377,4 @@ const ModelsTab = ({
   );
 };
 
-export default ModelsTab;
+export default memo(ModelsTab);

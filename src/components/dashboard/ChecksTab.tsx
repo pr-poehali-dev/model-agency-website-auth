@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -523,4 +523,4 @@ const ChecksTab = () => {
   );
 };
 
-export default ChecksTab;
+export default memo(ChecksTab);

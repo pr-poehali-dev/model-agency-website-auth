@@ -1,20 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, type UserRole } from '@/lib/permissions';
-
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
-import ModelsTab from '@/components/dashboard/ModelsTab';
-import ChecksTab from '@/components/dashboard/ChecksTab';
-import DashboardTab from '@/components/dashboard/DashboardTab';
+import LoadingScreen from '@/components/LoadingScreen';
 
-import UserManagement from './UserManagement';
-
-import ModelAssignmentManager from '@/components/ModelAssignmentManager';
-import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
-import FinancesTab from '@/components/FinancesTab';
-import ScheduleTab from '@/components/ScheduleTab';
-import ModelFinances from '@/components/ModelFinances';
+const ModelsTab = lazy(() => import('@/components/dashboard/ModelsTab'));
+const ChecksTab = lazy(() => import('@/components/dashboard/ChecksTab'));
+const DashboardTab = lazy(() => import('@/components/dashboard/DashboardTab'));
+const UserManagement = lazy(() => import('./UserManagement'));
+const ModelAssignmentManager = lazy(() => import('@/components/ModelAssignmentManager'));
+const ProducerAssignmentManager = lazy(() => import('@/components/ProducerAssignmentManager'));
+const FinancesTab = lazy(() => import('@/components/FinancesTab'));
+const ScheduleTab = lazy(() => import('@/components/ScheduleTab'));
+const ModelFinances = lazy(() => import('@/components/ModelFinances'));
 
 const models = [
   {
@@ -319,7 +318,9 @@ const Dashboard = () => {
 
       <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
         <div className="p-6 lg:p-8 animate-fade-in">
-          {renderTabContent()}
+          <Suspense fallback={<LoadingScreen />}>
+            {renderTabContent()}
+          </Suspense>
         </div>
       </main>
     </div>
