@@ -61,9 +61,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 u.id as user_id,
                 u.email,
                 u.full_name,
-                u.role
+                u.role,
+                u.solo_percentage
             FROM users u
-            WHERE u.role IN ('operator', 'content_maker', 'producer')
+            WHERE u.role IN ('operator', 'content_maker', 'producer', 'solo_maker')
         """)
         users = cur.fetchall()
         
@@ -148,13 +149,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income_dollars}, transfers={transfers_dollars}, total_check={total_check}")
             
-            model_salary = total_check * 0.3
-            
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             operator_percentage = float(model_assignment.get('operator_percentage', 20)) if model_assignment else 20
             model_email = model_assignment['model_email'] if model_assignment else None
             if not model_email:
                 model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
+            
+            # Check if this model is a solo_maker
+            model_user = next((u for u in users if u['user_id'] == model_id), None)
+            if model_user and model_user.get('role') == 'solo_maker':
+                # For solo makers, use their percentage from profile
+                solo_percentage = int(model_user.get('solo_percentage', '50'))
+                model_salary = total_check * (solo_percentage / 100)
+                print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}% = ${model_salary}")
+            else:
+                # For regular content makers, use 30%
+                model_salary = total_check * 0.3
             
             operator_email = None
             producer_operator_email = None
