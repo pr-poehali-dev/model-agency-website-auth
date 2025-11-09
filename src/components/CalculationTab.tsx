@@ -310,17 +310,167 @@ const CalculationTab = () => {
       </div>
 
       <div className="space-y-6">
+        {producers.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-cyan-400">Продюсеры</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {producers.map(user => {
+                const calc = calculations[user.email] || {};
+                const salary = calculateSalary(user.email, user.role);
+                return (
+                  <Card key={user.id} className="p-3 bg-cyan-500/5 border-cyan-500/20">
+                    <h4 className="font-semibold mb-2 text-center text-sm">{user.fullName || user.email}</h4>
+                    
+                    <div className="space-y-1.5 mb-2">
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div className="text-muted-foreground">Чек $ / 10%</div>
+                        <div className="font-semibold text-right">${salary.totalCheck} / ${salary.dollars}</div>
+                        
+                        <div className="text-muted-foreground">Курс / ₽</div>
+                        <div className="font-semibold text-right">{exchangeRate} / {Math.round(salary.dollars * exchangeRate)} ₽</div>
+                        
+                        <div className="text-muted-foreground">Затраты</div>
+                        <div className="font-semibold text-right text-green-600">+{calc.expenses || 0} ₽</div>
+                        
+                        <div className="text-muted-foreground">Аванс / Штраф</div>
+                        <div className="font-semibold text-right text-red-600">-{calc.advance || 0} / -{calc.penalty || 0} ₽</div>
+                      </div>
+                      
+                      <div className="border-t pt-1.5">
+                        <div className="grid grid-cols-2 gap-1 text-xs font-bold">
+                          <div>Итог</div>
+                          <div className="text-right text-green-600">{salary.rubles} ₽</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 border-t pt-2">
+                      <Input
+                        type="text"
+                        placeholder="StripChat"
+                        value={calc.stripchat || ''}
+                        onChange={(e) => handleInputChange(user.email, 'stripchat', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Chaturbate"
+                        value={calc.chaturbate || ''}
+                        onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Затраты"
+                        value={calc.expenses || ''}
+                        onChange={(e) => handleInputChange(user.email, 'expenses', e.target.value)}
+                        className="text-center bg-green-500/10 text-green-600 font-semibold text-xs h-8"
+                      />
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <Input
+                          type="text"
+                          placeholder="Аванс"
+                          value={calc.advance || ''}
+                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
+                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Штраф"
+                          value={calc.penalty || ''}
+                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
+                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {operators.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Операторы</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {operators.map(user => {
+                const calc = calculations[user.email] || {};
+                const salary = calculateSalary(user.email, user.role);
+                return (
+                  <Card key={user.id} className="p-3">
+                    <h4 className="font-semibold mb-2 text-center text-sm">{user.fullName || user.email}</h4>
+                    
+                    <div className="space-y-1.5 mb-2">
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div className="text-muted-foreground">Чек $ / 20%</div>
+                        <div className="font-semibold text-right">${salary.totalCheck} / ${salary.dollars}</div>
+                        
+                        <div className="text-muted-foreground">Курс / ₽</div>
+                        <div className="font-semibold text-right">{exchangeRate} / {Math.round(salary.dollars * exchangeRate)} ₽</div>
+                        
+                        <div className="text-muted-foreground">Аванс / Штраф</div>
+                        <div className="font-semibold text-right text-red-600">-{calc.advance || 0} / -{calc.penalty || 0} ₽</div>
+                      </div>
+                      
+                      <div className="border-t pt-1.5">
+                        <div className="grid grid-cols-2 gap-1 text-xs font-bold">
+                          <div>Итог</div>
+                          <div className="text-right text-green-600">{salary.rubles} ₽</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 border-t pt-2">
+                      <Input
+                        type="text"
+                        placeholder="StripChat"
+                        value={calc.stripchat || ''}
+                        onChange={(e) => handleInputChange(user.email, 'stripchat', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Chaturbate"
+                        value={calc.chaturbate || ''}
+                        onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <Input
+                          type="text"
+                          placeholder="Аванс"
+                          value={calc.advance || ''}
+                          disabled
+                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Штраф"
+                          value={calc.penalty || ''}
+                          disabled
+                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div>
           <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Icon name="Users" size={24} />
-            Операторы
+            <Icon name="Star" size={24} />
+            Мейкеры
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {operators.map(user => {
+            {models.map(user => {
               const calc = calculations[user.email] || {};
               const salary = calculateSalary(user.email, user.role);
               return (
-                <Card key={user.id} className="p-4 bg-pink-500/5 border-pink-500/20">
+                <Card key={user.id} className="p-4 bg-yellow-500/5 border-yellow-500/20">
                   <h4 className="font-bold text-lg mb-3 text-center">{user.fullName || user.email}</h4>
                   
                   <div className="space-y-2 mb-3">
@@ -328,7 +478,7 @@ const CalculationTab = () => {
                       <div className="text-muted-foreground">Общий чек $</div>
                       <div className="font-semibold text-right">${salary.totalCheck}</div>
                       
-                      <div className="text-muted-foreground">Процент 20%</div>
+                      <div className="text-muted-foreground">Процент 30%</div>
                       <div className="font-semibold text-right">${salary.dollars}</div>
                       
                       <div className="text-muted-foreground">Курс</div>
