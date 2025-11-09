@@ -17,6 +17,7 @@ const CalculationTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [exchangeRate, setExchangeRate] = useState(74.23);
   const [adjustments, setAdjustments] = useState<any>({});
+  const [loading, setLoading] = useState(true);
   const [calculations, setCalculations] = useState<Record<string, {
     stripchat: string;
     chaturbate: string;
@@ -25,9 +26,16 @@ const CalculationTab = () => {
   }>>({});
 
   useEffect(() => {
-    loadUsers();
-    loadExchangeRate();
-    loadAdjustments();
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        loadUsers(),
+        loadExchangeRate(),
+        loadAdjustments()
+      ]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   const loadUsers = async () => {
@@ -176,6 +184,23 @@ const CalculationTab = () => {
 
   const totalSolo = 0;
   const totalAll = totalOperators + totalModels + totalProducers + totalSolo;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
+          <p className="text-muted-foreground">Загрузка данных...</p>
+        </div>
+        <Card className="p-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Загружаем данные из раздела "Чеки"...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
