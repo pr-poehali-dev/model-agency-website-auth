@@ -540,21 +540,6 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             </p>
           </Card>
         )}
-        
-        <Card 
-          className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-blue-500 hover:scale-105 transition-transform"
-          onClick={() => onNavigate?.('files')}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Icon name="Files" size={20} className="text-blue-600" />
-            </div>
-            <h4 className="font-semibold">Файлы</h4>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Удобно загружайте фотографии и видео моделей для работы
-          </p>
-        </Card>
 
         <Card 
           className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-purple-500 hover:scale-105 transition-transform"
