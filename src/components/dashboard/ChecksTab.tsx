@@ -17,6 +17,7 @@ const ChecksTab = () => {
   const [cbrRate, setCbrRate] = useState(79.47);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
+  const [isLoadingRole, setIsLoadingRole] = useState(true);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [producerModels, setProducerModels] = useState<any[]>([]);
@@ -73,6 +74,8 @@ const ChecksTab = () => {
       }
     } catch (err) {
       console.error('Failed to load user role', err);
+    } finally {
+      setIsLoadingRole(false);
     }
   };
 
@@ -415,6 +418,17 @@ const ChecksTab = () => {
       const producerTotalSum = Math.round(salary.total * exchangeRate);
       totalOperatorSum += producerTotalSum;
     });
+  }
+
+  if (isLoadingRole) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Чеки</h2>
+          <p className="text-muted-foreground">Загрузка...</p>
+        </div>
+      </div>
+    );
   }
 
   if (userRole !== 'producer' && userRole !== 'director') {
