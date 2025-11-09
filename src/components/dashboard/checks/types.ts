@@ -13,6 +13,7 @@ export interface Employee {
   operatorPercentage?: number;
   producerPercentage?: number;
   role?: string;
+  soloPercentage?: string;
 }
 
 export interface ProducerData {

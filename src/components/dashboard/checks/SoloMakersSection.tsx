@@ -8,9 +8,10 @@ interface SoloMakersSectionProps {
   period: Period;
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
+  onPercentageUpdate?: (email: string, percentage: string) => void;
 }
 
-const SoloMakersSection = ({ soloMakers, period, canEdit, onUpdate }: SoloMakersSectionProps) => {
+const SoloMakersSection = ({ soloMakers, period, canEdit, onUpdate, onPercentageUpdate }: SoloMakersSectionProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -26,6 +27,7 @@ const SoloMakersSection = ({ soloMakers, period, canEdit, onUpdate }: SoloMakers
             icon="Star"
             canEdit={canEdit}
             onUpdate={onUpdate}
+            onPercentageUpdate={onPercentageUpdate}
           />
         ))}
       </div>

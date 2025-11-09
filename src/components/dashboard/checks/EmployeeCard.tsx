@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
 import { useState, useEffect } from 'react';
@@ -10,16 +11,19 @@ interface EmployeeCardProps {
   icon?: string;
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
+  onPercentageUpdate?: (email: string, percentage: string) => void;
 }
 
-const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: EmployeeCardProps) => {
+const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPercentageUpdate }: EmployeeCardProps) => {
   const [advance, setAdvance] = useState(employee.advance);
   const [penalty, setPenalty] = useState(employee.penalty);
+  const [percentage, setPercentage] = useState(employee.soloPercentage || '50');
 
   useEffect(() => {
     setAdvance(employee.advance);
     setPenalty(employee.penalty);
-  }, [employee.advance, employee.penalty]);
+    setPercentage(employee.soloPercentage || '50');
+  }, [employee.advance, employee.penalty, employee.soloPercentage]);
 
   const handleBlur = (field: 'advance' | 'penalty', value: number) => {
     if (onUpdate && employee.email) {
@@ -81,6 +85,36 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
             <span className="font-semibold text-lg text-amber-600 dark:text-amber-400">
               30%
             </span>
+          </div>
+        )}
+        
+        {employee.role === 'solo_maker' && color === 'purple' && (
+          <div className="py-2 border-b bg-purple-500/5 px-3 rounded space-y-2">
+            <span className="text-muted-foreground font-medium block">Процент соло-мейкера</span>
+            {canEdit ? (
+              <div className="grid grid-cols-4 gap-1">
+                {['50', '60', '65', '70'].map(pct => (
+                  <Button
+                    key={pct}
+                    size="sm"
+                    variant={percentage === pct ? 'default' : 'outline'}
+                    onClick={() => {
+                      setPercentage(pct);
+                      if (onPercentageUpdate && employee.email) {
+                        onPercentageUpdate(employee.email, pct);
+                      }
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    {pct}%
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <span className="font-semibold text-lg text-purple-600 dark:text-purple-400">
+                {percentage}%
+              </span>
+            )}
           </div>
         )}
         
