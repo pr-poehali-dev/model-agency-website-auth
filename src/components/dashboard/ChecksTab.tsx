@@ -18,6 +18,7 @@ const ChecksTab = () => {
   const [userEmail, setUserEmail] = useState('');
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
+  const [producerModels, setProducerModels] = useState<any[]>([]);
   const [allAssignments, setAllAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
@@ -100,13 +101,14 @@ const ChecksTab = () => {
       const assignments = await response.json();
       
       const producerModelResponse = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
-      const producerModels = await producerModelResponse.json();
-      const producerModelEmails = producerModels.map((pm: any) => pm.modelEmail);
+      const producerModelsData = await producerModelResponse.json();
+      const producerModelEmails = producerModelsData.map((pm: any) => pm.modelEmail);
       
       const filteredAssignments = assignments.filter((a: any) => 
         producerModelEmails.includes(a.modelEmail)
       );
       
+      setProducerModels(producerModelsData);
       setProducerAssignments(filteredAssignments);
     } catch (err) {
       console.error('Failed to load producer assignments', err);
@@ -321,9 +323,9 @@ const ChecksTab = () => {
         total: Math.round(sumRubles - adj.advance - adj.penalty)
       };
     });
-  } else if (userRole === 'producer' && producerAssignments.length > 0 && users.length > 0) {
+  } else if (userRole === 'producer' && producerModels.length > 0 && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
-    const assignedModelEmails = producerAssignments.map(a => a.modelEmail);
+    const assignedModelEmails = producerModels.map((pm: any) => pm.modelEmail);
     
     const operatorUsers = users.filter(u => u.role === 'operator' && assignedOperatorEmails.includes(u.email));
     const modelUsers = users.filter(u => u.role === 'content_maker' && assignedModelEmails.includes(u.email));
