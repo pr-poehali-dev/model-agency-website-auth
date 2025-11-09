@@ -105,6 +105,7 @@ const ModelFinances = ({
   >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSoloMaker, setIsSoloMaker] = useState(false);
   const { toast } = useToast();
 
   const isReadOnly = userRole === "content_maker";
@@ -119,6 +120,14 @@ const ModelFinances = ({
       // Load all users
       const usersResponse = await fetch(USERS_API_URL);
       const users = await usersResponse.json();
+      
+      // Check if current model is a solo maker
+      const modelUser = users.find((u: any) => u.id === modelId);
+      if (modelUser && modelUser.role === "solo_maker") {
+        setIsSoloMaker(true);
+      } else {
+        setIsSoloMaker(false);
+      }
 
       // Load ALL assignments
       const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
@@ -468,9 +477,17 @@ const ModelFinances = ({
             </Button>
           )}
           <div>
-            <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-2">
-              Финансы — {modelName}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-2">
+                Финансы — {modelName}
+              </h2>
+              {isSoloMaker && (
+                <Badge className="bg-purple-500/20 text-purple-600 border-purple-500/30 mb-2">
+                  <Icon name="Star" size={14} className="mr-1" />
+                  Соло-мейкер
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">
               Статистика доходов по платформам
             </p>
