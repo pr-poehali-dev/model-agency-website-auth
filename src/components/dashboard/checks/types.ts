@@ -29,4 +29,12 @@ export interface ProducerData {
   total: number;
   employees: Employee[];
   averageProducerPercentage?: number;
+  salaryDetails?: Array<{
+    date: string;
+    model_id: number;
+    model_email: string;
+    amount: number;
+    check: number;
+    note?: string;
+  }>;
 }
