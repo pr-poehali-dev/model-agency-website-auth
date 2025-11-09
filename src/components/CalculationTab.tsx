@@ -504,30 +504,6 @@ const CalculationTab = () => {
                       className="text-center"
                     />
 
-                    <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                      <div className="text-muted-foreground">CamSoda</div>
-                      <div className="font-semibold text-right">{salary.totalCheck > 0 ? Math.round((parseInt(calc.camsoda || '0') * 0.05 / salary.totalCheck) * 100) : 0}%</div>
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder="Токены CamSoda"
-                      value={calc.camsoda || ''}
-                      onChange={(e) => handleInputChange(user.email, 'camsoda', e.target.value)}
-                      className="text-center"
-                    />
-
-                    <div className="grid grid-cols-2 gap-2 text-sm mt-2">
-                      <div className="text-muted-foreground">Cam4</div>
-                      <div className="font-semibold text-right">{salary.totalCheck > 0 ? Math.round((parseInt(calc.cam4 || '0') / salary.totalCheck) * 100) : 0}%</div>
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder="Сумма Cam4 ($)"
-                      value={calc.cam4 || ''}
-                      onChange={(e) => handleInputChange(user.email, 'cam4', e.target.value)}
-                      className="text-center"
-                    />
-
                     <div className="grid grid-cols-2 gap-2 mt-3">
                       <Input
                         type="text"
