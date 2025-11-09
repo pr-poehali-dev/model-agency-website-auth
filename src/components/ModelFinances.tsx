@@ -379,12 +379,16 @@ const ModelFinances = ({
     0,
   );
   const totalChaturbateTokens = Math.floor(totalCbTokens * 0.456);
+  
+  // For solo makers, don't multiply by 0.6 (show gross income)
+  const incomeMultiplier = isSoloMaker ? 1 : 0.6;
+  
   const totalIncome = onlineData.reduce((sum, d) => {
     const dailyIncome =
       ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
         d.cam4Income +
         d.transfers) *
-      0.6;
+      incomeMultiplier;
     return sum + dailyIncome;
   }, 0);
   const totalShifts = onlineData.filter((d) => d.shift).length;
@@ -414,22 +418,22 @@ const ModelFinances = ({
     {
       platform: "Chaturbate",
       tokens: totalCbIncomeTokens,
-      income: totalCbIncomeTokens * 0.05 * 0.6,
+      income: totalCbIncomeTokens * 0.05 * incomeMultiplier,
     },
     {
       platform: "Stripchat",
       tokens: totalSpIncomeTokens,
-      income: totalSpIncomeTokens * 0.05 * 0.6,
+      income: totalSpIncomeTokens * 0.05 * incomeMultiplier,
     },
     {
       platform: "CamSoda",
       tokens: totalSodaIncomeTokens,
-      income: totalSodaIncomeTokens * 0.05 * 0.6,
+      income: totalSodaIncomeTokens * 0.05 * incomeMultiplier,
     },
     {
       platform: "Cam4",
       tokens: totalCam4Income,
-      income: totalCam4Income * 0.6,
+      income: totalCam4Income * incomeMultiplier,
     },
   ];
 
@@ -439,19 +443,19 @@ const ModelFinances = ({
       ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 +
         current.cam4Income +
         current.transfers) *
-      0.6;
+      incomeMultiplier;
     const bestIncome =
       ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 +
         best.cam4Income +
         best.transfers) *
-      0.6;
+      incomeMultiplier;
     return currentIncome > bestIncome ? current : best;
   }, onlineData[0]);
   const bestDayIncome =
     ((bestDay.cbIncome + bestDay.spIncome + bestDay.sodaIncome) * 0.05 +
       bestDay.cam4Income +
       bestDay.transfers) *
-    0.6;
+    incomeMultiplier;
 
   if (isLoading) {
     return (
