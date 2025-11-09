@@ -7,6 +7,7 @@ import ProducerSalaryCard from './checks/ProducerSalaryCard';
 import ProducersSection from './checks/ProducersSection';
 import OperatorsSection from './checks/OperatorsSection';
 import ContentMakersSection from './checks/ContentMakersSection';
+import SoloMakersSection from './checks/SoloMakersSection';
 import { producerData } from './checks/mockData';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 
@@ -232,6 +233,7 @@ const ChecksTab = () => {
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
+  const soloMakers: any[] = [];
   const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => {
     const salary = salaries.producers[p.email] || { total: 0, details: [] };
     const adj = adjustments[p.email] || { expenses: 0, advance: 0, penalty: 0 };
@@ -313,6 +315,26 @@ const ChecksTab = () => {
       return {
         name: cm.fullName || cm.email,
         email: cm.email,
+        week: 0,
+        model: '',
+        sumDollars: Math.round(sumDollars * 100) / 100,
+        rate: exchangeRate,
+        sumRubles: Math.round(sumRubles),
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty)
+      };
+    });
+    
+    const soloMakerUsers = users.filter(u => u.role === 'solo_maker');
+    soloMakers = soloMakerUsers.map(sm => {
+      const salary = salaries.models[sm.email] || { total: 0, details: [] };
+      const adj = adjustments[sm.email] || { advance: 0, penalty: 0 };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
+      return {
+        name: sm.fullName || sm.email,
+        email: sm.email,
         week: 0,
         model: '',
         sumDollars: Math.round(sumDollars * 100) / 100,
@@ -518,6 +540,14 @@ const ChecksTab = () => {
           canEdit={true}
           onUpdate={handleUpdateEmployee}
         />
+        {userRole === 'director' && soloMakers.length > 0 && (
+          <SoloMakersSection 
+            soloMakers={soloMakers} 
+            period={currentPeriod} 
+            canEdit={true}
+            onUpdate={handleUpdateEmployee}
+          />
+        )}
       </div>
     </div>
   );
