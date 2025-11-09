@@ -233,7 +233,7 @@ const ChecksTab = () => {
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
-  const soloMakers: any[] = [];
+  let soloMakers: any[] = [];
   const producers = userRole === 'director' ? users.filter(u => u.role === 'producer').map(p => {
     const salary = salaries.producers[p.email] || { total: 0, details: [] };
     const adj = adjustments[p.email] || { expenses: 0, advance: 0, penalty: 0 };
