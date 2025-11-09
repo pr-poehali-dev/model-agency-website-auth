@@ -348,6 +348,47 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
         )}
       </div>
 
+      {userRole === 'producer' && salaryData && salaryData.details && salaryData.details.length > 0 && (() => {
+        const details = salaryData.details;
+        const totalIncome = salaryData.total;
+        const modelsCount = [...new Set(details.map((d: any) => d.model_email))].length;
+        const shiftsCount = details.filter((d: any) => d.amount > 0).length;
+        const avgIncome = shiftsCount > 0 ? totalIncome / shiftsCount : 0;
+        const bestDay = Math.max(...details.map((d: any) => d.amount || 0));
+        const bestDayData = details.find((d: any) => d.amount === bestDay);
+
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Icon name="BarChart3" size={20} className="text-primary" />
+              Статистика за период {currentPeriod.label}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Всего за период</p>
+                <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Средний доход</p>
+                <p className="text-2xl font-bold text-blue-600">${avgIncome.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">за смену</p>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Лучший день</p>
+                <p className="text-2xl font-bold text-purple-600">${bestDay.toFixed(2)}</p>
+                {bestDayData && (
+                  <p className="text-xs text-muted-foreground">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
+                )}
+              </div>
+              <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Моделей</p>
+                <p className="text-2xl font-bold text-cyan-600">{modelsCount}</p>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
+
       {userRole === 'content_maker' && salaryData && salaryData.details && salaryData.details.length > 0 && (() => {
         const details = salaryData.details;
         const totalIncome = salaryData.total;
@@ -405,6 +446,12 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
                     <p className="font-medium">{new Date(detail.date).toLocaleDateString('ru-RU')}</p>
                     {detail.model_email && (
                       <p className="text-sm text-muted-foreground">{detail.model_email}</p>
+                    )}
+                    {detail.note && userRole === 'producer' && (
+                      <p className="text-xs text-muted-foreground mt-1">{detail.note}</p>
+                    )}
+                    {detail.check && userRole === 'producer' && (
+                      <p className="text-xs text-blue-600">Чек: ${detail.check.toFixed(2)}</p>
                     )}
                   </div>
                 </div>
