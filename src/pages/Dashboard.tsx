@@ -7,7 +7,7 @@ import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
 import ModelsTab from '@/components/dashboard/ModelsTab';
 import ChecksTab from '@/components/dashboard/ChecksTab';
 import DashboardTab from '@/components/dashboard/DashboardTab';
-import FilesTab from '@/components/dashboard/FilesTab';
+
 import UserManagement from './UserManagement';
 import AuditLog from './AuditLog';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
@@ -235,7 +235,7 @@ const Dashboard = () => {
     { id: 'finances', label: 'Финансы', icon: 'DollarSign', permission: PERMISSIONS.VIEW_FINANCES },
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
-    { id: 'files', label: 'Файлы', icon: 'Files', permission: PERMISSIONS.VIEW_FILES },
+
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
     { id: 'producer-assignments', label: 'Продюсеры', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_PRODUCERS },
@@ -291,8 +291,7 @@ const Dashboard = () => {
         return <ChecksTab />;
       case 'schedule':
         return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
-      case 'files':
-        return <FilesTab />;
+
       case 'users':
         return <UserManagement />;
       case 'assignments':
