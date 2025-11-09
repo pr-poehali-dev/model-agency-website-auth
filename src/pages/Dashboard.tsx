@@ -14,6 +14,7 @@ const ProducerAssignmentManager = lazy(() => import('@/components/ProducerAssign
 const FinancesTab = lazy(() => import('@/components/FinancesTab'));
 const ScheduleTab = lazy(() => import('@/components/ScheduleTab'));
 const ModelFinances = lazy(() => import('@/components/ModelFinances'));
+const CalculationTab = lazy(() => import('@/components/CalculationTab'));
 
 const models = [
   {
@@ -221,6 +222,7 @@ const Dashboard = () => {
     { id: 'models', label: 'Модели', icon: 'Users', permission: PERMISSIONS.VIEW_MODELS },
     { id: 'finances', label: 'Финансы', icon: 'DollarSign', permission: PERMISSIONS.VIEW_FINANCES },
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
+    { id: 'calculation', label: 'Подсчёт', icon: 'Calculator', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
 
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
@@ -270,6 +272,8 @@ const Dashboard = () => {
         />;
       case 'checks':
         return <ChecksTab />;
+      case 'calculation':
+        return <CalculationTab />;
       case 'schedule':
         return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
 
