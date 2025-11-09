@@ -333,9 +333,8 @@ const ChecksTab = () => {
     soloMakers = soloMakerUsers.map(sm => {
       const salary = salaries.models[sm.email] || { total: 0, details: [] };
       const adj = adjustments[sm.email] || { advance: 0, penalty: 0 };
-      const percentage = parseInt(sm.soloPercentage || '50');
-      const totalCheck = salary.total;
-      const sumDollars = totalCheck * (percentage / 100);
+      // Backend already calculates salary with percentage, so use it directly
+      const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
         name: sm.fullName || sm.email,
