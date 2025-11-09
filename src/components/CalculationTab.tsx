@@ -11,10 +11,12 @@ interface User {
 }
 
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
 
 const CalculationTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [exchangeRate, setExchangeRate] = useState(74.23);
+  const [adjustments, setAdjustments] = useState<any>({});
   const [calculations, setCalculations] = useState<Record<string, {
     stripchat: string;
     chaturbate: string;
@@ -25,6 +27,7 @@ const CalculationTab = () => {
   useEffect(() => {
     loadUsers();
     loadExchangeRate();
+    loadAdjustments();
   }, []);
 
   const loadUsers = async () => {
@@ -60,6 +63,56 @@ const CalculationTab = () => {
       }
     } catch (err) {
       console.error('Failed to load exchange rate', err);
+    }
+  };
+
+  const loadAdjustments = async () => {
+    try {
+      const today = new Date();
+      const dayOfMonth = today.getDate();
+      
+      let periodStart: Date;
+      let periodEnd: Date;
+      
+      if (dayOfMonth >= 1 && dayOfMonth <= 15) {
+        periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        periodEnd = new Date(today.getFullYear(), today.getMonth(), 15);
+      } else {
+        periodStart = new Date(today.getFullYear(), today.getMonth(), 16);
+        periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      }
+      
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStartStr = formatDate(periodStart);
+      const periodEndStr = formatDate(periodEnd);
+      
+      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStartStr}&period_end=${periodEndStr}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdjustments(data);
+        
+        setCalculations(prev => {
+          const updated = { ...prev };
+          Object.keys(data).forEach(email => {
+            if (updated[email]) {
+              updated[email] = {
+                ...updated[email],
+                advance: String(data[email].advance || 0),
+                penalty: String(data[email].penalty || 0)
+              };
+            }
+          });
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load adjustments', err);
     }
   };
 
@@ -184,10 +237,10 @@ const CalculationTab = () => {
                       <div className="font-semibold text-right">{salary.rubles} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
-                      <div className="font-semibold text-right">{calc.advance || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
                       
                       <div className="text-muted-foreground">Штраф</div>
-                      <div className="font-semibold text-right">{calc.penalty || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.penalty || 0}</div>
                       
                       <div className="text-muted-foreground">Дополжить</div>
                       <div className="font-semibold text-right">0,00 ₽</div>
@@ -231,15 +284,15 @@ const CalculationTab = () => {
                         type="text"
                         placeholder="Аванс"
                         value={calc.advance || ''}
-                        onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                       <Input
                         type="text"
                         placeholder="Штраф"
                         value={calc.penalty || ''}
-                        onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                     </div>
                   </div>
@@ -274,10 +327,10 @@ const CalculationTab = () => {
                       <div className="font-semibold text-right">{salary.rubles} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
-                      <div className="font-semibold text-right">{calc.advance || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
                       
                       <div className="text-muted-foreground">Штраф</div>
-                      <div className="font-semibold text-right">{calc.penalty || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.penalty || 0}</div>
                       
                       <div className="text-muted-foreground">Дополжить</div>
                       <div className="font-semibold text-right">0,00 ₽</div>
@@ -321,15 +374,15 @@ const CalculationTab = () => {
                         type="text"
                         placeholder="Аванс"
                         value={calc.advance || ''}
-                        onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                       <Input
                         type="text"
                         placeholder="Штраф"
                         value={calc.penalty || ''}
-                        onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                     </div>
                   </div>
@@ -364,10 +417,10 @@ const CalculationTab = () => {
                       <div className="font-semibold text-right">{salary.rubles} ₽</div>
                       
                       <div className="text-muted-foreground">Аванс</div>
-                      <div className="font-semibold text-right">{calc.advance || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
                       
                       <div className="text-muted-foreground">Штраф</div>
-                      <div className="font-semibold text-right">{calc.penalty || 0}</div>
+                      <div className="font-semibold text-right text-red-600">{calc.penalty || 0}</div>
                       
                       <div className="text-muted-foreground">Дополжить</div>
                       <div className="font-semibold text-right">0,00 ₽</div>
@@ -435,15 +488,15 @@ const CalculationTab = () => {
                         type="text"
                         placeholder="Аванс"
                         value={calc.advance || ''}
-                        onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                       <Input
                         type="text"
                         placeholder="Штраф"
                         value={calc.penalty || ''}
-                        onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                        className="text-center"
+                        disabled
+                        className="text-center bg-red-500/10 text-red-600 font-semibold"
                       />
                     </div>
                   </div>
