@@ -229,22 +229,32 @@ const ModelsTab = ({
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Наши модели</h2>
-          <p className="text-muted-foreground"></p>
-          {operatorAssignments.length > 0 && (
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">
+            {userRole === 'solo_maker' ? 'Мой профиль' : 'Наши модели'}
+          </h2>
+          <p className="text-muted-foreground">
+            {userRole === 'solo_maker' ? 'Управляйте своими аккаунтами и следите за статистикой' : ''}
+          </p>
+          {operatorAssignments.length > 0 && userRole !== 'solo_maker' && (
             <Badge variant="secondary" className="mt-2">
               Назначено вам: {operatorAssignments.length} {operatorAssignments.length === 1 ? 'модель' : 'моделей'}
             </Badge>
           )}
-          {producerAssignments.length > 0 && (
+          {producerAssignments.length > 0 && userRole !== 'solo_maker' && (
             <Badge variant="secondary" className="mt-2">
               Назначено вам: {producerAssignments.length} {producerAssignments.length === 1 ? 'модель' : 'моделей'}
             </Badge>
           )}
-          {assignedProducer && (
+          {assignedProducer && userRole !== 'solo_maker' && (
             <div className="mt-2">
               <Badge variant="outline">Ваш продюсер: {assignedProducer}</Badge>
             </div>
+          )}
+          {userRole === 'solo_maker' && filteredModels.length > 0 && (
+            <Badge variant="secondary" className="mt-2">
+              <Icon name="Star" size={14} className="mr-1" />
+              Соло-модель
+            </Badge>
           )}
         </div>
         
