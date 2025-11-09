@@ -47,7 +47,7 @@ const ModelAccountsDialog = ({
     setShowPasswords({});
   }, [initialAccounts, modelName, open]);
 
-  const canEdit = userRole === 'director' || userRole === 'producer';
+  const canEdit = userRole === 'director' || userRole === 'producer' || userRole === 'solo_maker';
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
