@@ -25,6 +25,7 @@ const CalculationTab = () => {
     chaturbate: string;
     advance: string;
     penalty: string;
+    expenses?: string;
   }>>({});
 
   useEffect(() => {
@@ -58,7 +59,8 @@ const CalculationTab = () => {
           stripchat: '0',
           chaturbate: '0',
           advance: '0',
-          penalty: '0'
+          penalty: '0',
+          expenses: '0'
         };
       });
       setCalculations(initialCalc);
@@ -114,11 +116,19 @@ const CalculationTab = () => {
           const updated = { ...prev };
           Object.keys(data).forEach(email => {
             if (updated[email]) {
-              updated[email] = {
-                ...updated[email],
-                advance: String(data[email].advance || 0),
-                penalty: String(data[email].penalty || 0)
-              };
+              const user = users.find(u => u.email === email);
+              if (user?.role === 'producer') {
+                updated[email] = {
+                  ...updated[email],
+                  expenses: String(data[email].expenses || 0)
+                };
+              } else {
+                updated[email] = {
+                  ...updated[email],
+                  advance: String(data[email].advance || 0),
+                  penalty: String(data[email].penalty || 0)
+                };
+              }
             }
           });
           return updated;
@@ -175,6 +185,7 @@ const CalculationTab = () => {
     const chaturbate = parseInt(calc.chaturbate || '0');
     const advance = parseInt(calc.advance || '0');
     const penalty = parseInt(calc.penalty || '0');
+    const expenses = parseInt(calc.expenses || '0');
 
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
@@ -189,7 +200,12 @@ const CalculationTab = () => {
       salaryDollars = totalCheck * 0.1;
     }
 
-    const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
+    let salaryRubles = 0;
+    if (role === 'producer') {
+      salaryRubles = (salaryDollars * exchangeRate) + expenses;
+    } else {
+      salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
+    }
 
     return {
       dollars: Math.round(salaryDollars * 100) / 100,
@@ -505,14 +521,8 @@ const CalculationTab = () => {
                       <div className="text-muted-foreground">Сумма ₽</div>
                       <div className="font-semibold text-right">{Math.round(salary.dollars * exchangeRate)} ₽</div>
                       
-                      <div className="text-muted-foreground">Аванс</div>
-                      <div className="font-semibold text-right text-red-600">{calc.advance || 0}</div>
-                      
-                      <div className="text-muted-foreground">Штраф</div>
-                      <div className="font-semibold text-right text-red-600">{calc.penalty || 0}</div>
-                      
-                      <div className="text-muted-foreground">Дополжить</div>
-                      <div className="font-semibold text-right">0,00 ₽</div>
+                      <div className="text-muted-foreground">Затраты</div>
+                      <div className="font-semibold text-right text-green-600">+{calc.expenses || 0} ₽</div>
                     </div>
                     
                     <div className="border-t pt-2 mt-2">
@@ -548,20 +558,13 @@ const CalculationTab = () => {
                       className="text-center"
                     />
 
-                    <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="mt-3">
                       <Input
                         type="text"
-                        placeholder="Аванс"
-                        value={calc.advance || ''}
+                        placeholder="Затраты"
+                        value={calc.expenses || ''}
                         disabled
-                        className="text-center bg-red-500/10 text-red-600 font-semibold"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Штраф"
-                        value={calc.penalty || ''}
-                        disabled
-                        className="text-center bg-red-500/10 text-red-600 font-semibold"
+                        className="text-center bg-green-500/10 text-green-600 font-semibold"
                       />
                     </div>
                   </div>
