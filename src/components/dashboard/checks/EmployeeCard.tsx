@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 interface EmployeeCardProps {
   employee: Employee;
-  color: 'emerald' | 'amber' | 'red';
+  color: 'emerald' | 'amber' | 'red' | 'purple';
   icon?: string;
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
@@ -31,13 +31,15 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate }: Empl
   const colorClasses = {
     emerald: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30',
     amber: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30',
-    red: 'from-red-500/20 to-orange-500/20 border-red-500/30'
+    red: 'from-red-500/20 to-orange-500/20 border-red-500/30',
+    purple: 'from-purple-500/20 to-violet-500/20 border-purple-500/30'
   };
 
   const iconClasses = {
     emerald: 'text-emerald-500',
     amber: 'text-amber-500',
-    red: 'text-red-500'
+    red: 'text-red-500',
+    purple: 'text-purple-500'
   };
 
   return (
