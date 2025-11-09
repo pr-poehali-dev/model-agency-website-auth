@@ -285,7 +285,7 @@ const ChecksTab = () => {
         }, 0);
         avgOperatorPercentage = Math.round((totalOperatorPercentage / operatorAssignments.length) * 10) / 10;
       }
-      const avgProducerPercentage = 30 - avgOperatorPercentage;
+      const avgProducerPercentage = Math.round((30 - avgOperatorPercentage) * 10) / 10;
       
       return {
         name: op.fullName || op.email,
