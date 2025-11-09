@@ -14,12 +14,22 @@ interface User {
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
 
+interface SoloModel {
+  id: string;
+  name: string;
+  stripchat: string;
+  chaturbate: string;
+  advance: string;
+  penalty: string;
+}
+
 const CalculationTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [exchangeRate, setExchangeRate] = useState(74.23);
   const [adjustments, setAdjustments] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [soloModels, setSoloModels] = useState<SoloModel[]>([]);
   const [calculations, setCalculations] = useState<Record<string, {
     stripchat: string;
     chaturbate: string;
@@ -36,6 +46,12 @@ const CalculationTab = () => {
         loadExchangeRate(),
         loadAdjustments()
       ]);
+      
+      const savedSoloModels = localStorage.getItem('soloModels');
+      if (savedSoloModels) {
+        setSoloModels(JSON.parse(savedSoloModels));
+      }
+      
       setLoading(false);
     };
     loadData();
@@ -232,7 +248,19 @@ const CalculationTab = () => {
     return sum + calculateSalary(prod.email, prod.role).rubles;
   }, 0);
 
-  const totalSolo = 0;
+  const totalSolo = soloModels.reduce((sum, solo) => {
+    const stripchat = parseInt(solo.stripchat || '0');
+    const chaturbate = parseInt(solo.chaturbate || '0');
+    const advance = parseInt(solo.advance || '0');
+    const penalty = parseInt(solo.penalty || '0');
+    const stripchatDollars = stripchat * 0.05;
+    const chaturbateDollars = chaturbate * 0.05;
+    const totalCheck = stripchatDollars + chaturbateDollars;
+    const salaryDollars = totalCheck * 0.5;
+    const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
+    return sum + salaryRubles;
+  }, 0);
+  
   const totalAll = totalOperators + totalModels + totalProducers + totalSolo;
 
   if (loading) {
@@ -531,11 +559,155 @@ const CalculationTab = () => {
         )}
 
         <div>
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Icon name="Star" size={24} />
-            Соло
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-purple-400">Соло</h3>
+            <Button
+              onClick={() => {
+                const newSolo: SoloModel = {
+                  id: `solo-${Date.now()}`,
+                  name: '',
+                  stripchat: '0',
+                  chaturbate: '0',
+                  advance: '0',
+                  penalty: '0'
+                };
+                const updated = [...soloModels, newSolo];
+                setSoloModels(updated);
+                localStorage.setItem('soloModels', JSON.stringify(updated));
+              }}
+              size="sm"
+              className="h-8"
+            >
+              <Icon name="Plus" size={16} className="mr-1" />
+              Добавить
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {soloModels.map(solo => {
+              const stripchat = parseInt(solo.stripchat || '0');
+              const chaturbate = parseInt(solo.chaturbate || '0');
+              const advance = parseInt(solo.advance || '0');
+              const penalty = parseInt(solo.penalty || '0');
+              
+              const stripchatDollars = stripchat * 0.05;
+              const chaturbateDollars = chaturbate * 0.05;
+              const totalCheck = stripchatDollars + chaturbateDollars;
+              const salaryDollars = totalCheck * 0.5;
+              const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
+              
+              return (
+                <Card key={solo.id} className="p-3 bg-purple-500/5 border-purple-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <Input
+                      type="text"
+                      placeholder="Имя"
+                      value={solo.name}
+                      onChange={(e) => {
+                        const updated = soloModels.map(s => 
+                          s.id === solo.id ? { ...s, name: e.target.value } : s
+                        );
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="text-center text-sm font-semibold h-8 bg-transparent border-0 p-0"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const updated = soloModels.filter(s => s.id !== solo.id);
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Icon name="X" size={14} />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-1.5 mb-2">
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      <div className="text-muted-foreground">Чек $ / 50%</div>
+                      <div className="font-semibold text-right">${Math.round(totalCheck * 100) / 100} / ${Math.round(salaryDollars * 100) / 100}</div>
+                      
+                      <div className="text-muted-foreground">Курс / ₽</div>
+                      <div className="font-semibold text-right">{exchangeRate} / {Math.round(salaryDollars * exchangeRate)} ₽</div>
+                      
+                      <div className="text-muted-foreground">Аванс / Штраф</div>
+                      <div className="font-semibold text-right text-red-600">-{advance} / -{penalty} ₽</div>
+                    </div>
+                    
+                    <div className="border-t pt-1.5">
+                      <div className="grid grid-cols-2 gap-1 text-xs font-bold">
+                        <div>Итог</div>
+                        <div className="text-right text-green-600">{Math.round(salaryRubles * 100) / 100} ₽</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 border-t pt-2">
+                    <Input
+                      type="text"
+                      placeholder="StripChat"
+                      value={solo.stripchat}
+                      onChange={(e) => {
+                        const numValue = e.target.value.replace(/[^0-9]/g, '');
+                        const updated = soloModels.map(s => 
+                          s.id === solo.id ? { ...s, stripchat: numValue } : s
+                        );
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="text-center text-xs h-8"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Chaturbate"
+                      value={solo.chaturbate}
+                      onChange={(e) => {
+                        const numValue = e.target.value.replace(/[^0-9]/g, '');
+                        const updated = soloModels.map(s => 
+                          s.id === solo.id ? { ...s, chaturbate: numValue } : s
+                        );
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="text-center text-xs h-8"
+                    />
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Input
+                        type="text"
+                        placeholder="Аванс"
+                        value={solo.advance}
+                        onChange={(e) => {
+                          const numValue = e.target.value.replace(/[^0-9]/g, '');
+                          const updated = soloModels.map(s => 
+                            s.id === solo.id ? { ...s, advance: numValue } : s
+                          );
+                          setSoloModels(updated);
+                          localStorage.setItem('soloModels', JSON.stringify(updated));
+                        }}
+                        className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Штраф"
+                        value={solo.penalty}
+                        onChange={(e) => {
+                          const numValue = e.target.value.replace(/[^0-9]/g, '');
+                          const updated = soloModels.map(s => 
+                            s.id === solo.id ? { ...s, penalty: numValue } : s
+                          );
+                          setSoloModels(updated);
+                          localStorage.setItem('soloModels', JSON.stringify(updated));
+                        }}
+                        className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>
