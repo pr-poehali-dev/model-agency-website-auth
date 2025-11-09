@@ -1,6 +1,7 @@
 import { useState, useEffect, memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
 interface User {
@@ -18,6 +19,7 @@ const CalculationTab = () => {
   const [exchangeRate, setExchangeRate] = useState(74.23);
   const [adjustments, setAdjustments] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [calculations, setCalculations] = useState<Record<string, {
     stripchat: string;
     chaturbate: string;
@@ -124,6 +126,12 @@ const CalculationTab = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadAdjustments();
+    setRefreshing(false);
+  };
+
   const handleInputChange = (email: string, field: string, value: string) => {
     const numValue = value.replace(/[^0-9]/g, '');
     setCalculations(prev => ({
@@ -204,9 +212,21 @@ const CalculationTab = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
-        <p className="text-muted-foreground">Ручной расчёт по токенам для проверки</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
+          <p className="text-muted-foreground">Ручной расчёт по токенам для проверки</p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          variant="outline"
+          size="sm"
+          className="gap-2"
+        >
+          <Icon name={refreshing ? "Loader2" : "RefreshCw"} size={16} className={refreshing ? "animate-spin" : ""} />
+          {refreshing ? "Обновление..." : "Обновить данные"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
