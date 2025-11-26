@@ -412,9 +412,7 @@ const ChecksTab = () => {
   
   if (userRole === 'producer') {
     const producerSalary = salaries.producers[userEmail] || { total: 0, details: [] };
-    const adj = adjustments[userEmail] || { expenses: 0, advance: 0, penalty: 0 };
-    const sumRubles = producerSalary.total * exchangeRate;
-    const producerTotalSum = Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty);
+    const producerTotalSum = Math.round(producerSalary.total * exchangeRate);
     totalOperatorSum += producerTotalSum;
   } else if (userRole === 'director') {
     const producerUsers = users.filter(u => u.role === 'producer');
