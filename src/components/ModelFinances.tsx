@@ -944,13 +944,6 @@ const ModelFinances = ({
               name="Chaturbate"
               strokeWidth={2}
             />
-            <Line
-              type="monotone"
-              dataKey="onlineSoda"
-              stroke="#3b82f6"
-              name="CamSoda"
-              strokeWidth={2}
-            />
           </LineChart>
         </ResponsiveContainer>
       </Card>
@@ -963,8 +956,6 @@ const ModelFinances = ({
               date: formatDate(d.date),
               CB: d.cbIncome * 0.05 * 0.6,
               SP: d.spIncome * 0.05 * 0.6,
-              Soda: d.sodaIncome * 0.05 * 0.6,
-              Cam4: d.cam4 * 0.6,
               Transfers: d.transfers * 0.6,
             }))}
           >
@@ -981,8 +972,6 @@ const ModelFinances = ({
             <Legend />
             <Bar dataKey="CB" fill="#f97316" name="Chaturbate ($)" />
             <Bar dataKey="SP" fill="#ef4444" name="Stripchat ($)" />
-            <Bar dataKey="Soda" fill="#3b82f6" name="CamSoda ($)" />
-            <Bar dataKey="Cam4" fill="#ec4899" name="Cam4 ($)" />
             <Bar dataKey="Transfers" fill="#10b981" name="Переводы ($)" />
           </BarChart>
         </ResponsiveContainer>
