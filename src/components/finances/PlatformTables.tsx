@@ -22,7 +22,6 @@ const platformSummary = [
   { platform: 'Chaturbate', tokens: 1467, income: 200.07 },
   { platform: 'Stripchat', tokens: 37137, income: 1138.11 },
   { platform: 'CamSoda', tokens: 0, income: 0 },
-  { platform: 'Cam4', tokens: 0.6, income: 0.36 },
 ];
 
 const graphOnlineData = [

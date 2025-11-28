@@ -46,11 +46,9 @@ interface DayData {
   cb: number;
   sp: number;
   soda: number;
-  cam4: number;
   cbIncome: number;
   spIncome: number;
   sodaIncome: number;
-  cam4Income: number;
   stripchatTokens: number;
   transfers: number;
   operator: string;
@@ -65,11 +63,9 @@ const generateInitialData = (period: Period): DayData[] => {
     cb: 0,
     sp: 0,
     soda: 0,
-    cam4: 0,
     cbIncome: 0,
     spIncome: 0,
     sodaIncome: 0,
-    cam4Income: 0,
     stripchatTokens: 0,
     transfers: 0,
     operator: "",
@@ -386,7 +382,6 @@ const ModelFinances = ({
   const totalIncome = onlineData.reduce((sum, d) => {
     const dailyIncome =
       ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
-        d.cam4Income +
         d.transfers) *
       incomeMultiplier;
     return sum + dailyIncome;
@@ -412,8 +407,6 @@ const ModelFinances = ({
     (sum, d) => sum + d.sodaIncome,
     0,
   );
-  const totalCam4Income = onlineData.reduce((sum, d) => sum + d.cam4Income, 0);
-
   const platformSummary = [
     {
       platform: "Chaturbate",
@@ -430,23 +423,16 @@ const ModelFinances = ({
       tokens: totalSodaIncomeTokens,
       income: totalSodaIncomeTokens * 0.05 * incomeMultiplier,
     },
-    {
-      platform: "Cam4",
-      tokens: totalCam4Income,
-      income: totalCam4Income * incomeMultiplier,
-    },
   ];
 
   const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
   const bestDay = onlineData.reduce((best, current) => {
     const currentIncome =
       ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 +
-        current.cam4Income +
         current.transfers) *
       incomeMultiplier;
     const bestIncome =
       ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 +
-        best.cam4Income +
         best.transfers) *
       incomeMultiplier;
     return currentIncome > bestIncome ? current : best;
@@ -660,25 +646,6 @@ const ModelFinances = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Cam4 $:</span>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={d.cam4Income || ""}
-                    disabled={isReadOnly}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.,]/g, "").replace(',', '.');
-                      handleCellChange(
-                        idx,
-                        "cam4Income",
-                        val === "" ? 0 : Number(val),
-                      );
-                    }}
-                    className="w-20 h-8 text-right"
-                  />
-                </div>
-
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between font-semibold text-green-600">
                     <span>Доход:</span>
@@ -686,9 +653,8 @@ const ModelFinances = ({
                       $
                       {(
                         ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
-                          d.cam4Income +
                           d.transfers) *
-                        0.6
+                        incomeMultiplier
                       ).toFixed(2)}
                     </span>
                   </div>
@@ -892,36 +858,6 @@ const ModelFinances = ({
                 </td>
               </tr>
 
-              <tr className="border-b bg-pink-500/5">
-                <td className="p-2 font-medium sticky left-0 bg-pink-500/5">
-                  Cam4 ($)
-                </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.cam4Income || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.,]/g, "").replace(',', '.');
-                        handleCellChange(
-                          idx,
-                          "cam4Income",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
-                <td className="p-2 text-center font-bold bg-pink-500/10">
-                  {onlineData
-                    .reduce((sum, d) => sum + d.cam4Income, 0)
-                    .toFixed(2)}
-                </td>
-              </tr>
-
               <tr className="border-b hover:bg-muted/30">
                 <td className="p-2 font-medium sticky left-0 bg-background">
                   Переводы
@@ -1039,11 +975,9 @@ const ModelFinances = ({
           <Card key={platform.platform} className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{platform.platform}</h3>
-              {platform.platform !== "Cam4" && (
-                <Badge variant="outline">
-                  {platform.tokens.toFixed(0)} токенов
-                </Badge>
-              )}
+              <Badge variant="outline">
+                {platform.tokens.toFixed(0)} токенов
+              </Badge>
             </div>
             <div className="text-3xl font-bold text-primary">
               ${platform.income.toFixed(2)}
