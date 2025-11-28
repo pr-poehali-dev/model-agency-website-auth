@@ -45,10 +45,8 @@ interface DayData {
   date: string;
   cb: number;
   sp: number;
-  soda: number;
   cbIncome: number;
   spIncome: number;
-  sodaIncome: number;
   stripchatTokens: number;
   transfers: number;
   operator: string;
@@ -62,10 +60,8 @@ const generateInitialData = (period: Period): DayData[] => {
     date,
     cb: 0,
     sp: 0,
-    soda: 0,
     cbIncome: 0,
     spIncome: 0,
-    sodaIncome: 0,
     stripchatTokens: 0,
     transfers: 0,
     operator: "",
@@ -381,7 +377,7 @@ const ModelFinances = ({
   
   const totalIncome = onlineData.reduce((sum, d) => {
     const dailyIncome =
-      ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
+      ((d.cbIncome + d.spIncome) * 0.05 +
         d.transfers) *
       incomeMultiplier;
     return sum + dailyIncome;
@@ -392,7 +388,6 @@ const ModelFinances = ({
     date: formatDate(d.date),
     onlineSP: d.sp,
     onlineCB: d.cb,
-    onlineSoda: d.soda,
   }));
 
   const totalCbIncomeTokens = onlineData.reduce(
@@ -401,10 +396,6 @@ const ModelFinances = ({
   );
   const totalSpIncomeTokens = onlineData.reduce(
     (sum, d) => sum + d.spIncome,
-    0,
-  );
-  const totalSodaIncomeTokens = onlineData.reduce(
-    (sum, d) => sum + d.sodaIncome,
     0,
   );
   const platformSummary = [
@@ -418,21 +409,16 @@ const ModelFinances = ({
       tokens: totalSpIncomeTokens,
       income: totalSpIncomeTokens * 0.05 * incomeMultiplier,
     },
-    {
-      platform: "CamSoda",
-      tokens: totalSodaIncomeTokens,
-      income: totalSodaIncomeTokens * 0.05 * incomeMultiplier,
-    },
   ];
 
   const averageDaily = totalShifts > 0 ? totalIncome / totalShifts : 0;
   const bestDay = onlineData.reduce((best, current) => {
     const currentIncome =
-      ((current.cbIncome + current.spIncome + current.sodaIncome) * 0.05 +
+      ((current.cbIncome + current.spIncome) * 0.05 +
         current.transfers) *
       incomeMultiplier;
     const bestIncome =
-      ((best.cbIncome + best.spIncome + best.sodaIncome) * 0.05 +
+      ((best.cbIncome + best.spIncome) * 0.05 +
         best.transfers) *
       incomeMultiplier;
     return currentIncome > bestIncome ? current : best;
@@ -652,7 +638,7 @@ const ModelFinances = ({
                     <span>
                       $
                       {(
-                        ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
+                        ((d.cbIncome + d.spIncome) * 0.05 +
                           d.transfers) *
                         incomeMultiplier
                       ).toFixed(2)}
@@ -797,63 +783,6 @@ const ModelFinances = ({
                 <td className="p-2 text-center font-bold bg-red-500/30">
                   {onlineData
                     .reduce((sum, d) => sum + d.spIncome, 0)
-                    .toFixed(2)}
-                </td>
-              </tr>
-
-              <tr className="border-b hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background">
-                  Online Soda
-                </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={d.soda || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        handleCellChange(
-                          idx,
-                          "soda",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
-                <td className="p-2 text-center"></td>
-              </tr>
-
-              <tr className="border-b bg-cyan-400/20">
-                <td className="p-2 font-medium sticky left-0 bg-cyan-400/20">
-                  CamSoda
-                </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.sodaIncome || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, "");
-                        handleCellChange(
-                          idx,
-                          "sodaIncome",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
-                <td className="p-2 text-center font-bold bg-cyan-400/30">
-                  {onlineData
-                    .reduce((sum, d) => sum + d.sodaIncome, 0)
                     .toFixed(2)}
                 </td>
               </tr>
