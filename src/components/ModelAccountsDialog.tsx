@@ -14,7 +14,6 @@ interface ModelAccountsDialogProps {
     stripchat?: { login: string; password: string };
     chaturbate?: { login: string; password: string };
     camsoda?: { login: string; password: string };
-    cam4?: { login: string; password: string };
     email?: { login: string; password: string };
   };
   userRole?: string;
@@ -25,7 +24,6 @@ const platformConfig = [
   { key: 'stripchat', label: 'Stripchat', icon: 'Video', color: 'bg-red-500' },
   { key: 'chaturbate', label: 'Chaturbate', icon: 'Video', color: 'bg-orange-500' },
   { key: 'camsoda', label: 'CamSoda', icon: 'Video', color: 'bg-amber-500' },
-  { key: 'cam4', label: 'Cam4', icon: 'Video', color: 'bg-emerald-500' },
   { key: 'email', label: 'Email', icon: 'Mail', color: 'bg-green-500' }
 ];
 
