@@ -424,8 +424,7 @@ const ModelFinances = ({
     return currentIncome > bestIncome ? current : best;
   }, onlineData[0]);
   const bestDayIncome =
-    ((bestDay.cbIncome + bestDay.spIncome + bestDay.sodaIncome) * 0.05 +
-      bestDay.cam4Income +
+    ((bestDay.cbIncome + bestDay.spIncome) * 0.05 +
       bestDay.transfers) *
     incomeMultiplier;
 
@@ -877,10 +876,9 @@ const ModelFinances = ({
                 </td>
                 {onlineData.map((d) => {
                   const dailyIncome =
-                    ((d.cbIncome + d.spIncome + d.sodaIncome) * 0.05 +
-                      d.cam4Income +
+                    ((d.cbIncome + d.spIncome) * 0.05 +
                       d.transfers) *
-                    0.6;
+                    incomeMultiplier;
                   return (
                     <td
                       key={d.date}

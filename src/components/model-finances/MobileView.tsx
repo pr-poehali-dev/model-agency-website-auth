@@ -33,31 +33,31 @@ const MobileView = ({ onlineData, operators, isReadOnly, onCellChange }: MobileV
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">CB:</span>
+                <span className="text-muted-foreground">Chaturbate:</span>
                 <Input
                   type="number"
-                  value={d.cbIncome || ''}
-                  onChange={(e) => onCellChange(idx, 'cbIncome', Number(e.target.value))}
+                  value={d.chaturbate || ''}
+                  onChange={(e) => onCellChange(idx, 'chaturbate', Number(e.target.value))}
                   className="w-24 h-8 text-right"
                   disabled={isReadOnly}
                 />
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">SP:</span>
+                <span className="text-muted-foreground">Stripchat:</span>
                 <Input
                   type="number"
-                  value={d.spIncome || ''}
-                  onChange={(e) => onCellChange(idx, 'spIncome', Number(e.target.value))}
+                  value={d.stripchat || ''}
+                  onChange={(e) => onCellChange(idx, 'stripchat', Number(e.target.value))}
                   className="w-24 h-8 text-right"
                   disabled={isReadOnly}
                 />
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Soda:</span>
+                <span className="text-muted-foreground">Переводы:</span>
                 <Input
                   type="number"
-                  value={d.sodaIncome || ''}
-                  onChange={(e) => onCellChange(idx, 'sodaIncome', Number(e.target.value))}
+                  value={d.transfers || ''}
+                  onChange={(e) => onCellChange(idx, 'transfers', Number(e.target.value))}
                   className="w-24 h-8 text-right"
                   disabled={isReadOnly}
                 />

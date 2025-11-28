@@ -4,18 +4,18 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Period, getDatesInPeriod } from '@/utils/periodUtils';
 
 const onlineData = [
-  { date: '16.10', cb: 41, sp: 106, soda: 0, cam4: 0, cbIncome: 44.01, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '17.10', cb: 38, sp: 79, soda: 0, cam4: 0, cbIncome: 1.62, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '18.10', cb: 49, sp: 108, soda: 0, cam4: 0, cbIncome: 67.59, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '19.10', cb: 46, sp: 119, soda: 0, cam4: 0, cbIncome: 38.61, spIncome: 525, sodaIncome: 0, cam4Income: 0 },
-  { date: '20.10', cb: 39, sp: 103, soda: 0, cam4: 0, cbIncome: 2.67, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '21.10', cb: 26, sp: 98, soda: 0, cam4: 0, cbIncome: 0.06, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '22.10', cb: 31, sp: 69, soda: 0, cam4: 0, cbIncome: 3.00, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '23.10', cb: 100, sp: 81, soda: 0, cam4: 0.2, cbIncome: 18.84, spIncome: 0, sodaIncome: 0, cam4Income: 0.12 },
-  { date: '24.10', cb: 30, sp: 78, soda: 0, cam4: 0.4, cbIncome: 8.37, spIncome: 515.58, sodaIncome: 0, cam4Income: 0.24 },
-  { date: '25.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '26.10', cb: 0, sp: 0, soda: 0, cam4: 0, cbIncome: 0, spIncome: 0, sodaIncome: 0, cam4Income: 0 },
-  { date: '27.10', cb: 34, sp: 77, soda: 0, cam4: 0, cbIncome: 15.30, spIncome: 97.53, sodaIncome: 0, cam4Income: 0 },
+  { date: '16.10', cb: 41, sp: 106, cbIncome: 44.01, spIncome: 0 },
+  { date: '17.10', cb: 38, sp: 79, cbIncome: 1.62, spIncome: 0 },
+  { date: '18.10', cb: 49, sp: 108, cbIncome: 67.59, spIncome: 0 },
+  { date: '19.10', cb: 46, sp: 119, cbIncome: 38.61, spIncome: 525 },
+  { date: '20.10', cb: 39, sp: 103, cbIncome: 2.67, spIncome: 0 },
+  { date: '21.10', cb: 26, sp: 98, cbIncome: 0.06, spIncome: 0 },
+  { date: '22.10', cb: 31, sp: 69, cbIncome: 3.00, spIncome: 0 },
+  { date: '23.10', cb: 100, sp: 81, cbIncome: 18.84, spIncome: 0 },
+  { date: '24.10', cb: 30, sp: 78, cbIncome: 8.37, spIncome: 515.58 },
+  { date: '25.10', cb: 0, sp: 0, cbIncome: 0, spIncome: 0 },
+  { date: '26.10', cb: 0, sp: 0, cbIncome: 0, spIncome: 0 },
+  { date: '27.10', cb: 34, sp: 77, cbIncome: 15.30, spIncome: 97.53 },
 ];
 
 const platformSummary = [
@@ -135,7 +135,7 @@ const PlatformTables = ({ period }: PlatformTablesProps) => {
               </thead>
               <tbody>
                 {onlineData.map((day, index) => {
-                  const totalIncome = day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income;
+                  const totalIncome = day.cbIncome + day.spIncome;
                   return (
                     <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
                       <td className="py-2 px-2 font-medium">{day.date}</td>

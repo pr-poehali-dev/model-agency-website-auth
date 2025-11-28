@@ -21,9 +21,8 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 font-medium sticky left-0 bg-muted/50 z-10">Дата</th>
-                <th className="text-right p-3 font-medium">CB $</th>
-                <th className="text-right p-3 font-medium">SP $</th>
-                <th className="text-right p-3 font-medium">Soda $</th>
+                <th className="text-right p-3 font-medium">Chaturbate</th>
+                <th className="text-right p-3 font-medium">Stripchat</th>
                 <th className="text-right p-3 font-medium">Переводы $</th>
                 <th className="text-center p-3 font-medium">Оператор</th>
                 <th className="text-center p-3 font-medium">Смена</th>
@@ -46,8 +45,8 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
                     <td className="p-2">
                       <Input
                         type="number"
-                        value={d.cbIncome || ''}
-                        onChange={(e) => onCellChange(idx, 'cbIncome', Number(e.target.value))}
+                        value={d.chaturbate || ''}
+                        onChange={(e) => onCellChange(idx, 'chaturbate', Number(e.target.value))}
                         className="w-24 h-9 text-right"
                         disabled={isReadOnly}
                       />
@@ -55,17 +54,8 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
                     <td className="p-2">
                       <Input
                         type="number"
-                        value={d.spIncome || ''}
-                        onChange={(e) => onCellChange(idx, 'spIncome', Number(e.target.value))}
-                        className="w-24 h-9 text-right"
-                        disabled={isReadOnly}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <Input
-                        type="number"
-                        value={d.sodaIncome || ''}
-                        onChange={(e) => onCellChange(idx, 'sodaIncome', Number(e.target.value))}
+                        value={d.stripchat || ''}
+                        onChange={(e) => onCellChange(idx, 'stripchat', Number(e.target.value))}
                         className="w-24 h-9 text-right"
                         disabled={isReadOnly}
                       />
