@@ -77,6 +77,7 @@ const CalculationTab = () => {
         initialCalc[user.email] = savedData[user.email] || {
           stripchat: '0',
           chaturbate: '0',
+          transfers: '0',
           advance: '0',
           penalty: '0',
           expenses: '0'
@@ -174,7 +175,8 @@ const CalculationTab = () => {
           updated[email] = {
             ...updated[email],
             stripchat: '0',
-            chaturbate: '0'
+            chaturbate: '0',
+            transfers: '0'
           };
         });
         localStorage.setItem('calculationTabData', JSON.stringify(updated));
@@ -184,7 +186,7 @@ const CalculationTab = () => {
   };
 
   const handleInputChange = (email: string, field: string, value: string) => {
-    const numValue = value.replace(/[^0-9]/g, '');
+    const numValue = field === 'transfers' ? value.replace(/[^0-9.]/g, '') : value.replace(/[^0-9]/g, '');
     setCalculations(prev => {
       const updated = {
         ...prev,
@@ -204,13 +206,14 @@ const CalculationTab = () => {
 
     const stripchat = parseInt(calc.stripchat || '0');
     const chaturbate = parseInt(calc.chaturbate || '0');
+    const transfers = parseFloat(calc.transfers || '0');
     const advance = parseInt(calc.advance || '0');
     const penalty = parseInt(calc.penalty || '0');
     const expenses = parseInt(calc.expenses || '0');
 
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
-    const totalCheck = stripchatDollars + chaturbateDollars;
+    const totalCheck = stripchatDollars + chaturbateDollars + transfers;
 
     let salaryDollars = 0;
     if (role === 'content_maker') {
@@ -218,7 +221,7 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      salaryDollars = (stripchatDollars * 0.1) + (chaturbateDollars * 0.3);
+      salaryDollars = (stripchatDollars * 0.1) + (chaturbateDollars * 0.3) + (transfers * 0.2);
     }
 
     let salaryRubles = 0;
@@ -393,6 +396,13 @@ const CalculationTab = () => {
                       />
                       <Input
                         type="text"
+                        placeholder="Переводы $"
+                        value={calc.transfers || ''}
+                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
                         placeholder="Затраты"
                         value={calc.expenses || ''}
                         onChange={(e) => handleInputChange(user.email, 'expenses', e.target.value)}
@@ -468,6 +478,13 @@ const CalculationTab = () => {
                         onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
                         className="text-center text-xs h-8"
                       />
+                      <Input
+                        type="text"
+                        placeholder="Переводы $"
+                        value={calc.transfers || ''}
+                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
                       <div className="grid grid-cols-2 gap-1.5">
                         <Input
                           type="text"
@@ -536,6 +553,13 @@ const CalculationTab = () => {
                         placeholder="Chaturbate"
                         value={calc.chaturbate || ''}
                         onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Переводы $"
+                        value={calc.transfers || ''}
+                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
                         className="text-center text-xs h-8"
                       />
                       <div className="grid grid-cols-2 gap-1.5">
