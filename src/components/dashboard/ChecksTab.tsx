@@ -55,7 +55,7 @@ const ChecksTab = () => {
       const data = await response.json();
       if (data.rate) {
         setCbrRate(data.rate);
-        setExchangeRate(data.rate - 7);
+        setExchangeRate(data.rate - 5);
       }
     } catch (err) {
       console.error('Failed to load exchange rate from CBR', err);
