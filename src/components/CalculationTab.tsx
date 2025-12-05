@@ -94,7 +94,7 @@ const CalculationTab = () => {
       const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
       if (data.rate) {
-        setExchangeRate(data.rate - 7);
+        setExchangeRate(data.rate - 5);
       }
     } catch (err) {
       console.error('Failed to load exchange rate', err);

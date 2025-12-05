@@ -63,7 +63,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
       const response = await fetch(EXCHANGE_RATE_API_URL);
       const data = await response.json();
       if (data.rate) {
-        setExchangeRate(data.rate - 7);
+        setExchangeRate(data.rate - 5);
       }
     } catch (error) {
       console.error('Failed to load exchange rate:', error);
