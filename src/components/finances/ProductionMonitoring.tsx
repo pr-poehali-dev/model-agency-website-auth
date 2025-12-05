@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Period, getPreviousPeriod } from '@/utils/periodUtils';
 
@@ -43,9 +44,11 @@ interface ProductionMonitoringProps {
   userEmail: string;
   userRole: string;
   period: Period;
+  onPreviousPeriod: () => void;
+  onNextPeriod: () => void;
 }
 
-const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitoringProps) => {
+const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, onNextPeriod }: ProductionMonitoringProps) => {
   const [data, setData] = useState<ProducerData | null>(null);
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -314,9 +317,19 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
   if (userRole === 'director') {
     return (
       <div className="space-y-8">
-        <div>
-          <h2 className="text-3xl font-serif font-bold mb-2">Мониторинг производства</h2>
-          <p className="text-muted-foreground">Статистика по всем продакшенам за период {period.label}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-serif font-bold mb-2">Мониторинг производства</h2>
+            <p className="text-muted-foreground">Статистика по всем продакшенам за период {period.label}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={onPreviousPeriod} variant="outline" size="sm">
+              <Icon name="ChevronLeft" size={16} />
+            </Button>
+            <Button onClick={onNextPeriod} variant="outline" size="sm">
+              <Icon name="ChevronRight" size={16} />
+            </Button>
+          </div>
         </div>
 
         {producersData.map((producerData, index) => (
@@ -346,9 +359,19 @@ const ProductionMonitoring = ({ userEmail, userRole, period }: ProductionMonitor
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-serif font-bold mb-2">Мониторинг производства</h2>
-        <p className="text-muted-foreground">Ваша команда за период {period.label}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-serif font-bold mb-2">Мониторинг производства</h2>
+          <p className="text-muted-foreground">Ваша команда за период {period.label}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={onPreviousPeriod} variant="outline" size="sm">
+            <Icon name="ChevronLeft" size={16} />
+          </Button>
+          <Button onClick={onNextPeriod} variant="outline" size="sm">
+            <Icon name="ChevronRight" size={16} />
+          </Button>
+        </div>
       </div>
       {renderProducerStats(data)}
     </div>

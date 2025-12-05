@@ -4,7 +4,7 @@ import StatsCards from './finances/StatsCards';
 import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
 import ProductionMonitoring from './finances/ProductionMonitoring';
-import { getCurrentPeriod, Period } from '@/utils/periodUtils';
+import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 
 interface Transaction {
   id: number;
@@ -37,7 +37,15 @@ interface FinancesTabProps {
 const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail = '', userRole = '' }: FinancesTabProps) => {
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
-  const [currentPeriod] = useState<Period>(getCurrentPeriod());
+  const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
+
+  const handlePreviousPeriod = () => {
+    setCurrentPeriod(prev => getPreviousPeriod(prev));
+  };
+
+  const handleNextPeriod = () => {
+    setCurrentPeriod(prev => getNextPeriod(prev));
+  };
 
   const filteredTransactions = transactions.filter(t => {
     if (statusFilter === 'paid') return t.status === 'Paid';
@@ -56,6 +64,8 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
           userEmail={userEmail}
           userRole={userRole}
           period={currentPeriod}
+          onPreviousPeriod={handlePreviousPeriod}
+          onNextPeriod={handleNextPeriod}
         />
       </div>
     );
