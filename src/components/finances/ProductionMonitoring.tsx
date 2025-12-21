@@ -46,9 +46,10 @@ interface ProductionMonitoringProps {
   period: Period;
   onPreviousPeriod: () => void;
   onNextPeriod: () => void;
+  onDataLoaded?: (data: ProducerData[]) => void;
 }
 
-const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, onNextPeriod }: ProductionMonitoringProps) => {
+const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, onNextPeriod, onDataLoaded }: ProductionMonitoringProps) => {
   const [data, setData] = useState<ProducerData | null>(null);
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,11 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
       console.log('Production stats loaded:', result);
       
       if (userRole === 'director') {
-        setProducersData(result.producers || []);
+        const producers = result.producers || [];
+        setProducersData(producers);
+        if (onDataLoaded) {
+          onDataLoaded(producers);
+        }
       } else {
         setData(result);
       }

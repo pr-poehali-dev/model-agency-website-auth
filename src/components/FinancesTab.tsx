@@ -35,10 +35,19 @@ interface FinancesTabProps {
   userRole?: string;
 }
 
+interface ProducerData {
+  models: Array<{
+    name: string;
+    email: string;
+    current_income: number;
+  }>;
+}
+
 const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail = '', userRole = '' }: FinancesTabProps) => {
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
+  const [producersData, setProducersData] = useState<ProducerData[]>([]);
 
   const handlePreviousPeriod = () => {
     setCurrentPeriod(prev => getPreviousPeriod(prev));
@@ -46,6 +55,10 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
 
   const handleNextPeriod = () => {
     setCurrentPeriod(prev => getNextPeriod(prev));
+  };
+
+  const handleDataLoaded = (data: ProducerData[]) => {
+    setProducersData(data);
   };
 
   const filteredTransactions = transactions.filter(t => {
@@ -67,8 +80,9 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
           period={currentPeriod}
           onPreviousPeriod={handlePreviousPeriod}
           onNextPeriod={handleNextPeriod}
+          onDataLoaded={handleDataLoaded}
         />
-        {userRole === 'director' && <DirectorsSalary />}
+        {userRole === 'director' && <DirectorsSalary producersData={producersData} />}
       </div>
     );
   }

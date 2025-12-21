@@ -1,22 +1,38 @@
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 
+interface ModelStats {
+  name: string;
+  email: string;
+  current_income: number;
+}
+
+interface ProducerData {
+  models: ModelStats[];
+}
+
 interface Director {
   name: string;
   salary: number;
 }
 
 interface DirectorsSalaryProps {
-  directors?: Director[];
+  producersData: ProducerData[];
 }
 
-const DirectorsSalary = ({ directors }: DirectorsSalaryProps) => {
-  const defaultDirectors: Director[] = [
-    { name: 'Директор Юрий', salary: 0 },
-    { name: 'Директор Александр', salary: 0 }
-  ];
+const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
+  // Рассчитываем общий доход всех моделей
+  const totalModelsIncome = producersData.reduce((total, producer) => {
+    return total + producer.models.reduce((sum, model) => sum + model.current_income, 0);
+  }, 0);
 
-  const displayDirectors = directors && directors.length > 0 ? directors : defaultDirectors;
+  // Каждый директор получает 20% от общего дохода
+  const directorSalary = totalModelsIncome * 0.2;
+
+  const displayDirectors: Director[] = [
+    { name: 'Директор Юрий', salary: directorSalary },
+    { name: 'Директор Александр', salary: directorSalary }
+  ];
 
   return (
     <div className="space-y-4">
