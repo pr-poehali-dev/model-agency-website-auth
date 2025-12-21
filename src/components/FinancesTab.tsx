@@ -4,6 +4,7 @@ import StatsCards from './finances/StatsCards';
 import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
 import ProductionMonitoring from './finances/ProductionMonitoring';
+import DirectorsSalary from './finances/DirectorsSalary';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 
 interface Transaction {
@@ -67,6 +68,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
           onPreviousPeriod={handlePreviousPeriod}
           onNextPeriod={handleNextPeriod}
         />
+        {userRole === 'director' && <DirectorsSalary />}
       </div>
     );
   }
