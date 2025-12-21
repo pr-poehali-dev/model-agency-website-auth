@@ -5,6 +5,8 @@ interface ModelStats {
   name: string;
   email: string;
   current_income: number;
+  is_solo_maker: boolean;
+  solo_percentage: number;
 }
 
 interface ProducerData {
@@ -21,20 +23,33 @@ interface DirectorsSalaryProps {
 }
 
 const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
-  // Рассчитываем общий доход всех моделей в долларах
-  const totalModelsIncomeUSD = producersData.reduce((total, producer) => {
-    return total + producer.models.reduce((sum, model) => sum + model.current_income, 0);
-  }, 0);
-
   // Получаем курс доллара из настроек
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
 
+  // Рассчитываем доход директоров с учетом соло-мейкеров
+  let totalModelsIncomeUSD = 0;
+  let totalDirectorsIncomeUSD = 0;
+
+  producersData.forEach(producer => {
+    producer.models.forEach(model => {
+      const modelIncomeUSD = model.current_income;
+      totalModelsIncomeUSD += modelIncomeUSD;
+
+      if (model.is_solo_maker && model.solo_percentage > 0) {
+        // Для соло-мейкеров: директора получают (100 - solo_percentage)%
+        const directorsPercentage = 100 - model.solo_percentage;
+        totalDirectorsIncomeUSD += modelIncomeUSD * (directorsPercentage / 100);
+      } else {
+        // Для обычных моделей: директора получают 40%
+        totalDirectorsIncomeUSD += modelIncomeUSD * 0.4;
+      }
+    });
+  });
+
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
-
-  // Общий доход директоров = 40% от всех моделей
-  const totalDirectorsIncome = totalModelsIncome * 0.4;
+  const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
   // Каждый директор получает 50% от общего дохода директоров
   const directorSalary = totalDirectorsIncome * 0.5;

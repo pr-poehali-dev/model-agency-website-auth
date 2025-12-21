@@ -134,12 +134,14 @@ def get_all_production_stats(cursor, schema: str, period_start: str, period_end:
     return {'producers': producer_stats}
 
 def get_model_finance_stats(cursor, schema: str, model_email: str, period_start: str, period_end: str) -> Dict[str, Any]:
-    cursor.execute(f'SELECT id FROM {schema}.users WHERE email = %s', (model_email,))
+    cursor.execute(f'SELECT id, role, solo_percentage FROM {schema}.users WHERE email = %s', (model_email,))
     user_row = cursor.fetchone()
     if not user_row:
-        return {'current_income': 0, 'previous_income': 0, 'current_shifts': 0, 'previous_shifts': 0}
+        return {'current_income': 0, 'previous_income': 0, 'current_shifts': 0, 'previous_shifts': 0, 'is_solo_maker': False, 'solo_percentage': 0}
     
     model_id = user_row['id']
+    is_solo_maker = user_row.get('role') == 'solo_maker'
+    solo_percentage = int(user_row.get('solo_percentage') or 0)
     
     cursor.execute(f'''
         SELECT 
@@ -164,7 +166,9 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
         'current_income': float(current['total_income']) if current else 0,
         'previous_income': float(previous['total_income']) if previous else 0,
         'current_shifts': int(current['shift_count']) if current else 0,
-        'previous_shifts': int(previous['shift_count']) if previous else 0
+        'previous_shifts': int(previous['shift_count']) if previous else 0,
+        'is_solo_maker': is_solo_maker,
+        'solo_percentage': solo_percentage
     }
 
 def get_operator_stats(cursor, schema: str, operator_email: str, period_start: str, period_end: str) -> Dict[str, Any]:

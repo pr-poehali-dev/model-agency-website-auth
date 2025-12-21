@@ -12,6 +12,8 @@ interface ModelStats {
   previous_income: number;
   current_shifts: number;
   previous_shifts: number;
+  is_solo_maker: boolean;
+  solo_percentage: number;
 }
 
 interface OperatorStats {
