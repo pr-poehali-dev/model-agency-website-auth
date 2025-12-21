@@ -43,7 +43,7 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
 
       <div className="grid gap-4 md:grid-cols-2">
         {displayDirectors.map((director, index) => (
-          <Card key={index} className="p-6">
+          <Card key={index} className="p-6 space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
@@ -55,6 +55,21 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
                     {director.salary.toLocaleString('ru-RU')} ₽
                   </p>
                 </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Общий доход моделей:</span>
+                <span className="font-medium">{totalModelsIncome.toLocaleString('ru-RU')} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Процент директора:</span>
+                <span className="font-medium">20%</span>
+              </div>
+              <div className="flex items-center justify-between text-sm pt-2 border-t">
+                <span className="text-muted-foreground font-medium">Итого к выплате:</span>
+                <span className="font-bold text-primary">{director.salary.toLocaleString('ru-RU')} ₽</span>
               </div>
             </div>
           </Card>
