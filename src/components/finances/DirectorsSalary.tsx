@@ -22,7 +22,7 @@ const DirectorsSalary = ({ directors }: DirectorsSalaryProps) => {
     <div className="space-y-4">
       <div>
         <h3 className="text-xl font-semibold mb-1">Зарплата директоров</h3>
-        <p className="text-sm text-muted-foreground">Расчет вознаграждения руководящего состава</p>
+        <p className="text-sm text-muted-foreground"></p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
