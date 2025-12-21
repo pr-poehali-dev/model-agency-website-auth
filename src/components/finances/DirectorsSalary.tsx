@@ -21,12 +21,18 @@ interface DirectorsSalaryProps {
 }
 
 const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
-  // Рассчитываем общий доход всех моделей
-  const totalModelsIncome = producersData.reduce((total, producer) => {
+  // Рассчитываем общий доход всех моделей в долларах
+  const totalModelsIncomeUSD = producersData.reduce((total, producer) => {
     return total + producer.models.reduce((sum, model) => sum + model.current_income, 0);
   }, 0);
 
-  // Каждый директор получает 20% от общего дохода
+  // Курс доллара (можно вынести в настройки)
+  const USD_TO_RUB = 95;
+
+  // Конвертируем в рубли
+  const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
+
+  // Каждый директор получает 20% от общего дохода в рублях
   const directorSalary = totalModelsIncome * 0.2;
 
   const displayDirectors: Director[] = [
