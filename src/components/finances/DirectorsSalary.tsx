@@ -26,8 +26,9 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
     return total + producer.models.reduce((sum, model) => sum + model.current_income, 0);
   }, 0);
 
-  // Курс доллара (можно вынести в настройки)
-  const USD_TO_RUB = 95;
+  // Получаем курс доллара из настроек
+  const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
+  const USD_TO_RUB = parseFloat(usdRateStr);
 
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
