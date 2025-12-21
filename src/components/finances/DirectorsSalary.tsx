@@ -33,8 +33,11 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
 
-  // Каждый директор получает 20% от общего дохода в рублях
-  const directorSalary = totalModelsIncome * 0.2;
+  // Общий доход директоров = 40% от всех моделей
+  const totalDirectorsIncome = totalModelsIncome * 0.4;
+  
+  // Каждый директор получает 50% от общего дохода директоров
+  const directorSalary = totalDirectorsIncome * 0.5;
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -71,8 +74,12 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
                 <span className="font-medium">{totalModelsIncome.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Процент директора:</span>
-                <span className="font-medium">20%</span>
+                <span className="text-muted-foreground">Доля директоров (40%):</span>
+                <span className="font-medium">{totalDirectorsIncome.toLocaleString('ru-RU')} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Доля директора (50%):</span>
+                <span className="font-medium">{director.salary.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm pt-2 border-t">
                 <span className="text-muted-foreground font-medium">Итого к выплате:</span>
