@@ -119,10 +119,41 @@ def get_all_production_stats(cursor, schema: str, period_start: str, period_end:
         producer_stats.append(stats)
         all_producer_emails.append(producer['producer_email'])
     
+    # Add solo makers as a separate "producer" group
+    cursor.execute(f'''
+        SELECT email, full_name
+        FROM {schema}.users
+        WHERE role = 'solo_maker'
+    ''')
+    solo_makers = cursor.fetchall()
+    
+    if solo_makers:
+        solo_model_stats = []
+        solo_emails = [sm['email'] for sm in solo_makers]
+        
+        for solo in solo_makers:
+            stats = get_model_finance_stats(cursor, schema, solo['email'], period_start, period_end)
+            stats['name'] = solo['full_name']
+            stats['email'] = solo['email']
+            solo_model_stats.append(stats)
+        
+        solo_adjustments = get_salary_adjustments(cursor, schema, solo_emails, period_start, period_end)
+        
+        solo_group = {
+            'producer_name': 'Соло-мейкеры',
+            'producer_email': 'solo_makers_group',
+            'models': solo_model_stats,
+            'operators': [],
+            'adjustments': solo_adjustments
+        }
+        producer_stats.append(solo_group)
+    
     director_adjustments = get_salary_adjustments(cursor, schema, all_producer_emails, period_start, period_end)
     
     for prod_stat in producer_stats:
         prod_email = prod_stat['producer_email']
+        if prod_email == 'solo_makers_group':
+            continue
         prod_current = [a for a in director_adjustments['current'] if a['email'] == prod_email]
         prod_previous = [a for a in director_adjustments['previous'] if a['email'] == prod_email]
         
