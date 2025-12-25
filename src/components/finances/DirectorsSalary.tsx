@@ -72,7 +72,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
   // Рассчитываем доход директоров с учетом соло-мейкеров
   let totalModelsIncomeUSD = 0;
-  let totalDirectorsIncomeUSD = 0;
+  let totalGrossRevenueUSD = 0; // Общий чек (100%)
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
@@ -80,19 +80,26 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       totalModelsIncomeUSD += modelIncomeUSD;
 
       if (model.is_solo_maker && model.solo_percentage > 0) {
-        // Для соло-мейкеров: директора получают (100 - solo_percentage)%
-        const directorsPercentage = 100 - model.solo_percentage;
-        totalDirectorsIncomeUSD += modelIncomeUSD * (directorsPercentage / 100);
+        // Для соло-мейкеров: модель получает solo_percentage% от чека
+        // Значит общий чек = modelIncome / (solo_percentage / 100)
+        const grossRevenue = modelIncomeUSD / (model.solo_percentage / 100);
+        totalGrossRevenueUSD += grossRevenue;
       } else {
-        // Для обычных моделей: директора получают 40%
-        totalDirectorsIncomeUSD += modelIncomeUSD * 0.4;
+        // Для обычных моделей: модель получает 60% от чека
+        // Значит общий чек = modelIncome / 0.6
+        const grossRevenue = modelIncomeUSD / 0.6;
+        totalGrossRevenueUSD += grossRevenue;
       }
     });
   });
 
+  // Директора получают 40% от общего чека
+  const totalDirectorsIncomeUSD = totalGrossRevenueUSD * 0.4;
+
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
+  const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   
   // Каждый директор получает 50% от общего дохода директоров
   const directorSalary = totalDirectorsIncome * 0.5;
@@ -148,16 +155,16 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
             <div className="pt-4 border-t space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Общий доход моделей:</span>
+                <span className="text-muted-foreground">Общий чек (100%):</span>
+                <span className="font-medium">{totalGrossRevenue.toLocaleString('ru-RU')} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Доход моделей (60%):</span>
                 <span className="font-medium">{totalModelsIncome.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Доля директоров (40%):</span>
                 <span className="font-medium">{totalDirectorsIncome.toLocaleString('ru-RU')} ₽</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Доля директора (50%):</span>
-                <span className="font-medium">{director.salary.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm pt-2 border-t">
                 <span className="text-muted-foreground font-medium">Итого к выплате:</span>
