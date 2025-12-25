@@ -14,21 +14,8 @@ interface ModelStats {
   solo_percentage: number;
 }
 
-interface Adjustment {
-  email: string;
-  role: string;
-  advance: number;
-  penalty: number;
-  expenses: number;
-}
-
 interface ProducerData {
   models: ModelStats[];
-  operators?: any[];
-  adjustments?: {
-    current: Adjustment[];
-    previous: Adjustment[];
-  };
 }
 
 interface Director {
@@ -41,10 +28,9 @@ interface DirectorsSalaryProps {
   period: Period;
   onPreviousPeriod: () => void;
   onNextPeriod: () => void;
-  productionData?: ProducerData[];
 }
 
-const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, productionData = [] }: DirectorsSalaryProps) => {
+const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
@@ -67,12 +53,10 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, pr
       setLoading(true);
       try {
         const response = await fetch(
-          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?user_email=${encodeURIComponent(userEmail)}&role=director&period_start=${periodStart}&period_end=${periodEnd}`
+          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
         );
         const data = await response.json();
-        console.log('DirectorsSalary data received:', data);
         if (data.producers) {
-          console.log('Producers data:', data.producers);
           setProducersData(data.producers);
         }
       } catch (error) {
@@ -92,17 +76,8 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, pr
   // Рассчитываем зарплату директоров
   let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
   let totalDirectorsIncomeUSD = 0; // Доля директоров
-  let totalAdvances = 0; // Общие авансы всех сотрудников
-  let totalPenalties = 0; // Общие штрафы всех сотрудников
 
-  // Используем данные из ProductionMonitoring если они есть, иначе собственные данные
-  const dataToProcess = productionData.length > 0 ? productionData : producersData;
-  
-  console.log('Processing producers, count:', dataToProcess.length, 'source:', productionData.length > 0 ? 'production' : 'own');
-  
-  dataToProcess.forEach((producer, idx) => {
-    console.log(`Producer ${idx}:`, producer.producer_name || 'Unknown', 'has adjustments:', !!producer.adjustments);
-    
+  producersData.forEach(producer => {
     producer.models.forEach(model => {
       // current_gross_revenue уже содержит (токены × 0.05)
       const grossRevenue = model.current_gross_revenue || 0;
@@ -117,33 +92,15 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, pr
         totalDirectorsIncomeUSD += grossRevenue * 0.4;
       }
     });
-    
-    // Собираем авансы и штрафы всех сотрудников
-    if (producer.adjustments?.current) {
-      console.log(`  Adjustments count for ${producer.producer_name}:`, producer.adjustments.current.length);
-      producer.adjustments.current.forEach(adj => {
-        const advance = parseFloat(adj.advance) || 0;
-        const penalty = parseFloat(adj.penalty) || 0;
-        console.log('  Adjustment:', adj.email, 'advance:', advance, 'penalty:', penalty);
-        totalAdvances += advance;
-        totalPenalties += penalty;
-      });
-    } else {
-      console.log(`  No adjustments for ${producer.producer_name}`);
-    }
   });
-  
-  console.log('FINAL - Total advances:', totalAdvances, 'Total penalties:', totalPenalties);
 
   // Конвертируем в рубли
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
-  // Каждый директор получает 50% от общей доли директоров + половина штрафов + половина авансов - половина затрат
-  const advancesPerDirector = totalAdvances / 2;
-  const penaltiesPerDirector = totalPenalties / 2;
+  // Каждый директор получает 50% от общей доли директоров минус половина затрат
   const expensesPerDirector = totalExpenses / 2;
-  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 + penaltiesPerDirector + advancesPerDirector - expensesPerDirector);
+  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 - expensesPerDirector);
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -176,42 +133,6 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, pr
           </Button>
         </div>
       </div>
-
-      <Card className="p-6 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
-              <Icon name="TrendingUp" size={24} className="text-green-600" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-lg mb-1">Общие штрафы</h4>
-              <p className="text-sm text-muted-foreground">Прибавляется к зарплатам директоров поровну</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-green-600">{totalPenalties.toLocaleString('ru-RU')}</span>
-            <span className="text-muted-foreground font-medium">₽</span>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-500/10">
-              <Icon name="Wallet" size={24} className="text-orange-600" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-lg mb-1">Общие авансы</h4>
-              <p className="text-sm text-muted-foreground">Прибавляется к зарплатам директоров поровну</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-orange-600">{totalAdvances.toLocaleString('ru-RU')}</span>
-            <span className="text-muted-foreground font-medium">₽</span>
-          </div>
-        </div>
-      </Card>
 
       <Card className="p-6 mb-4">
         <div className="flex items-center justify-between">
@@ -267,18 +188,6 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, pr
                 <span className="text-muted-foreground">50% доли:</span>
                 <span className="font-medium">{(totalDirectorsIncome * 0.5).toLocaleString('ru-RU')} ₽</span>
               </div>
-              {totalPenalties > 0 && (
-                <div className="flex items-center justify-between text-sm text-green-600">
-                  <span>Штрафы (50%):</span>
-                  <span>+ {penaltiesPerDirector.toLocaleString('ru-RU')} ₽</span>
-                </div>
-              )}
-              {totalAdvances > 0 && (
-                <div className="flex items-center justify-between text-sm text-orange-600">
-                  <span>Авансы (50%):</span>
-                  <span>+ {advancesPerDirector.toLocaleString('ru-RU')} ₽</span>
-                </div>
-              )}
               {totalExpenses > 0 && (
                 <div className="flex items-center justify-between text-sm text-destructive">
                   <span>Затраты (50%):</span>
