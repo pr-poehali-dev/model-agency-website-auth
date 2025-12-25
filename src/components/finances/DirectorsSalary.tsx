@@ -111,11 +111,16 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
     // Собираем авансы и штрафы всех сотрудников
     if (producer.adjustments?.current) {
       producer.adjustments.current.forEach(adj => {
-        totalAdvances += parseFloat(adj.advance) || 0;
-        totalPenalties += parseFloat(adj.penalty) || 0;
+        const advance = parseFloat(adj.advance) || 0;
+        const penalty = parseFloat(adj.penalty) || 0;
+        console.log('Adjustment:', adj.email, 'advance:', advance, 'penalty:', penalty);
+        totalAdvances += advance;
+        totalPenalties += penalty;
       });
     }
   });
+  
+  console.log('Total advances:', totalAdvances, 'Total penalties:', totalPenalties);
 
   // Конвертируем в рубли
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
