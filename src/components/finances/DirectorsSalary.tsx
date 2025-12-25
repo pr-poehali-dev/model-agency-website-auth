@@ -41,9 +41,10 @@ interface DirectorsSalaryProps {
   period: Period;
   onPreviousPeriod: () => void;
   onNextPeriod: () => void;
+  productionData?: ProducerData[];
 }
 
-const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
+const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod, productionData = [] }: DirectorsSalaryProps) => {
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
@@ -94,9 +95,12 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   let totalAdvances = 0; // Общие авансы всех сотрудников
   let totalPenalties = 0; // Общие штрафы всех сотрудников
 
-  console.log('Processing producers, count:', producersData.length);
+  // Используем данные из ProductionMonitoring если они есть, иначе собственные данные
+  const dataToProcess = productionData.length > 0 ? productionData : producersData;
   
-  producersData.forEach((producer, idx) => {
+  console.log('Processing producers, count:', dataToProcess.length, 'source:', productionData.length > 0 ? 'production' : 'own');
+  
+  dataToProcess.forEach((producer, idx) => {
     console.log(`Producer ${idx}:`, producer.producer_name || 'Unknown', 'has adjustments:', !!producer.adjustments);
     
     producer.models.forEach(model => {

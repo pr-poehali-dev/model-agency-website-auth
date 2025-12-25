@@ -121,6 +121,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
             period={directorsPeriod}
             onPreviousPeriod={handleDirectorsPreviousPeriod}
             onNextPeriod={handleDirectorsNextPeriod}
+            productionData={producersData}
           />
         )}
       </div>
