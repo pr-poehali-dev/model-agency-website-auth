@@ -59,11 +59,48 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
   };
 
   const handleDirectorsPreviousPeriod = () => {
-    setDirectorsPeriod(prev => getPreviousPeriod(prev));
+    setDirectorsPeriod(prev => {
+      const currentRef = getCurrentPeriod();
+      const newPeriod = getPreviousPeriod(prev);
+      
+      // Считаем количество полупериодов назад от текущего
+      const periodsBack = countPeriodsBetween(newPeriod, currentRef);
+      
+      // Разрешаем максимум 6 полупериодов назад (3 недели = 6 полупериодов)
+      if (periodsBack <= 6) {
+        return newPeriod;
+      }
+      return prev;
+    });
   };
 
   const handleDirectorsNextPeriod = () => {
-    setDirectorsPeriod(prev => getNextPeriod(prev));
+    setDirectorsPeriod(prev => {
+      const currentRef = getCurrentPeriod();
+      const newPeriod = getNextPeriod(prev);
+      
+      // Считаем количество полупериодов вперед от текущего
+      const periodsForward = countPeriodsBetween(currentRef, newPeriod);
+      
+      // Разрешаем максимум 2 полупериода вперед (1 неделя = 2 полупериода)
+      if (periodsForward <= 2) {
+        return newPeriod;
+      }
+      return prev;
+    });
+  };
+
+  // Функция для подсчета количества полупериодов между двумя периодами
+  const countPeriodsBetween = (from: Period, to: Period): number => {
+    let count = 0;
+    let current = from;
+    
+    while (current.startDate < to.startDate && count < 20) {
+      current = getNextPeriod(current);
+      count++;
+    }
+    
+    return count;
   };
 
   const handleDataLoaded = (data: ProducerData[]) => {
