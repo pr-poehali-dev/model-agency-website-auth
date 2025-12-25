@@ -121,11 +121,11 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
-  // Каждый директор получает 50% от общей доли директоров + половина штрафов - половина авансов - половина затрат
+  // Каждый директор получает 50% от общей доли директоров + половина штрафов + половина авансов - половина затрат
   const advancesPerDirector = totalAdvances / 2;
   const penaltiesPerDirector = totalPenalties / 2;
   const expensesPerDirector = totalExpenses / 2;
-  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 + penaltiesPerDirector - advancesPerDirector - expensesPerDirector);
+  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 + penaltiesPerDirector + advancesPerDirector - expensesPerDirector);
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -185,7 +185,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             </div>
             <div>
               <h4 className="font-semibold text-lg mb-1">Общие авансы</h4>
-              <p className="text-sm text-muted-foreground">Вычитается из зарплат директоров поровну</p>
+              <p className="text-sm text-muted-foreground">Прибавляется к зарплатам директоров поровну</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -258,7 +258,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
               {totalAdvances > 0 && (
                 <div className="flex items-center justify-between text-sm text-orange-600">
                   <span>Авансы (50%):</span>
-                  <span>- {advancesPerDirector.toLocaleString('ru-RU')} ₽</span>
+                  <span>+ {advancesPerDirector.toLocaleString('ru-RU')} ₽</span>
                 </div>
               )}
               {totalExpenses > 0 && (
