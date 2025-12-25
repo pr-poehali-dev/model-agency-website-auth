@@ -111,8 +111,8 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
     // Собираем авансы и штрафы всех сотрудников
     if (producer.adjustments?.current) {
       producer.adjustments.current.forEach(adj => {
-        totalAdvances += adj.advance || 0;
-        totalPenalties += adj.penalty || 0;
+        totalAdvances += parseFloat(adj.advance) || 0;
+        totalPenalties += parseFloat(adj.penalty) || 0;
       });
     }
   });
