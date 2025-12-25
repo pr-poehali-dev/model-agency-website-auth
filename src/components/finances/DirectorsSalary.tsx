@@ -34,6 +34,8 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
   useEffect(() => {
     const fetchDirectorStats = async () => {
+      if (!period?.start || !period?.end) return;
+      
       setLoading(true);
       try {
         const response = await fetch(
