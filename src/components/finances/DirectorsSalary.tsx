@@ -34,12 +34,23 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
   useEffect(() => {
     const fetchDirectorStats = async () => {
-      if (!period?.start || !period?.end) return;
+      if (!period?.startDate || !period?.endDate) return;
+      
+      // Форматируем даты в YYYY-MM-DD
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(period.startDate);
+      const periodEnd = formatDate(period.endDate);
       
       setLoading(true);
       try {
         const response = await fetch(
-          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${period.start}&period_end=${period.end}`
+          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
         );
         const data = await response.json();
         if (data.producers) {
@@ -97,7 +108,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         <div>
           <h3 className="text-xl font-semibold mb-1">Зарплата директоров</h3>
           <p className="text-sm text-muted-foreground">
-            Период: {period?.start || '...'} — {period?.end || '...'}
+            Период: {period?.label || 'Загрузка...'}
           </p>
         </div>
         <div className="flex items-center gap-2">
