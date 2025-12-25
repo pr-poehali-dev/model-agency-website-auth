@@ -97,7 +97,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         <div>
           <h3 className="text-xl font-semibold mb-1">Зарплата директоров</h3>
           <p className="text-sm text-muted-foreground">
-            {period.start} - {period.end}
+            Период: {period?.start || '...'} — {period?.end || '...'}
           </p>
         </div>
         <div className="flex items-center gap-2">
