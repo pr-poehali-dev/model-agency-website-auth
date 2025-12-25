@@ -70,30 +70,28 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
 
-  // Рассчитываем 40% от общего чека каждой модели
+  // Рассчитываем доход директоров с учетом соло-мейкеров
   let totalModelsIncomeUSD = 0;
-  let totalGrossRevenueUSD = 0; // Общий чек всех моделей (100%)
-  let totalDirectorsIncomeUSD = 0; // 40% от общего чека
+  let totalDirectorsIncomeUSD = 0;
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
-      const modelIncomeUSD = model.current_income; // Это 60% от чека модели
+      const modelIncomeUSD = model.current_income;
       totalModelsIncomeUSD += modelIncomeUSD;
 
-      // Вычисляем общий чек модели (100%)
-      // Модель получает 60% от чека, значит чек = доход / 0.6
-      const modelGrossRevenue = modelIncomeUSD / 0.6;
-      totalGrossRevenueUSD += modelGrossRevenue;
-      
-      // Директора получают 40% от чека этой модели
-      const directorsShare = modelGrossRevenue * 0.4;
-      totalDirectorsIncomeUSD += directorsShare;
+      if (model.is_solo_maker && model.solo_percentage > 0) {
+        // Для соло-мейкеров: директора получают (100 - solo_percentage)%
+        const directorsPercentage = 100 - model.solo_percentage;
+        totalDirectorsIncomeUSD += modelIncomeUSD * (directorsPercentage / 100);
+      } else {
+        // Для обычных моделей: директора получают 40%
+        totalDirectorsIncomeUSD += modelIncomeUSD * 0.4;
+      }
     });
   });
 
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
-  const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
   // Каждый директор получает 50% от общего дохода директоров
@@ -150,16 +148,16 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
             <div className="pt-4 border-t space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Общий чек (100%):</span>
-                <span className="font-medium">{totalGrossRevenue.toLocaleString('ru-RU')} ₽</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Доход моделей (60%):</span>
+                <span className="text-muted-foreground">Общий доход моделей:</span>
                 <span className="font-medium">{totalModelsIncome.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Доля директоров (40%):</span>
                 <span className="font-medium">{totalDirectorsIncome.toLocaleString('ru-RU')} ₽</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Доля директора (50%):</span>
+                <span className="font-medium">{director.salary.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm pt-2 border-t">
                 <span className="text-muted-foreground font-medium">Итого к выплате:</span>
