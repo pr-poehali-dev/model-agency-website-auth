@@ -47,6 +47,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
+  const [directorsPeriod, setDirectorsPeriod] = useState<Period>(getCurrentPeriod());
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
 
   const handlePreviousPeriod = () => {
@@ -55,6 +56,14 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
 
   const handleNextPeriod = () => {
     setCurrentPeriod(prev => getNextPeriod(prev));
+  };
+
+  const handleDirectorsPreviousPeriod = () => {
+    setDirectorsPeriod(prev => getPreviousPeriod(prev));
+  };
+
+  const handleDirectorsNextPeriod = () => {
+    setDirectorsPeriod(prev => getNextPeriod(prev));
   };
 
   const handleDataLoaded = (data: ProducerData[]) => {
@@ -84,10 +93,10 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
         />
         {userRole === 'director' && (
           <DirectorsSalary 
-            producersData={producersData}
-            period={currentPeriod}
-            onPreviousPeriod={handlePreviousPeriod}
-            onNextPeriod={handleNextPeriod}
+            userEmail={userEmail}
+            period={directorsPeriod}
+            onPreviousPeriod={handleDirectorsPreviousPeriod}
+            onNextPeriod={handleDirectorsNextPeriod}
           />
         )}
       </div>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -21,13 +22,37 @@ interface Director {
 }
 
 interface DirectorsSalaryProps {
-  producersData: ProducerData[];
+  userEmail: string;
   period: Period;
   onPreviousPeriod: () => void;
   onNextPeriod: () => void;
 }
 
-const DirectorsSalary = ({ producersData, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
+const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
+  const [producersData, setProducersData] = useState<ProducerData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDirectorStats = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${period.start}&period_end=${period.end}`
+        );
+        const data = await response.json();
+        if (data.producers) {
+          setProducersData(data.producers);
+        }
+      } catch (error) {
+        console.error('Error fetching director stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDirectorStats();
+  }, [userEmail, period]);
+
   // Получаем курс доллара из настроек
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
