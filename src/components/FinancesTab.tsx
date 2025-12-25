@@ -5,7 +5,7 @@ import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
 import ProductionMonitoring from './finances/ProductionMonitoring';
 import DirectorsSalary from './finances/DirectorsSalary';
-import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
+import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, getCurrentWeek, getPreviousWeek, getNextWeek, getWeeksBetween, Period } from '@/utils/periodUtils';
 
 interface Transaction {
   id: number;
@@ -47,7 +47,7 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
   const [dateFilter, setDateFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
-  const [directorsPeriod, setDirectorsPeriod] = useState<Period>(getCurrentPeriod());
+  const [directorsPeriod, setDirectorsPeriod] = useState<Period>(getCurrentWeek());
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
 
   const handlePreviousPeriod = () => {
@@ -60,15 +60,15 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
 
   const handleDirectorsPreviousPeriod = () => {
     setDirectorsPeriod(prev => {
-      const currentRef = getCurrentPeriod();
-      const newPeriod = getPreviousPeriod(prev);
+      const currentWeekRef = getCurrentWeek();
+      const newWeek = getPreviousWeek(prev);
       
-      // Считаем количество полупериодов назад от текущего
-      const periodsBack = countPeriodsBetween(newPeriod, currentRef);
+      // Считаем количество недель назад от текущей
+      const weeksBack = getWeeksBetween(newWeek, currentWeekRef);
       
-      // Разрешаем максимум 6 полупериодов назад (3 недели = 6 полупериодов)
-      if (periodsBack <= 6) {
-        return newPeriod;
+      // Разрешаем максимум 3 недели назад
+      if (weeksBack <= 3) {
+        return newWeek;
       }
       return prev;
     });
@@ -76,31 +76,18 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
 
   const handleDirectorsNextPeriod = () => {
     setDirectorsPeriod(prev => {
-      const currentRef = getCurrentPeriod();
-      const newPeriod = getNextPeriod(prev);
+      const currentWeekRef = getCurrentWeek();
+      const newWeek = getNextWeek(prev);
       
-      // Считаем количество полупериодов вперед от текущего
-      const periodsForward = countPeriodsBetween(currentRef, newPeriod);
+      // Считаем количество недель вперед от текущей
+      const weeksForward = getWeeksBetween(currentWeekRef, newWeek);
       
-      // Разрешаем максимум 2 полупериода вперед (1 неделя = 2 полупериода)
-      if (periodsForward <= 2) {
-        return newPeriod;
+      // Разрешаем максимум 1 неделю вперед
+      if (weeksForward <= 1) {
+        return newWeek;
       }
       return prev;
     });
-  };
-
-  // Функция для подсчета количества полупериодов между двумя периодами
-  const countPeriodsBetween = (from: Period, to: Period): number => {
-    let count = 0;
-    let current = from;
-    
-    while (current.startDate < to.startDate && count < 20) {
-      current = getNextPeriod(current);
-      count++;
-    }
-    
-    return count;
   };
 
   const handleDataLoaded = (data: ProducerData[]) => {

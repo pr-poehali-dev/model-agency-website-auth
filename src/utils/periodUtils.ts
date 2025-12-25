@@ -106,3 +106,60 @@ export const getDatesInPeriod = (period: Period): string[] => {
   
   return dates;
 };
+
+// Функции для работы с недельными периодами (понедельник - воскресенье)
+export const getCurrentWeek = (): Period => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = воскресенье, 1 = понедельник, ..., 6 = суббота
+  
+  // Рассчитываем начало недели (понедельник)
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  
+  // Рассчитываем конец недели (воскресенье)
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  
+  return {
+    startDate: monday,
+    endDate: sunday,
+    label: formatPeriodLabel(monday, sunday)
+  };
+};
+
+export const getPreviousWeek = (currentWeek: Period): Period => {
+  const previousMonday = new Date(currentWeek.startDate);
+  previousMonday.setDate(previousMonday.getDate() - 7);
+  
+  const previousSunday = new Date(previousMonday);
+  previousSunday.setDate(previousMonday.getDate() + 6);
+  
+  return {
+    startDate: previousMonday,
+    endDate: previousSunday,
+    label: formatPeriodLabel(previousMonday, previousSunday)
+  };
+};
+
+export const getNextWeek = (currentWeek: Period): Period => {
+  const nextMonday = new Date(currentWeek.startDate);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+  
+  const nextSunday = new Date(nextMonday);
+  nextSunday.setDate(nextMonday.getDate() + 6);
+  
+  return {
+    startDate: nextMonday,
+    endDate: nextSunday,
+    label: formatPeriodLabel(nextMonday, nextSunday)
+  };
+};
+
+export const getWeeksBetween = (from: Period, to: Period): number => {
+  const diffTime = to.startDate.getTime() - from.startDate.getTime();
+  const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+  return Math.abs(diffWeeks);
+};
