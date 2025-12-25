@@ -94,7 +94,11 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   let totalAdvances = 0; // Общие авансы всех сотрудников
   let totalPenalties = 0; // Общие штрафы всех сотрудников
 
-  producersData.forEach(producer => {
+  console.log('Processing producers, count:', producersData.length);
+  
+  producersData.forEach((producer, idx) => {
+    console.log(`Producer ${idx}:`, producer.producer_name || 'Unknown', 'has adjustments:', !!producer.adjustments);
+    
     producer.models.forEach(model => {
       // current_gross_revenue уже содержит (токены × 0.05)
       const grossRevenue = model.current_gross_revenue || 0;
@@ -112,17 +116,20 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
     
     // Собираем авансы и штрафы всех сотрудников
     if (producer.adjustments?.current) {
+      console.log(`  Adjustments count for ${producer.producer_name}:`, producer.adjustments.current.length);
       producer.adjustments.current.forEach(adj => {
         const advance = parseFloat(adj.advance) || 0;
         const penalty = parseFloat(adj.penalty) || 0;
-        console.log('Adjustment:', adj.email, 'advance:', advance, 'penalty:', penalty);
+        console.log('  Adjustment:', adj.email, 'advance:', advance, 'penalty:', penalty);
         totalAdvances += advance;
         totalPenalties += penalty;
       });
+    } else {
+      console.log(`  No adjustments for ${producer.producer_name}`);
     }
   });
   
-  console.log('Total advances:', totalAdvances, 'Total penalties:', totalPenalties);
+  console.log('FINAL - Total advances:', totalAdvances, 'Total penalties:', totalPenalties);
 
   // Конвертируем в рубли
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
