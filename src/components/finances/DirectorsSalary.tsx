@@ -14,8 +14,21 @@ interface ModelStats {
   solo_percentage: number;
 }
 
+interface Adjustment {
+  email: string;
+  role: string;
+  advance: number;
+  penalty: number;
+  expenses: number;
+}
+
 interface ProducerData {
   models: ModelStats[];
+  operators?: any[];
+  adjustments?: {
+    current: Adjustment[];
+    previous: Adjustment[];
+  };
 }
 
 interface Director {
@@ -76,6 +89,8 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   // Рассчитываем зарплату директоров
   let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
   let totalDirectorsIncomeUSD = 0; // Доля директоров
+  let totalAdvances = 0; // Общие авансы всех сотрудников
+  let totalPenalties = 0; // Общие штрафы всех сотрудников
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
@@ -92,15 +107,25 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         totalDirectorsIncomeUSD += grossRevenue * 0.4;
       }
     });
+    
+    // Собираем авансы и штрафы всех сотрудников
+    if (producer.adjustments?.current) {
+      producer.adjustments.current.forEach(adj => {
+        totalAdvances += adj.advance || 0;
+        totalPenalties += adj.penalty || 0;
+      });
+    }
   });
 
   // Конвертируем в рубли
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
-  // Каждый директор получает 50% от общей доли директоров минус половина затрат
+  // Каждый директор получает 50% от общей доли директоров + половина штрафов - половина авансов - половина затрат
+  const advancesPerDirector = totalAdvances / 2;
+  const penaltiesPerDirector = totalPenalties / 2;
   const expensesPerDirector = totalExpenses / 2;
-  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 - expensesPerDirector);
+  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 + penaltiesPerDirector - advancesPerDirector - expensesPerDirector);
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -133,6 +158,42 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
           </Button>
         </div>
       </div>
+
+      <Card className="p-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Icon name="TrendingUp" size={24} className="text-green-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-lg mb-1">Общие штрафы</h4>
+              <p className="text-sm text-muted-foreground">Прибавляется к зарплатам директоров поровну</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-green-600">{totalPenalties.toLocaleString('ru-RU')}</span>
+            <span className="text-muted-foreground font-medium">₽</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <Icon name="Wallet" size={24} className="text-orange-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-lg mb-1">Общие авансы</h4>
+              <p className="text-sm text-muted-foreground">Вычитается из зарплат директоров поровну</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-orange-600">{totalAdvances.toLocaleString('ru-RU')}</span>
+            <span className="text-muted-foreground font-medium">₽</span>
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-6 mb-4">
         <div className="flex items-center justify-between">
@@ -188,6 +249,18 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
                 <span className="text-muted-foreground">50% доли:</span>
                 <span className="font-medium">{(totalDirectorsIncome * 0.5).toLocaleString('ru-RU')} ₽</span>
               </div>
+              {totalPenalties > 0 && (
+                <div className="flex items-center justify-between text-sm text-green-600">
+                  <span>Штрафы (50%):</span>
+                  <span>+ {penaltiesPerDirector.toLocaleString('ru-RU')} ₽</span>
+                </div>
+              )}
+              {totalAdvances > 0 && (
+                <div className="flex items-center justify-between text-sm text-orange-600">
+                  <span>Авансы (50%):</span>
+                  <span>- {advancesPerDirector.toLocaleString('ru-RU')} ₽</span>
+                </div>
+              )}
               {totalExpenses > 0 && (
                 <div className="flex items-center justify-between text-sm text-destructive">
                   <span>Затраты (50%):</span>
