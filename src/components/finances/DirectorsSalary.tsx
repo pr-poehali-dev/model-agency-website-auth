@@ -1,5 +1,7 @@
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { Period } from '@/utils/periodUtils';
 
 interface ModelStats {
   name: string;
@@ -20,9 +22,12 @@ interface Director {
 
 interface DirectorsSalaryProps {
   producersData: ProducerData[];
+  period: Period;
+  onPreviousPeriod: () => void;
+  onNextPeriod: () => void;
 }
 
-const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
+const DirectorsSalary = ({ producersData, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
   // Получаем курс доллара из настроек
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
@@ -61,9 +66,29 @@ const DirectorsSalary = ({ producersData }: DirectorsSalaryProps) => {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-xl font-semibold mb-1">Зарплата директоров</h3>
-        <p className="text-sm text-muted-foreground"></p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-semibold mb-1">Зарплата директоров</h3>
+          <p className="text-sm text-muted-foreground">
+            {period.start} - {period.end}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onPreviousPeriod}
+          >
+            <Icon name="ChevronLeft" size={16} />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onNextPeriod}
+          >
+            <Icon name="ChevronRight" size={16} />
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

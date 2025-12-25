@@ -82,7 +82,14 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
           onNextPeriod={handleNextPeriod}
           onDataLoaded={handleDataLoaded}
         />
-        {userRole === 'director' && <DirectorsSalary producersData={producersData} />}
+        {userRole === 'director' && (
+          <DirectorsSalary 
+            producersData={producersData}
+            period={currentPeriod}
+            onPreviousPeriod={handlePreviousPeriod}
+            onNextPeriod={handleNextPeriod}
+          />
+        )}
       </div>
     );
   }
