@@ -70,31 +70,26 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
 
-  // Рассчитываем доход директоров от общего чека
+  // Рассчитываем 40% от общего чека каждой модели
   let totalModelsIncomeUSD = 0;
-  let totalGrossRevenueUSD = 0; // Общий чек (100%)
+  let totalGrossRevenueUSD = 0; // Общий чек всех моделей (100%)
+  let totalDirectorsIncomeUSD = 0; // 40% от общего чека
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
-      const modelIncomeUSD = model.current_income;
+      const modelIncomeUSD = model.current_income; // Это 60% от чека модели
       totalModelsIncomeUSD += modelIncomeUSD;
 
-      if (model.is_solo_maker && model.solo_percentage > 0) {
-        // Для соло-мейкеров: модель получает solo_percentage% от чека
-        // Общий чек = доход_модели / (solo_percentage / 100)
-        const grossRevenue = modelIncomeUSD / (model.solo_percentage / 100);
-        totalGrossRevenueUSD += grossRevenue;
-      } else {
-        // Для обычных моделей: модель получает 60% от чека
-        // Общий чек = доход_модели / 0.6
-        const grossRevenue = modelIncomeUSD / 0.6;
-        totalGrossRevenueUSD += grossRevenue;
-      }
+      // Вычисляем общий чек модели (100%)
+      // Модель получает 60% от чека, значит чек = доход / 0.6
+      const modelGrossRevenue = modelIncomeUSD / 0.6;
+      totalGrossRevenueUSD += modelGrossRevenue;
+      
+      // Директора получают 40% от чека этой модели
+      const directorsShare = modelGrossRevenue * 0.4;
+      totalDirectorsIncomeUSD += directorsShare;
     });
   });
-
-  // Директора получают 40% от общего чека
-  const totalDirectorsIncomeUSD = totalGrossRevenueUSD * 0.4;
 
   // Конвертируем в рубли
   const totalModelsIncome = totalModelsIncomeUSD * USD_TO_RUB;
