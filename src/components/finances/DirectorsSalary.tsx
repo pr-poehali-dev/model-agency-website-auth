@@ -71,9 +71,9 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
 
-  // Рассчитываем зарплату директоров: токены × 0.05 × 40% / 2
+  // Рассчитываем зарплату директоров
   let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
-  let totalDirectorsIncomeUSD = 0; // 40% от общей суммы
+  let totalDirectorsIncomeUSD = 0; // Доля директоров
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
@@ -81,8 +81,14 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       const grossRevenue = model.current_gross_revenue || 0;
       totalGrossRevenueUSD += grossRevenue;
       
-      // Директора получают 40% от общего чека каждой модели
-      totalDirectorsIncomeUSD += grossRevenue * 0.4;
+      // Если соло-мейкер, директора получают остаток (100% - solo_percentage)
+      // Если обычная модель, директора получают 40%
+      if (model.is_solo_maker) {
+        const directorsShare = (100 - model.solo_percentage) / 100;
+        totalDirectorsIncomeUSD += grossRevenue * directorsShare;
+      } else {
+        totalDirectorsIncomeUSD += grossRevenue * 0.4;
+      }
     });
   });
 
