@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Period } from '@/utils/periodUtils';
 
@@ -32,6 +33,7 @@ interface DirectorsSalaryProps {
 const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: DirectorsSalaryProps) => {
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalExpenses, setTotalExpenses] = useState<number>(0);
 
   useEffect(() => {
     const fetchDirectorStats = async () => {
@@ -96,8 +98,9 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
-  // Каждый директор получает 50% от общей доли директоров
-  const directorSalary = totalDirectorsIncome * 0.5;
+  // Каждый директор получает 50% от общей доли директоров минус половина затрат
+  const expensesPerDirector = totalExpenses / 2;
+  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 - expensesPerDirector);
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -131,6 +134,30 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         </div>
       </div>
 
+      <Card className="p-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <Icon name="TrendingDown" size={24} className="text-destructive" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-lg mb-1">Общие затраты</h4>
+              <p className="text-sm text-muted-foreground">Вычитается из зарплат директоров поровну</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={totalExpenses}
+              onChange={(e) => setTotalExpenses(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="w-48 text-right font-semibold"
+              placeholder="0"
+            />
+            <span className="text-muted-foreground font-medium">₽</span>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         {displayDirectors.map((director, index) => (
           <Card key={index} className="p-6 space-y-4">
@@ -154,9 +181,19 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
                 <span className="font-medium">{totalGrossRevenue.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Доля директоров (40%):</span>
+                <span className="text-muted-foreground">Доля директоров:</span>
                 <span className="font-medium">{totalDirectorsIncome.toLocaleString('ru-RU')} ₽</span>
               </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">50% доли:</span>
+                <span className="font-medium">{(totalDirectorsIncome * 0.5).toLocaleString('ru-RU')} ₽</span>
+              </div>
+              {totalExpenses > 0 && (
+                <div className="flex items-center justify-between text-sm text-destructive">
+                  <span>Затраты (50%):</span>
+                  <span>- {expensesPerDirector.toLocaleString('ru-RU')} ₽</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm pt-2 border-t">
                 <span className="text-muted-foreground font-medium">Итого к выплате:</span>
                 <span className="font-bold text-primary">{director.salary.toLocaleString('ru-RU')} ₽</span>
