@@ -66,7 +66,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       setLoading(true);
       try {
         const response = await fetch(
-          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
+          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?user_email=${encodeURIComponent(userEmail)}&role=director&period_start=${periodStart}&period_end=${periodEnd}`
         );
         const data = await response.json();
         console.log('DirectorsSalary data received:', data);
