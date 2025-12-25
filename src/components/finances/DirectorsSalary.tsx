@@ -69,7 +69,9 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
           `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
         );
         const data = await response.json();
+        console.log('DirectorsSalary data received:', data);
         if (data.producers) {
+          console.log('Producers data:', data.producers);
           setProducersData(data.producers);
         }
       } catch (error) {
