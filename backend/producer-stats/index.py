@@ -178,6 +178,8 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
         SELECT 
             COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers) * 0.6), 0) as total_income,
             COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers), 0) as gross_revenue,
+            COALESCE(SUM(cb_income * 0.05), 0) as cb_gross_revenue,
+            COALESCE(SUM(sp_income * 0.05), 0) as sp_gross_revenue,
             COUNT(CASE WHEN has_shift = true THEN 1 END) as shift_count
         FROM {schema}.model_finances
         WHERE model_id = %s AND date >= %s AND date <= %s
@@ -189,6 +191,8 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
         SELECT 
             COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers) * 0.6), 0) as total_income,
             COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers), 0) as gross_revenue,
+            COALESCE(SUM(cb_income * 0.05), 0) as cb_gross_revenue,
+            COALESCE(SUM(sp_income * 0.05), 0) as sp_gross_revenue,
             COUNT(CASE WHEN has_shift = true THEN 1 END) as shift_count
         FROM {schema}.model_finances
         WHERE model_id = %s AND date >= %s AND date <= %s
@@ -200,6 +204,8 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
         'previous_income': float(previous['total_income']) if previous else 0,
         'current_gross_revenue': float(current['gross_revenue']) if current else 0,
         'previous_gross_revenue': float(previous['gross_revenue']) if previous else 0,
+        'current_cb_gross_revenue': float(current['cb_gross_revenue']) if current else 0,
+        'current_sp_gross_revenue': float(current['sp_gross_revenue']) if current else 0,
         'current_shifts': int(current['shift_count']) if current else 0,
         'previous_shifts': int(previous['shift_count']) if previous else 0,
         'is_solo_maker': is_solo_maker,

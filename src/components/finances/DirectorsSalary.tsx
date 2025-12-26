@@ -10,6 +10,8 @@ interface ModelStats {
   email: string;
   current_income: number;
   current_gross_revenue: number;
+  current_cb_gross_revenue?: number;
+  current_sp_gross_revenue?: number;
   is_solo_maker: boolean;
   solo_percentage: number;
 }
@@ -73,15 +75,22 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const usdRateStr = localStorage.getItem('usd_to_rub_rate') || '95';
   const USD_TO_RUB = parseFloat(usdRateStr);
 
-  // Рассчитываем зарплату директоров
+  // Рассчитываем зарплату директоров и статистику по площадкам
   let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
   let totalDirectorsIncomeUSD = 0; // Доля директоров
+  const totalChaturbateUSD = 0; // Общая выручка с Chaturbate
+  const totalStripchatUSD = 0; // Общая выручка со Stripchat
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
       // current_gross_revenue уже содержит (токены × 0.05)
       const grossRevenue = model.current_gross_revenue || 0;
+      const cbRevenue = model.current_cb_gross_revenue || 0;
+      const spRevenue = model.current_sp_gross_revenue || 0;
+      
       totalGrossRevenueUSD += grossRevenue;
+      totalChaturbateUSD += cbRevenue;
+      totalStripchatUSD += spRevenue;
       
       // Если соло-мейкер, директора получают остаток (100% - solo_percentage)
       // Если обычная модель, директора получают 40%
@@ -132,6 +141,46 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             <Icon name="ChevronRight" size={16} />
           </Button>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 mb-4">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Icon name="DollarSign" size={24} className="text-blue-500" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-lg mb-1">Chaturbate</h4>
+                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.05)</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-blue-500">
+                ${totalChaturbateUSD.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Icon name="DollarSign" size={24} className="text-purple-500" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-lg mb-1">Stripchat</h4>
+                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.05)</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-purple-500">
+                ${totalStripchatUSD.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       <Card className="p-6 mb-4">
