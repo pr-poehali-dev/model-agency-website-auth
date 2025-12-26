@@ -78,8 +78,8 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   // Рассчитываем зарплату директоров и статистику по площадкам
   let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
   let totalDirectorsIncomeUSD = 0; // Доля директоров
-  const totalChaturbateUSD = 0; // Общая выручка с Chaturbate
-  const totalStripchatUSD = 0; // Общая выручка со Stripchat
+  let totalChaturbateUSD = 0; // Общая выручка с Chaturbate
+  let totalStripchatUSD = 0; // Общая выручка со Stripchat
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
