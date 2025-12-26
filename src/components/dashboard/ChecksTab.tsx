@@ -408,6 +408,7 @@ const ChecksTab = () => {
   }
 
   const totalModelSum = Math.round(contentMakers.reduce((sum, e) => sum + (e.total || 0), 0));
+  const totalSoloMakerSum = Math.round(soloMakers.reduce((sum, e) => sum + (e.total || 0), 0));
   let totalOperatorSum = Math.round(operators.reduce((sum, e) => sum + (e.total || 0), 0));
   
   if (userRole === 'producer') {
@@ -467,7 +468,7 @@ const ChecksTab = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground mb-1">Текущий период</div>
           <div className="flex items-center gap-2 mt-2">
@@ -500,6 +501,13 @@ const ChecksTab = () => {
           <div className="text-sm text-muted-foreground mb-1">Сумма операторов</div>
           <div className="text-2xl font-bold text-green-600">{totalOperatorSum.toLocaleString()}₽</div>
         </Card>
+
+        {userRole === 'director' && soloMakers.length > 0 && (
+          <Card className="p-4 bg-purple-500/10 border-purple-500/20">
+            <div className="text-sm text-muted-foreground mb-1">Сумма соло-мейкеров</div>
+            <div className="text-2xl font-bold text-purple-600">{totalSoloMakerSum.toLocaleString()}₽</div>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
