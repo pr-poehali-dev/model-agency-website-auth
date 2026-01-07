@@ -34,6 +34,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   const [models, setModels] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<ProducerAssignment[]>([]);
   const [selectedProducer, setSelectedProducer] = useState<string>('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,7 +58,6 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     try {
       const response = await fetch(ASSIGNMENTS_API_URL);
       const data = await response.json();
-      console.log('Loaded assignments:', data);
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments', err);
@@ -65,18 +65,9 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   };
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
-    const matchingAssignments = assignments.filter(a => {
-      console.log('Checking assignment:', {
-        assignment: a,
-        producerMatch: a.producerEmail === producerEmail,
-        modelMatch: a.modelEmail === modelEmail,
-        typeMatch: a.assignmentType === 'model'
-      });
-      return a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model';
-    });
-    const result = matchingAssignments.length > 0;
-    console.log('isModelAssigned result:', { producerEmail, modelEmail, result, matchingCount: matchingAssignments.length });
-    return result;
+    return assignments.some(
+      a => a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model'
+    );
   };
 
   const isOperatorAssigned = (producerEmail: string, operatorEmail: string) => {
@@ -87,8 +78,6 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const handleToggleModel = async (producerEmail: string, modelEmail: string) => {
     const assigned = isModelAssigned(producerEmail, modelEmail);
-
-    console.log('handleToggleModel called:', { currentUserEmail, currentUserRole, assigned });
 
     try {
       if (assigned) {
@@ -129,7 +118,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         toast({ title: 'Модель назначена', description: 'Продюсер теперь видит эту модель' });
       }
       await loadAssignments();
-      console.log('Assignments reloaded after toggle');
+      setRefreshKey(prev => prev + 1);
     } catch (err) {
       console.error('Model toggle error:', err);
       toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
@@ -138,8 +127,6 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const handleToggleOperator = async (producerEmail: string, operatorEmail: string) => {
     const assigned = isOperatorAssigned(producerEmail, operatorEmail);
-
-    console.log('handleToggleOperator called:', { currentUserEmail, currentUserRole, assigned });
 
     try {
       if (assigned) {
@@ -180,6 +167,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         toast({ title: 'Оператор назначен', description: 'Продюсер может управлять этим оператором' });
       }
       await loadAssignments();
+      setRefreshKey(prev => prev + 1);
     } catch (err) {
       console.error('Operator toggle error:', err);
       toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
@@ -217,11 +205,11 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           <TabsContent value="models">
             <Card className="p-6">
               <h3 className="text-xl font-semibold text-foreground mb-4">Модели для {selectedProducer}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" key={`models-${refreshKey}`}>
                 {models.map(model => {
                   const assigned = isModelAssigned(selectedProducer, model.email);
                   return (
-                    <div key={model.email} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
+                    <div key={`${model.email}-${refreshKey}`} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
                       <span className="text-foreground font-medium">{model.email}</span>
                       <Button
                         onClick={() => handleToggleModel(selectedProducer, model.email)}
@@ -241,11 +229,11 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           <TabsContent value="operators">
             <Card className="p-6">
               <h3 className="text-xl font-semibold text-foreground mb-4">Операторы для {selectedProducer}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" key={`operators-${refreshKey}`}>
                 {operators.map(operator => {
                   const assigned = isOperatorAssigned(selectedProducer, operator.email);
                   return (
-                    <div key={operator.email} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
+                    <div key={`${operator.email}-${refreshKey}`} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
                       <span className="text-foreground font-medium">{operator.email}</span>
                       <Button
                         onClick={() => handleToggleOperator(selectedProducer, operator.email)}
