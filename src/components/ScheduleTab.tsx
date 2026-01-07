@@ -133,6 +133,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
+  const [userEmail, setUserEmail] = useState('');
   const { toast } = useToast();
   
   // Функция для получения дат недели с учетом смещения
@@ -168,8 +169,10 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     userPermissions?.includes('manage_all');
 
   useEffect(() => {
+    const email = localStorage.getItem('userEmail') || '';
+    setUserEmail(email);
     loadTeamMembers();
-    loadTeams();
+    loadTeams(email);
   }, []);
 
   useEffect(() => {
@@ -281,36 +284,40 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
-  const loadTeams = async () => {
+  const loadTeams = async (currentUserEmail: string) => {
     try {
-      const [usersResponse, assignmentsResponse] = await Promise.all([
+      const [usersResponse, assignmentsResponse, producerAssignmentsResponse] = await Promise.all([
         fetch(USERS_API_URL),
-        fetch(ASSIGNMENTS_API_URL)
+        fetch(ASSIGNMENTS_API_URL),
+        fetch(`https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?producer=${encodeURIComponent(currentUserEmail)}&type=model`)
       ]);
       
       const users = await usersResponse.json();
       const assignments = await assignmentsResponse.json();
+      const producerModels = await producerAssignmentsResponse.json();
       
       console.log('Users loaded:', users);
-      console.log('First user example:', users[0]);
       console.log('Assignments loaded:', assignments);
-      console.log('First assignment example:', assignments[0]);
+      console.log('Producer models:', producerModels);
       
-      const teamsData: Team[] = assignments
+      // Если пользователь продюсер, фильтруем только его команды
+      let filteredAssignments = assignments;
+      if (userRole === 'producer' && producerModels.length > 0) {
+        const producerModelEmails = producerModels.map((pm: any) => pm.modelEmail);
+        console.log('Producer model emails:', producerModelEmails);
+        filteredAssignments = assignments.filter((a: any) => 
+          producerModelEmails.includes(a.modelEmail)
+        );
+        console.log('Filtered assignments for producer:', filteredAssignments);
+      }
+      
+      const teamsData: Team[] = filteredAssignments
         .map((assignment: any) => {
           const operator = users.find((u: any) => u.email === assignment.operatorEmail);
           const model = users.find((u: any) => u.email === assignment.modelEmail);
           
-          console.log('Processing assignment:', {
-            operatorEmail: assignment.operatorEmail,
-            modelEmail: assignment.modelEmail,
-            operatorFound: operator,
-            modelFound: model
-          });
-          
           // Пропускаем команды, где хотя бы один пользователь не найден или неактивен
           if (!operator || !model || !operator.isActive || !model.isActive) {
-            console.log('Skipping team - user not found or inactive');
             return null;
           }
           
@@ -326,7 +333,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             displayName: `${operatorFirstName} / ${modelFirstName}`
           };
         })
-        .filter((team): team is Team => team !== null); // Убираем null значения
+        .filter((team): team is Team => team !== null);
       
       console.log('Teams created:', teamsData);
       setTeams(teamsData);
