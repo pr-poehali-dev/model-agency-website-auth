@@ -17,9 +17,11 @@ interface Model {
 
 interface DashboardHomeProps {
   models: Model[];
+  userRole?: string | null;
+  onNavigate?: (tab: string) => void;
 }
 
-const DashboardHome = ({ models }: DashboardHomeProps) => {
+const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => {
   const activeModels = models.filter(m => m.status === 'Available').length;
 
   return (
@@ -52,6 +54,40 @@ const DashboardHome = ({ models }: DashboardHomeProps) => {
           <p className="text-3xl font-serif font-bold text-foreground">{activeModels}</p>
         </Card>
       </div>
+
+      {userRole === 'director' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <Card 
+            className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 cursor-pointer hover:border-green-500/40 transition-all"
+            onClick={() => onNavigate?.('checks')}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <Icon name="DollarSign" size={24} className="text-green-600" />
+              </div>
+              <Icon name="ChevronRight" size={20} className="text-green-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Финансы</h3>
+            <p className="text-lg font-semibold text-foreground">Чеки и зарплаты</p>
+            <p className="text-sm text-muted-foreground mt-2">Расчет выплат сотрудникам</p>
+          </Card>
+
+          <Card 
+            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer hover:border-blue-500/40 transition-all"
+            onClick={() => onNavigate?.('schedule')}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-500/20 rounded-lg">
+                <Icon name="Calendar" size={24} className="text-blue-600" />
+              </div>
+              <Icon name="ChevronRight" size={20} className="text-blue-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Расписание</h3>
+            <p className="text-lg font-semibold text-foreground">Смены и графики</p>
+            <p className="text-sm text-muted-foreground mt-2">Управление рабочим временем</p>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

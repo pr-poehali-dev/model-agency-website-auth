@@ -298,10 +298,9 @@ const Dashboard = () => {
 
       default:
         return <DashboardHome 
-          models={models} 
-          transactions={transactions} 
-          monthlyRevenue={monthlyRevenue} 
-          modelPerformance={modelPerformance}
+          models={modelsData}
+          userRole={userRole}
+          onNavigate={handleTabChange}
         />;
     }
   };
