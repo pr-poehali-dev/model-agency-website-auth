@@ -85,7 +85,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'POST':
+            print(f'POST request received')
             if user_role != 'director':
+                print(f'Access denied: user_role={user_role}')
                 return {
                     'statusCode': 403,
                     'headers': {
@@ -100,6 +102,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             assignment_type = body_data.get('assignmentType')
             model_email = body_data.get('modelEmail')
             operator_email = body_data.get('operatorEmail')
+            
+            print(f'POST data: producer={producer_email}, type={assignment_type}, operator={operator_email}')
             
             if assignment_type == 'model':
                 cur.execute(f"""
@@ -135,6 +139,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             assignment_id = cur.fetchone()[0]
             conn.commit()
             
+            print(f'POST success: assignment_id={assignment_id}')
+            
             return {
                 'statusCode': 201,
                 'headers': {
@@ -145,7 +151,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'DELETE':
+            print(f'DELETE request received')
             if user_role != 'director':
+                print(f'Access denied: user_role={user_role}')
                 return {
                     'statusCode': 403,
                     'headers': {
@@ -161,6 +169,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_email = body_data.get('modelEmail')
             operator_email = body_data.get('operatorEmail')
             
+            print(f'DELETE data: producer={producer_email}, type={assignment_type}, operator={operator_email}')
+            
             if assignment_type == 'model':
                 cur.execute(f"""
                     DELETE FROM t_p35405502_model_agency_website.producer_assignments 
@@ -172,7 +182,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     WHERE producer_email = '{escape_sql_string(producer_email)}' AND operator_email = '{escape_sql_string(operator_email)}' AND assignment_type = 'operator'
                 """)
             
+            rows_deleted = cur.rowcount
             conn.commit()
+            
+            print(f'DELETE success: rows_deleted={rows_deleted}')
             
             return {
                 'statusCode': 200,
@@ -180,7 +193,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': json.dumps({'message': 'Assignment removed'})
+                'body': json.dumps({'message': 'Assignment removed', 'rowsDeleted': rows_deleted})
             }
         
         return {
