@@ -58,6 +58,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     try {
       const response = await fetch(ASSIGNMENTS_API_URL);
       const data = await response.json();
+      console.log('✅ Loaded assignments:', data.length, 'total');
+      console.log('Sample assignment:', data[0]);
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments', err);
@@ -65,9 +67,13 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   };
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
-    return assignments.some(
+    const found = assignments.find(
       a => a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model'
     );
+    if (found) {
+      console.log(`✅ Model ${modelEmail} IS assigned to ${producerEmail}`);
+    }
+    return !!found;
   };
 
   const isOperatorAssigned = (producerEmail: string, operatorEmail: string) => {
