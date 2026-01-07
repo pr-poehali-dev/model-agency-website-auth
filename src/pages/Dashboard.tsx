@@ -8,6 +8,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 const ModelsTab = lazy(() => import('@/components/dashboard/ModelsTab'));
 const ChecksTab = lazy(() => import('@/components/dashboard/ChecksTab'));
 const DashboardTab = lazy(() => import('@/components/dashboard/DashboardTab'));
+const DashboardHome = lazy(() => import('@/components/dashboard/DashboardHome'));
 const UserManagement = lazy(() => import('./UserManagement'));
 const ModelAssignmentManager = lazy(() => import('@/components/ModelAssignmentManager'));
 const ProducerAssignmentManager = lazy(() => import('@/components/ProducerAssignmentManager'));
