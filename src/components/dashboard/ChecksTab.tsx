@@ -53,9 +53,13 @@ const ChecksTab = () => {
     try {
       const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
+      console.log('CBR API response:', data);
       if (data.rate) {
-        setCbrRate(data.rate);
-        setExchangeRate(data.rate - 5);
+        const cbrRate = data.rate;
+        const workingRate = cbrRate - 5;
+        console.log(`CBR rate: ${cbrRate}, Working rate (CBR - 5): ${workingRate}`);
+        setCbrRate(cbrRate);
+        setExchangeRate(workingRate);
       }
     } catch (err) {
       console.error('Failed to load exchange rate from CBR', err);
