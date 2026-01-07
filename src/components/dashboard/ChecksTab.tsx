@@ -21,6 +21,7 @@ const ChecksTab = () => {
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [producerModels, setProducerModels] = useState<any[]>([]);
+  const [producerOperators, setProducerOperators] = useState<any[]>([]);
   const [allAssignments, setAllAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
@@ -117,13 +118,13 @@ const ChecksTab = () => {
       const producerOperatorsData = await producerOperatorResponse.json();
       
       const producerModelEmails = producerModelsData.map((pm: any) => pm.modelEmail);
-      const producerOperatorEmails = producerOperatorsData.map((po: any) => po.operatorEmail);
       
       const filteredAssignments = assignments.filter((a: any) => 
-        producerModelEmails.includes(a.modelEmail) && producerOperatorEmails.includes(a.operatorEmail)
+        producerModelEmails.includes(a.modelEmail)
       );
       
       setProducerModels(producerModelsData);
+      setProducerOperators(producerOperatorsData);
       setProducerAssignments(filteredAssignments);
     } catch (err) {
       console.error('Failed to load producer assignments', err);
@@ -363,10 +364,10 @@ const ChecksTab = () => {
       };
     });
   } else if (userRole === 'producer' && users.length > 0) {
-    const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
+    const assignedOperatorEmails = producerOperators.map((po: any) => po.operatorEmail);
     const assignedModelEmails = producerModels.map((pm: any) => pm.modelEmail);
     
-    console.log('Producer assignments:', producerAssignments);
+    console.log('Producer operators:', producerOperators);
     console.log('Producer models:', producerModels);
     console.log('Assigned operator emails:', assignedOperatorEmails);
     console.log('Assigned model emails:', assignedModelEmails);
@@ -378,30 +379,37 @@ const ChecksTab = () => {
     console.log('Filtered model users:', modelUsers);
     
     operators = operatorUsers.map(op => {
-      const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
-      const modelUser = users.find(u => u.email === assignment?.modelEmail);
+      const operatorAssignments = allAssignments.filter(a => a.operatorEmail === op.email);
+      const firstAssignment = operatorAssignments[0];
+      const modelUser = users.find(u => u.email === firstAssignment?.modelEmail);
       const salary = salaries.operators[op.email] || { total: 0, details: [] };
       const adj = adjustments[op.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       
-      const operatorPercentage = assignment?.operatorPercentage || 20;
-      const producerPercentage = 30 - operatorPercentage;
+      let avgOperatorPercentage = 20;
+      if (operatorAssignments.length > 0) {
+        const totalOperatorPercentage = operatorAssignments.reduce((sum: number, a: any) => {
+          return sum + (a.operatorPercentage || 20);
+        }, 0);
+        avgOperatorPercentage = Math.round((totalOperatorPercentage / operatorAssignments.length) * 10) / 10;
+      }
+      const avgProducerPercentage = Math.round((30 - avgOperatorPercentage) * 10) / 10;
       
       return {
         name: op.fullName || op.email,
         email: op.email,
         week: 0,
         shifts: salary.details.length,
-        model: modelUser?.fullName || assignment?.modelEmail || '',
+        model: modelUser?.fullName || firstAssignment?.modelEmail || '',
         sumDollars: Math.round(sumDollars * 100) / 100,
         rate: exchangeRate,
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
         total: Math.round(sumRubles - adj.advance - adj.penalty),
-        operatorPercentage,
-        producerPercentage,
+        operatorPercentage: avgOperatorPercentage,
+        producerPercentage: avgProducerPercentage,
         role: 'operator'
       };
     });
