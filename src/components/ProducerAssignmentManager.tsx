@@ -65,10 +65,17 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   };
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
-    const result = assignments.some(
-      a => a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model'
-    );
-    console.log('isModelAssigned check:', { producerEmail, modelEmail, result, assignments });
+    const matchingAssignments = assignments.filter(a => {
+      console.log('Checking assignment:', {
+        assignment: a,
+        producerMatch: a.producerEmail === producerEmail,
+        modelMatch: a.modelEmail === modelEmail,
+        typeMatch: a.assignmentType === 'model'
+      });
+      return a.producerEmail === producerEmail && a.modelEmail === modelEmail && a.assignmentType === 'model';
+    });
+    const result = matchingAssignments.length > 0;
+    console.log('isModelAssigned result:', { producerEmail, modelEmail, result, matchingCount: matchingAssignments.length });
     return result;
   };
 
