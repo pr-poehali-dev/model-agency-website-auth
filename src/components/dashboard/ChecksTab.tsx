@@ -355,12 +355,20 @@ const ChecksTab = () => {
         soloPercentage: sm.soloPercentage || '50'
       };
     });
-  } else if (userRole === 'producer' && producerModels.length > 0 && users.length > 0) {
+  } else if (userRole === 'producer' && users.length > 0) {
     const assignedOperatorEmails = producerAssignments.map(a => a.operatorEmail);
     const assignedModelEmails = producerModels.map((pm: any) => pm.modelEmail);
     
+    console.log('Producer assignments:', producerAssignments);
+    console.log('Producer models:', producerModels);
+    console.log('Assigned operator emails:', assignedOperatorEmails);
+    console.log('Assigned model emails:', assignedModelEmails);
+    
     const operatorUsers = users.filter(u => u.role === 'operator' && assignedOperatorEmails.includes(u.email));
     const modelUsers = users.filter(u => u.role === 'content_maker' && assignedModelEmails.includes(u.email));
+    
+    console.log('Filtered operator users:', operatorUsers);
+    console.log('Filtered model users:', modelUsers);
     
     operators = operatorUsers.map(op => {
       const assignment = producerAssignments.find(a => a.operatorEmail === op.email);
