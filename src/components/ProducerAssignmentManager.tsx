@@ -122,6 +122,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         toast({ title: 'Модель назначена', description: 'Продюсер теперь видит эту модель' });
       }
       await loadAssignments();
+      console.log('Assignments reloaded after toggle');
     } catch (err) {
       console.error('Model toggle error:', err);
       toast({ title: 'Ошибка', description: err instanceof Error ? err.message : 'Не удалось выполнить операцию', variant: 'destructive' });
