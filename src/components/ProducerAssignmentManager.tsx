@@ -58,8 +58,6 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     try {
       const response = await fetch(ASSIGNMENTS_API_URL);
       const data = await response.json();
-      console.log('✅ Loaded assignments:', data.length, 'total');
-      console.log('Sample assignment:', data[0]);
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments', err);
@@ -67,27 +65,11 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   };
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
-    const producerModelAssignments = assignments.filter(
-      a => a.producerEmail === producerEmail && a.assignmentType === 'model' && a.modelEmail
+    return assignments.some(
+      a => a.producerEmail === producerEmail && 
+           a.modelEmail === modelEmail && 
+           a.assignmentType === 'model'
     );
-    
-    if (producerModelAssignments.length > 0) {
-      console.log(`📋 Producer ${producerEmail} has ${producerModelAssignments.length} models:`, 
-        producerModelAssignments.map(a => a.modelEmail)
-      );
-    }
-    
-    const found = assignments.find(a => {
-      const matches = a.producerEmail === producerEmail && 
-                     a.modelEmail === modelEmail && 
-                     a.assignmentType === 'model';
-      if (matches) {
-        console.log(`✅ Model ${modelEmail} IS assigned to ${producerEmail}`);
-      }
-      return matches;
-    });
-    
-    return !!found;
   };
 
   const isOperatorAssigned = (producerEmail: string, operatorEmail: string) => {
@@ -225,6 +207,10 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           <TabsContent value="models">
             <Card className="p-6">
               <h3 className="text-xl font-semibold text-foreground mb-4">Модели для {selectedProducer}</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Всего назначений в базе: {assignments.length} | 
+                Назначений моделей этому продюсеру: {assignments.filter(a => a.producerEmail === selectedProducer && a.assignmentType === 'model' && a.modelEmail).length}
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4" key={`models-${refreshKey}`}>
                 {models.map(model => {
                   const assigned = isModelAssigned(selectedProducer, model.email);
