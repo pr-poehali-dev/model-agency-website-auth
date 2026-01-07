@@ -67,30 +67,26 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   };
 
   const isModelAssigned = (producerEmail: string, modelEmail: string) => {
-    console.log('🔍 Checking model assignment:', { 
-      producerEmail, 
-      modelEmail, 
-      totalAssignments: assignments.length,
-      sampleAssignment: assignments[0]
-    });
+    const producerModelAssignments = assignments.filter(
+      a => a.producerEmail === producerEmail && a.assignmentType === 'model' && a.modelEmail
+    );
+    
+    if (producerModelAssignments.length > 0) {
+      console.log(`📋 Producer ${producerEmail} has ${producerModelAssignments.length} models:`, 
+        producerModelAssignments.map(a => a.modelEmail)
+      );
+    }
     
     const found = assignments.find(a => {
       const matches = a.producerEmail === producerEmail && 
                      a.modelEmail === modelEmail && 
                      a.assignmentType === 'model';
-      if (a.producerEmail === producerEmail && a.assignmentType === 'model') {
-        console.log('  Comparing:', { 
-          dbModelEmail: a.modelEmail, 
-          checkingModelEmail: modelEmail, 
-          match: a.modelEmail === modelEmail 
-        });
+      if (matches) {
+        console.log(`✅ Model ${modelEmail} IS assigned to ${producerEmail}`);
       }
       return matches;
     });
     
-    if (found) {
-      console.log(`✅ Model ${modelEmail} IS assigned to ${producerEmail}`);
-    }
     return !!found;
   };
 
