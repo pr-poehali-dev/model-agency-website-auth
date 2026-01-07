@@ -59,7 +59,7 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <Card 
             className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 cursor-pointer hover:border-green-500/40 transition-all"
-            onClick={() => onNavigate?.('checks')}
+            onClick={() => onNavigate?.('finances')}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-green-500/20 rounded-lg">
@@ -68,8 +68,8 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
               <Icon name="ChevronRight" size={20} className="text-green-600" />
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Финансы</h3>
-            <p className="text-lg font-semibold text-foreground">Чеки и зарплаты</p>
-            <p className="text-sm text-muted-foreground mt-2">Расчет выплат сотрудникам</p>
+            <p className="text-lg font-semibold text-foreground">Управление финансами</p>
+            <p className="text-sm text-muted-foreground mt-2">Транзакции и статистика</p>
           </Card>
 
           <Card 
