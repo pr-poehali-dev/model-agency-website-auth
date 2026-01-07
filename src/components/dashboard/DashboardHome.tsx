@@ -118,11 +118,8 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-amber-500/20">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-amber-500/20 rounded-lg">
-                  <Icon name="TrendingUp" size={24} className="text-amber-600" />
-                </div>
-                <Badge variant="secondary" className="bg-amber-500/20 text-amber-600"></Badge>
+              <div className="flex items-center mb-4">
+                <Icon name="TrendingUp" size={24} className="text-amber-600" />
               </div>
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Курс доллара (ЦБ - 5₽)</h3>
               <p className="text-3xl font-serif font-bold text-foreground">
