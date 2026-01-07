@@ -69,10 +69,15 @@ const ModelsTab = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    loadProducerAssignments();
     loadUsers();
     loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (userRole) {
+      loadProducerAssignments();
+    }
+  }, [userRole]);
 
   useEffect(() => {
     if (models.length > 0) {
@@ -98,7 +103,11 @@ const ModelsTab = ({
 
   const loadProducerAssignments = async () => {
     try {
-      const response = await fetch(`${PRODUCER_API_URL}?type=model`);
+      const email = localStorage.getItem('userEmail') || '';
+      const url = userRole === 'producer' 
+        ? `${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`
+        : `${PRODUCER_API_URL}?type=model`;
+      const response = await fetch(url);
       const data = await response.json();
       setProducerAssignmentsData(data);
     } catch (error) {
