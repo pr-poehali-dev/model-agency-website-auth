@@ -25,7 +25,7 @@ interface ModelFromDB {
   email: string;
 }
 
-const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 
 const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { currentUserEmail: string; currentUserRole: string }) => {
@@ -56,7 +56,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const loadAssignments = async () => {
     try {
-      const response = await fetch(ASSIGNMENTS_API_URL);
+      const response = await fetch(PRODUCER_API_URL);
       const data = await response.json();
       setAssignments(data);
     } catch (err) {
@@ -83,7 +83,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         
         toast({ title: 'Модель откреплена', description: 'Модель убрана из доступа продюсера' });
       } else {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         
         toast({ title: 'Оператор откреплен', description: 'Продюсер больше не управляет этим оператором' });
       } else {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await fetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
