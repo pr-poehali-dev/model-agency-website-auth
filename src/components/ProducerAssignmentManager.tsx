@@ -78,6 +78,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   const handleToggleModel = async (producerEmail: string, modelEmail: string) => {
     const assigned = isModelAssigned(producerEmail, modelEmail);
 
+    console.log('handleToggleModel called:', { currentUserEmail, currentUserRole, assigned });
+
     try {
       if (assigned) {
         const response = await fetch(ASSIGNMENTS_API_URL, {
@@ -125,6 +127,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const handleToggleOperator = async (producerEmail: string, operatorEmail: string) => {
     const assigned = isOperatorAssigned(producerEmail, operatorEmail);
+
+    console.log('handleToggleOperator called:', { currentUserEmail, currentUserRole, assigned });
 
     try {
       if (assigned) {
