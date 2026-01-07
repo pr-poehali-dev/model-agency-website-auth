@@ -56,7 +56,7 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
     <div className="space-y-6">
       <div>
         <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Главная</h2>
-        <p className="text-muted-foreground">Обзор моделей агентства</p>
+        <p className="text-muted-foreground"></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
