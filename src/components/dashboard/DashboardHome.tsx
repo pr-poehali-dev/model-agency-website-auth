@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 interface Model {
   id: number;
   name: string;
+  email?: string;
   image: string;
   height: string;
   bust: string;
@@ -23,16 +24,39 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => {
-  const activeModels = models.filter(m => m.status === 'Available').length;
   const [cbrRate, setCbrRate] = useState<number | null>(null);
   const [workingRate, setWorkingRate] = useState<number | null>(null);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     if (userRole === 'director') {
       loadExchangeRate();
+      loadAssignments();
+      loadUsers();
     }
   }, [userRole]);
+
+  const loadAssignments = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30');
+      const data = await response.json();
+      setAssignments(data);
+    } catch (err) {
+      console.error('Failed to load assignments', err);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
+      const data = await response.json();
+      setUsers(data);
+    } catch (err) {
+      console.error('Failed to load users', err);
+    }
+  };
 
   const loadExchangeRate = async () => {
     setIsLoadingRate(true);
@@ -52,11 +76,18 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
     }
   };
 
+  const totalModels = users.filter(u => u.role === 'content_maker' || u.role === 'solo_maker').length;
+  
+  const modelsWithOperators = new Set(assignments.map(a => a.modelEmail));
+  const soloMakers = users.filter(u => u.role === 'solo_maker').map(u => u.email);
+  const activeModelsEmails = new Set([...modelsWithOperators, ...soloMakers]);
+  const activeModelsCount = activeModelsEmails.size;
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Главная</h2>
-        <p className="text-muted-foreground"></p>
+        <p className="text-muted-foreground">Обзор агентства</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -65,10 +96,10 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
             <div className="p-3 bg-accent/20 rounded-lg">
               <Icon name="Users" size={24} className="text-accent" />
             </div>
-            <Badge variant="secondary" className="bg-accent/20 text-accent">{activeModels} активных</Badge>
+            <Badge variant="secondary" className="bg-accent/20 text-accent">Все роли</Badge>
           </div>
           <h3 className="text-sm font-medium text-muted-foreground mb-1">Всего моделей</h3>
-          <p className="text-3xl font-serif font-bold text-foreground">{models.length}</p>
+          <p className="text-3xl font-serif font-bold text-foreground">{totalModels}</p>
         </Card>
 
         <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
@@ -76,10 +107,10 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
             <div className="p-3 bg-primary/20 rounded-lg">
               <Icon name="CheckCircle" size={24} className="text-primary" />
             </div>
-            <Badge variant="secondary" className="bg-primary/20 text-primary">Доступны</Badge>
+            <Badge variant="secondary" className="bg-primary/20 text-primary">С операторами</Badge>
           </div>
           <h3 className="text-sm font-medium text-muted-foreground mb-1">Активные модели</h3>
-          <p className="text-3xl font-serif font-bold text-foreground">{activeModels}</p>
+          <p className="text-3xl font-serif font-bold text-foreground">{activeModelsCount}</p>
         </Card>
       </div>
 
