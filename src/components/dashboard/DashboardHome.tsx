@@ -92,11 +92,8 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-accent/20 rounded-lg">
-              <Icon name="Users" size={24} className="text-accent" />
-            </div>
-            <Badge variant="secondary" className="bg-accent/20 text-accent">Все роли</Badge>
+          <div className="flex items-center mb-4">
+            <Icon name="Users" size={24} className="text-accent" />
           </div>
           <h3 className="text-sm font-medium text-muted-foreground mb-1">Всего моделей</h3>
           <p className="text-3xl font-serif font-bold text-foreground">{totalModels}</p>
