@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "Cleanup orphaned assignments (director only)",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

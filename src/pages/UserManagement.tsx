@@ -11,6 +11,7 @@ import EditUserDialog from '@/components/UserManagement/EditUserDialog';
 import PermissionsDialog from '@/components/UserManagement/PermissionsDialog';
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+const CLEANUP_API_URL = 'https://functions.poehali.dev/ebdade58-dd83-497b-bd3b-570e724eed8b';
 
 interface User {
   id: number;
@@ -308,6 +309,43 @@ const UserManagement = () => {
     );
   };
 
+  const handleCleanupOrphanedAssignments = async () => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
+    setLoading(true);
+    
+    try {
+      const response = await fetch(CLEANUP_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Role': currentUserRole || 'director'
+        }
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Ошибка очистки');
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: 'Очистка завершена',
+        description: result.message,
+      });
+      
+      await loadUsers();
+    } catch (err: any) {
+      toast({
+        title: 'Ошибка',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSavePermissions = async () => {
     if (!selectedUser) return;
 
@@ -372,6 +410,16 @@ const UserManagement = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {currentUserRole === 'director' && (
+            <button
+              onClick={handleCleanupOrphanedAssignments}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg border border-destructive/20 transition-colors disabled:opacity-50"
+              title="Удалить назначения удалённых пользователей"
+            >
+              Очистить базу
+            </button>
+          )}
           <div className="relative flex-1 lg:w-64">
             <input
               type="text"

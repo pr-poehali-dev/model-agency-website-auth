@@ -252,14 +252,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             query_params = event.get('queryStringParameters', {})
             user_id = query_params.get('id')
             
-            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            cur.execute("SELECT role, email FROM users WHERE id = %s", (user_id,))
             user = cur.fetchone()
-            if user and user['role'] == 'director':
+            if not user:
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Пользователь не найден'})
+                }
+            
+            if user['role'] == 'director':
                 return {
                     'statusCode': 403,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({'error': 'Нельзя удалить директора'})
                 }
+            
+            user_email = user['email']
+            
+            cur.execute("DELETE FROM producer_assignments WHERE producer_email = %s", (user_email,))
+            cur.execute("DELETE FROM producer_assignments WHERE model_email = %s", (user_email,))
+            cur.execute("DELETE FROM producer_assignments WHERE operator_email = %s", (user_email,))
+            
+            cur.execute("DELETE FROM operator_model_assignments WHERE operator_email = %s", (user_email,))
+            cur.execute("DELETE FROM operator_model_assignments WHERE model_email = %s", (user_email,))
             
             cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
             conn.commit()
@@ -267,7 +283,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'success': True})
+                'body': json.dumps({'success': True, 'message': f'Пользователь {user_email} и все его назначения удалены'})
             }
         
         return {
