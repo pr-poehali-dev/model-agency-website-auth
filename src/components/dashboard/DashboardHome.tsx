@@ -56,35 +56,35 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
       </div>
 
       {userRole === 'director' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card 
-            className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 cursor-pointer hover:border-green-500/40 transition-all"
+            className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 cursor-pointer hover:shadow-lg transition-all group"
             onClick={() => onNavigate?.('finances')}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-500/20 rounded-lg">
+              <div className="p-3 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-colors">
                 <Icon name="DollarSign" size={24} className="text-green-600" />
               </div>
-              <Icon name="ChevronRight" size={20} className="text-green-600" />
+              <Badge variant="secondary" className="bg-green-500/20 text-green-600">Перейти</Badge>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Финансы</h3>
-            <p className="text-lg font-semibold text-foreground">Управление финансами</p>
-            <p className="text-sm text-muted-foreground mt-2">Транзакции и статистика</p>
+            <p className="text-3xl font-serif font-bold text-foreground mb-2">Управление</p>
+            <p className="text-sm text-muted-foreground">Транзакции и статистика</p>
           </Card>
 
           <Card 
-            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer hover:border-blue-500/40 transition-all"
+            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer hover:shadow-lg transition-all group"
             onClick={() => onNavigate?.('schedule')}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-500/20 rounded-lg">
+              <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
                 <Icon name="Calendar" size={24} className="text-blue-600" />
               </div>
-              <Icon name="ChevronRight" size={20} className="text-blue-600" />
+              <Badge variant="secondary" className="bg-blue-500/20 text-blue-600">Перейти</Badge>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Расписание</h3>
-            <p className="text-lg font-semibold text-foreground">Смены и графики</p>
-            <p className="text-sm text-muted-foreground mt-2">Управление рабочим временем</p>
+            <p className="text-3xl font-serif font-bold text-foreground mb-2">Смены</p>
+            <p className="text-sm text-muted-foreground">Управление рабочим временем</p>
           </Card>
         </div>
       )}
