@@ -108,12 +108,19 @@ const ChecksTab = () => {
       const response = await fetch(`${ASSIGNMENTS_API_URL}`);
       const assignments = await response.json();
       
-      const producerModelResponse = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
+      const [producerModelResponse, producerOperatorResponse] = await Promise.all([
+        fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`),
+        fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=operator`)
+      ]);
+      
       const producerModelsData = await producerModelResponse.json();
+      const producerOperatorsData = await producerOperatorResponse.json();
+      
       const producerModelEmails = producerModelsData.map((pm: any) => pm.modelEmail);
+      const producerOperatorEmails = producerOperatorsData.map((po: any) => po.operatorEmail);
       
       const filteredAssignments = assignments.filter((a: any) => 
-        producerModelEmails.includes(a.modelEmail)
+        producerModelEmails.includes(a.modelEmail) && producerOperatorEmails.includes(a.operatorEmail)
       );
       
       setProducerModels(producerModelsData);
