@@ -81,6 +81,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if nominal > 1:
             rate = rate / nominal
         
+        rounded_rate = round(rate, 2)
+        print(f'CBR rate fetched: {rounded_rate} (raw: {rate})')
+        
         return {
             'statusCode': 200,
             'headers': {
@@ -90,7 +93,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             },
             'isBase64Encoded': False,
             'body': json.dumps({
-                'rate': round(rate, 2),
+                'rate': rounded_rate,
                 'source': 'CBR',
                 'currency': 'USD'
             })
