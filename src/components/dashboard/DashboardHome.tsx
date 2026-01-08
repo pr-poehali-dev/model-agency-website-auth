@@ -82,6 +82,8 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   };
 
   const loadMySalary = async () => {
+    if (!userEmail) return;
+    
     setIsLoadingSalary(true);
     try {
       const now = new Date();
@@ -98,23 +100,32 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const adjustmentsData = await adjustmentsRes.json();
       const rateData = await rateRes.json();
 
+      console.log('Salary data:', salaryData);
+      console.log('Adjustments data:', adjustmentsData);
+      console.log('User email:', userEmail);
+      console.log('User role:', userRole);
+
       const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
 
       let baseSalaryUSD = 0;
-      if (userRole === 'operator' && salaryData.operators?.[userEmail || '']) {
-        baseSalaryUSD = salaryData.operators[userEmail].total;
-      } else if (userRole === 'content_maker' && salaryData.models?.[userEmail || '']) {
-        baseSalaryUSD = salaryData.models[userEmail].total;
-      } else if (userRole === 'solo_maker' && salaryData.models?.[userEmail || '']) {
-        baseSalaryUSD = salaryData.models[userEmail].total;
+      if (userRole === 'operator' && salaryData.operators?.[userEmail]) {
+        baseSalaryUSD = salaryData.operators[userEmail].total || 0;
+      } else if ((userRole === 'content_maker' || userRole === 'solo_maker') && salaryData.models?.[userEmail]) {
+        baseSalaryUSD = salaryData.models[userEmail].total || 0;
       }
 
-      const adjustments = adjustmentsData[userEmail || ''] || { advance: 0, penalty: 0, expenses: 0 };
-      const totalRUB = (baseSalaryUSD * exchangeRate) + adjustments.expenses - adjustments.advance - adjustments.penalty;
+      const adjustments = adjustmentsData[userEmail] || { advance: 0, penalty: 0, expenses: 0 };
+      console.log('Base salary USD:', baseSalaryUSD);
+      console.log('Adjustments:', adjustments);
+      console.log('Exchange rate:', exchangeRate);
+
+      const totalRUB = (baseSalaryUSD * exchangeRate) + (adjustments.expenses || 0) - (adjustments.advance || 0) - (adjustments.penalty || 0);
+      console.log('Total RUB:', totalRUB);
 
       setMySalary(totalRUB);
     } catch (err) {
       console.error('Failed to load salary', err);
+      setMySalary(0);
     } finally {
       setIsLoadingSalary(false);
     }
