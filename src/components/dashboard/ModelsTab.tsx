@@ -62,6 +62,7 @@ const ModelsTab = ({
   const [users, setUsers] = useState<any[]>([]);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
@@ -69,21 +70,20 @@ const ModelsTab = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    loadUsers();
-    loadCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    if (userRole) {
-      loadProducerAssignments();
-    }
-  }, [userRole]);
-
-  useEffect(() => {
-    if (models.length > 0) {
-      loadAllModelAccounts();
-    }
-  }, [models]);
+    const init = async () => {
+      setLoading(true);
+      loadCurrentUser();
+      await loadUsers();
+      if (userRole) {
+        await loadProducerAssignments();
+      }
+      if (models.length > 0) {
+        await loadAllModelAccounts();
+      }
+      setLoading(false);
+    };
+    init();
+  }, [userRole, models]);
 
   const loadAllModelAccounts = async () => {
     const accountsData: any = {};
@@ -249,6 +249,17 @@ const ModelsTab = ({
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Загрузка моделей...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

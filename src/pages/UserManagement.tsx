@@ -5,6 +5,7 @@ import {
   ROLE_PERMISSIONS,
   type UserRole,
 } from '@/lib/permissions';
+import Icon from '@/components/ui/icon';
 import UserCard from '@/components/UserManagement/UserCard';
 import AddUserDialog from '@/components/UserManagement/AddUserDialog';
 import EditUserDialog from '@/components/UserManagement/EditUserDialog';
@@ -28,6 +29,7 @@ interface User {
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -52,8 +54,11 @@ const UserManagement = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadUsers();
-    loadCurrentUser();
+    const init = async () => {
+      await Promise.all([loadUsers(), loadCurrentUser()]);
+      setInitialLoading(false);
+    };
+    init();
   }, []);
 
   const loadCurrentUser = async () => {
@@ -400,6 +405,17 @@ const UserManagement = () => {
     u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Загрузка пользователей...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
