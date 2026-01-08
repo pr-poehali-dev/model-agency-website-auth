@@ -420,6 +420,13 @@ const UserManagement = () => {
               Очистить базу
             </button>
           )}
+          <button
+            onClick={() => setIsAddDialogOpen(true)}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+          >
+            Добавить пользователя
+          </button>
           <div className="relative flex-1 lg:w-64">
             <input
               type="text"
