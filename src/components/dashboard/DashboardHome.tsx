@@ -110,10 +110,11 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const adjustmentsData = await adjustmentsRes.json();
       const rateData = await rateRes.json();
 
-      console.log('Salary data:', salaryData);
-      console.log('Adjustments data:', adjustmentsData);
+      console.log('=== DASHBOARD HOME SALARY CALCULATION ===');
       console.log('User email:', userEmail);
       console.log('User role:', userRole);
+      console.log('Full salary data:', JSON.stringify(salaryData, null, 2));
+      console.log('Full adjustments data:', JSON.stringify(adjustmentsData, null, 2));
 
       const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
 
