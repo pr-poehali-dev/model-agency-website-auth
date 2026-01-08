@@ -490,14 +490,14 @@ const CalculationTab = () => {
                           type="text"
                           placeholder="Аванс"
                           value={calc.advance || ''}
-                          disabled
+                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
                           className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
                         />
                         <Input
                           type="text"
                           placeholder="Штраф"
                           value={calc.penalty || ''}
-                          disabled
+                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
                           className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
                         />
                       </div>
@@ -567,14 +567,14 @@ const CalculationTab = () => {
                           type="text"
                           placeholder="Аванс"
                           value={calc.advance || ''}
-                          disabled
+                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
                           className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
                         />
                         <Input
                           type="text"
                           placeholder="Штраф"
                           value={calc.penalty || ''}
-                          disabled
+                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
                           className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
                         />
                       </div>
