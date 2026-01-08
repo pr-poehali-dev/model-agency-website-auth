@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
 interface Model {
@@ -154,8 +155,17 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-            <div className="flex items-center mb-4">
+            <div className="flex items-center justify-between mb-4">
               <Icon name="Wallet" size={24} className="text-green-600" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadMySalary}
+                disabled={isLoadingSalary}
+                className="h-8 w-8 p-0"
+              >
+                <Icon name="RefreshCw" size={16} className={isLoadingSalary ? 'animate-spin' : ''} />
+              </Button>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата за текущий месяц</h3>
             <p className="text-3xl font-serif font-bold text-foreground">
