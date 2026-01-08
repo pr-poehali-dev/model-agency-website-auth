@@ -40,7 +40,7 @@ interface ProducerAssignment {
 interface ModelsTabProps {
   models: Model[];
   operatorAssignments?: number[];
-  producerAssignments?: string[];
+  producerAssignments?: number[];
   assignedProducer?: string;
   onViewFinances?: (modelId: number, modelName: string) => void;
   userRole?: string;
