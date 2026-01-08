@@ -20,23 +20,28 @@ interface Model {
 interface DashboardHomeProps {
   models: Model[];
   userRole?: string | null;
+  userEmail?: string;
   onNavigate?: (tab: string) => void;
 }
 
-const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => {
+const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHomeProps) => {
   const [cbrRate, setCbrRate] = useState<number | null>(null);
   const [workingRate, setWorkingRate] = useState<number | null>(null);
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [mySalary, setMySalary] = useState<number | null>(null);
+  const [isLoadingSalary, setIsLoadingSalary] = useState(false);
 
   useEffect(() => {
     if (userRole === 'director') {
       loadExchangeRate();
       loadAssignments();
       loadUsers();
+    } else if (userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && userEmail) {
+      loadMySalary();
     }
-  }, [userRole]);
+  }, [userRole, userEmail]);
 
   const loadAssignments = async () => {
     try {
@@ -76,6 +81,45 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
     }
   };
 
+  const loadMySalary = async () => {
+    setIsLoadingSalary(true);
+    try {
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+      const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
+        fetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
+        fetch(`https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7?period_start=${periodStart}&period_end=${periodEnd}`),
+        fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a')
+      ]);
+
+      const salaryData = await salaryRes.json();
+      const adjustmentsData = await adjustmentsRes.json();
+      const rateData = await rateRes.json();
+
+      const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
+
+      let baseSalaryUSD = 0;
+      if (userRole === 'operator' && salaryData.operators?.[userEmail || '']) {
+        baseSalaryUSD = salaryData.operators[userEmail].total;
+      } else if (userRole === 'content_maker' && salaryData.models?.[userEmail || '']) {
+        baseSalaryUSD = salaryData.models[userEmail].total;
+      } else if (userRole === 'solo_maker' && salaryData.models?.[userEmail || '']) {
+        baseSalaryUSD = salaryData.models[userEmail].total;
+      }
+
+      const adjustments = adjustmentsData[userEmail || ''] || { advance: 0, penalty: 0, expenses: 0 };
+      const totalRUB = (baseSalaryUSD * exchangeRate) + adjustments.expenses - adjustments.advance - adjustments.penalty;
+
+      setMySalary(totalRUB);
+    } catch (err) {
+      console.error('Failed to load salary', err);
+    } finally {
+      setIsLoadingSalary(false);
+    }
+  };
+
   const totalModels = users.filter(u => u.role === 'content_maker' || u.role === 'solo_maker').length;
   
   const modelsWithOperators = new Set(assignments.map(a => a.modelEmail));
@@ -90,7 +134,34 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
         <p className="text-muted-foreground"></p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+            <div className="flex items-center mb-4">
+              <Icon name="Wallet" size={24} className="text-green-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата за текущий месяц</h3>
+            <p className="text-3xl font-serif font-bold text-foreground">
+              {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary).toLocaleString('ru-RU')} ₽` : '—'}
+            </p>
+          </Card>
+
+          <Card 
+            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => onNavigate?.('schedule')}
+          >
+            <div className="flex items-center mb-4">
+              <Icon name="Calendar" size={24} className="text-blue-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Расписание</h3>
+            <p className="text-3xl font-serif font-bold text-foreground mb-2">Смены</p>
+            <p className="text-sm text-muted-foreground">Мое рабочее время</p>
+          </Card>
+        </div>
+      )}
+
+      {userRole === 'director' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
           <div className="flex items-center mb-4">
             <Icon name="Users" size={24} className="text-accent" />
@@ -110,6 +181,7 @@ const DashboardHome = ({ models, userRole, onNavigate }: DashboardHomeProps) => 
           <p className="text-3xl font-serif font-bold text-foreground">{activeModelsCount}</p>
         </Card>
       </div>
+      )}
 
       {userRole === 'director' && (
         <>

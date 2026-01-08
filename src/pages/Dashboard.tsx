@@ -258,6 +258,7 @@ const Dashboard = () => {
         return <DashboardHome 
           models={modelsData}
           userRole={userRole}
+          userEmail={userEmail}
           onNavigate={handleTabChange}
         />;
       case 'models':
@@ -305,6 +306,7 @@ const Dashboard = () => {
         return <DashboardHome 
           models={modelsData}
           userRole={userRole}
+          userEmail={userEmail}
           onNavigate={handleTabChange}
         />;
     }
