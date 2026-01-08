@@ -37,6 +37,8 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const [myPenalty, setMyPenalty] = useState<number>(0);
   const [myExpenses, setMyExpenses] = useState<number>(0);
   const [isLoadingSalary, setIsLoadingSalary] = useState(false);
+  const [myProducer, setMyProducer] = useState<string>('MBA Production');
+  const [currentPeriodLabel, setCurrentPeriodLabel] = useState<string>('');
 
   useEffect(() => {
     if (userRole === 'director') {
@@ -45,6 +47,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       loadUsers();
     } else if (userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && userEmail) {
       loadMySalary();
+      loadMyProducer();
       
       const interval = setInterval(() => {
         loadMySalary();
@@ -107,6 +110,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
+      setCurrentPeriodLabel(currentPeriod.label);
 
       const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
         fetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
@@ -155,6 +159,27 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
     }
   };
 
+  const loadMyProducer = async () => {
+    try {
+      const producerRes = await fetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
+      const producerData = await producerRes.json();
+      
+      const assignment = producerData.find((a: any) => a.modelEmail === userEmail);
+      
+      if (assignment) {
+        const usersRes = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
+        const usersData = await usersRes.json();
+        const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
+        setMyProducer(producer?.fullName || assignment.producerEmail);
+      } else {
+        setMyProducer('MBA Production');
+      }
+    } catch (err) {
+      console.error('Failed to load producer', err);
+      setMyProducer('MBA Production');
+    }
+  };
+
   const totalModels = users.filter(u => u.role === 'content_maker' || u.role === 'solo_maker').length;
   
   const modelsWithOperators = new Set(assignments.map(a => a.modelEmail));
@@ -184,7 +209,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
                 <Icon name="RefreshCw" size={16} className={isLoadingSalary ? 'animate-spin' : ''} />
               </Button>
             </div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата за текущий месяц</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата{currentPeriodLabel ? ` (${currentPeriodLabel})` : ''}</h3>
             <p className="text-3xl font-serif font-bold text-foreground mb-3">
               {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary).toLocaleString('ru-RU')} ₽` : '—'}
             </p>
@@ -224,6 +249,16 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
             <p className="text-sm text-muted-foreground">Мое рабочее время</p>
           </Card>
         </div>
+      )}
+
+      {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
+        <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+          <div className="flex items-center mb-4">
+            <Icon name="User" size={24} className="text-purple-600" />
+          </div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Мой продюсер</h3>
+          <p className="text-2xl font-serif font-bold text-foreground">{myProducer}</p>
+        </Card>
       )}
 
       {userRole === 'director' && (
