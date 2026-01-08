@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { getCurrentPeriod } from '@/utils/periodUtils';
 
 interface Model {
   id: number;
@@ -96,9 +97,16 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
     
     setIsLoadingSalary(true);
     try {
-      const now = new Date();
-      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const currentPeriod = getCurrentPeriod();
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const periodStart = formatDate(currentPeriod.startDate);
+      const periodEnd = formatDate(currentPeriod.endDate);
 
       const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
         fetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
