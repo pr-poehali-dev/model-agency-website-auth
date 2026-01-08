@@ -40,6 +40,12 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       loadUsers();
     } else if (userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && userEmail) {
       loadMySalary();
+      
+      const interval = setInterval(() => {
+        loadMySalary();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [userRole, userEmail]);
 
