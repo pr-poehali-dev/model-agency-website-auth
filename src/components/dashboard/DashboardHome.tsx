@@ -32,6 +32,9 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const [assignments, setAssignments] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [mySalary, setMySalary] = useState<number | null>(null);
+  const [myAdvance, setMyAdvance] = useState<number>(0);
+  const [myPenalty, setMyPenalty] = useState<number>(0);
+  const [myExpenses, setMyExpenses] = useState<number>(0);
   const [isLoadingSalary, setIsLoadingSalary] = useState(false);
 
   useEffect(() => {
@@ -126,10 +129,15 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       console.log('Adjustments:', adjustments);
       console.log('Exchange rate:', exchangeRate);
 
-      const totalRUB = (baseSalaryUSD * exchangeRate) + (adjustments.expenses || 0) - (adjustments.advance || 0) - (adjustments.penalty || 0);
-      console.log('Total RUB:', totalRUB);
+      const baseRUB = baseSalaryUSD * exchangeRate;
+      const totalWithExpenses = baseRUB + (adjustments.expenses || 0);
+      const totalRUB = totalWithExpenses - (adjustments.advance || 0) - (adjustments.penalty || 0);
+      console.log('Base RUB:', baseRUB, 'With expenses:', totalWithExpenses, 'Final:', totalRUB);
 
       setMySalary(totalRUB);
+      setMyAdvance(adjustments.advance || 0);
+      setMyPenalty(adjustments.penalty || 0);
+      setMyExpenses(adjustments.expenses || 0);
     } catch (err) {
       console.error('Failed to load salary', err);
       setMySalary(0);
@@ -168,9 +176,31 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
               </Button>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата за текущий месяц</h3>
-            <p className="text-3xl font-serif font-bold text-foreground">
+            <p className="text-3xl font-serif font-bold text-foreground mb-3">
               {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary).toLocaleString('ru-RU')} ₽` : '—'}
             </p>
+            {!isLoadingSalary && mySalary !== null && (
+              <div className="space-y-1 text-sm">
+                {myAdvance > 0 && (
+                  <div className="flex justify-between text-red-600 dark:text-red-400">
+                    <span>Аванс:</span>
+                    <span>-{myAdvance.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+                {myPenalty > 0 && (
+                  <div className="flex justify-between text-red-600 dark:text-red-400">
+                    <span>Штраф:</span>
+                    <span>-{myPenalty.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+                {myExpenses > 0 && (
+                  <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                    <span>Расходы:</span>
+                    <span>+{myExpenses.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
 
           <Card 
