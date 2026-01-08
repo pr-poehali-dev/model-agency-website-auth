@@ -414,4 +414,4 @@ const ModelsTab = ({
   );
 };
 
-export default memo(ModelsTab);
+export default ModelsTab;
