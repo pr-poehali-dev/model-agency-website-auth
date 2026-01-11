@@ -8,12 +8,22 @@ Returns: HTTP response with schedule data
 import json
 import os
 from typing import Dict, Any
+from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
     dsn = os.environ.get('DATABASE_URL')
     return psycopg2.connect(dsn, cursor_factory=RealDictCursor)
+
+def cleanup_old_schedules(cur):
+    '''Удаляет записи расписания старше одной недели назад'''
+    one_week_ago = datetime.now() - timedelta(days=7)
+    
+    cur.execute("""
+        DELETE FROM t_p35405502_model_agency_website.schedule 
+        WHERE TO_DATE(date, 'DD.MM.YYYY') < %s
+    """, (one_week_ago.date(),))
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -75,6 +85,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'POST':
+            cleanup_old_schedules(cur)
+            
             body_data = json.loads(event.get('body', '{}'))
             apartment_name = body_data.get('apartment_name')
             apartment_address = body_data.get('apartment_address')
@@ -104,6 +116,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
         
         elif method == 'PUT':
+            cleanup_old_schedules(cur)
+            
             body_data = json.loads(event.get('body', '{}'))
             apartment_name = body_data.get('apartment_name')
             apartment_address = body_data.get('apartment_address')
