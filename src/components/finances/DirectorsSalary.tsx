@@ -36,6 +36,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
+  const [issuedFunds, setIssuedFunds] = useState<number>(0);
 
   useEffect(() => {
     const fetchDirectorStats = async () => {
@@ -107,9 +108,10 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const totalGrossRevenue = totalGrossRevenueUSD * USD_TO_RUB;
   const totalDirectorsIncome = totalDirectorsIncomeUSD * USD_TO_RUB;
   
-  // Каждый директор получает 50% от общей доли директоров минус половина затрат
+  // Каждый директор получает 50% от общей доли директоров минус половина затрат плюс половина выданных средств
   const expensesPerDirector = totalExpenses / 2;
-  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 - expensesPerDirector);
+  const issuedFundsPerDirector = issuedFunds / 2;
+  const directorSalary = Math.max(0, totalDirectorsIncome * 0.5 - expensesPerDirector + issuedFundsPerDirector);
 
   const displayDirectors: Director[] = [
     { name: 'Директор Юрий', salary: directorSalary },
@@ -207,6 +209,30 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         </div>
       </Card>
 
+      <Card className="p-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Icon name="TrendingUp" size={24} className="text-green-500" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-lg mb-1">Выданные средства</h4>
+              <p className="text-sm text-muted-foreground">Прибавляется к зарплатам директоров поровну</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={issuedFunds}
+              onChange={(e) => setIssuedFunds(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="w-48 text-right font-semibold"
+              placeholder="0"
+            />
+            <span className="text-muted-foreground font-medium">₽</span>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         {displayDirectors.map((director, index) => (
           <Card key={index} className="p-6 space-y-4">
@@ -241,6 +267,12 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
                 <div className="flex items-center justify-between text-sm text-destructive">
                   <span>Затраты (50%):</span>
                   <span>- {expensesPerDirector.toLocaleString('ru-RU')} ₽</span>
+                </div>
+              )}
+              {issuedFunds > 0 && (
+                <div className="flex items-center justify-between text-sm text-green-600">
+                  <span>Выданные средства (50%):</span>
+                  <span>+ {issuedFundsPerDirector.toLocaleString('ru-RU')} ₽</span>
                 </div>
               )}
               <div className="flex items-center justify-between text-sm pt-2 border-t">
