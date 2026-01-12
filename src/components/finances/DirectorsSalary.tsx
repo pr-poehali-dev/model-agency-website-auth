@@ -25,6 +25,12 @@ interface Director {
   salary: number;
 }
 
+interface SalaryData {
+  operators: Record<string, { email: string; total: number }>;
+  models: Record<string, { email: string; total: number }>;
+  producers: Record<string, { email: string; total: number }>;
+}
+
 interface DirectorsSalaryProps {
   userEmail: string;
   period: Period;
@@ -37,6 +43,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const [loading, setLoading] = useState(true);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [issuedFunds, setIssuedFunds] = useState<number>(0);
+  const [salariesData, setSalariesData] = useState<SalaryData | null>(null);
 
   const saveFinances = async (expenses: number, funds: number) => {
     if (!period?.startDate || !period?.endDate) return;
@@ -85,17 +92,21 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       
       setLoading(true);
       try {
-        const [statsResponse, financesResponse] = await Promise.all([
+        const [statsResponse, financesResponse, salariesResponse] = await Promise.all([
           fetch(
             `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
           ),
           fetch(
             `https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec?period_start=${periodStart}&period_end=${periodEnd}`
+          ),
+          fetch(
+            `https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`
           )
         ]);
         
         const statsData = await statsResponse.json();
         const financesData = await financesResponse.json();
+        const salariesDataResult = await salariesResponse.json();
         
         if (statsData.producers) {
           setProducersData(statsData.producers);
@@ -104,6 +115,10 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
         if (financesData) {
           setTotalExpenses(financesData.expenses || 0);
           setIssuedFunds(financesData.issued_funds || 0);
+        }
+        
+        if (salariesDataResult) {
+          setSalariesData(salariesDataResult);
         }
       } catch (error) {
         console.error('Error fetching director stats:', error);
@@ -334,6 +349,77 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
           </Card>
         ))}
       </div>
+
+      {salariesData && (
+        <Card className="p-6 mt-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Icon name="Calculator" size={20} />
+            Проверка расчёта зарплат директоров
+          </h3>
+          
+          {(() => {
+            const totalOperatorsSalary = Object.values(salariesData.operators).reduce((sum, op) => sum + op.total, 0);
+            const totalModelsSalary = Object.values(salariesData.models).reduce((sum, model) => sum + model.total, 0);
+            const totalProducersSalary = Object.values(salariesData.producers).reduce((sum, prod) => sum + prod.total, 0);
+            
+            const totalEmployeesSalary = totalOperatorsSalary + totalModelsSalary + totalProducersSalary;
+            
+            const totalCheckRUB = totalGrossRevenue;
+            const remainderRUB = totalCheckRUB - (totalEmployeesSalary * USD_TO_RUB);
+            const directorSalaryCheck = remainderRUB / 2;
+            
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Общий чек (токены × 0.05 × курс):</span>
+                  <span className="font-medium">{totalCheckRUB.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                
+                <div className="space-y-2 pl-4 border-l-2 border-muted">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Зарплата операторов:</span>
+                    <span className="font-medium text-orange-600">- {(totalOperatorsSalary * USD_TO_RUB).toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Зарплата моделей:</span>
+                    <span className="font-medium text-pink-600">- {(totalModelsSalary * USD_TO_RUB).toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Зарплата продюсеров:</span>
+                    <span className="font-medium text-purple-600">- {(totalProducersSalary * USD_TO_RUB).toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm pt-2 border-t">
+                  <span className="text-muted-foreground font-medium">Остаток:</span>
+                  <span className="font-semibold">{remainderRUB.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                
+                <div className="flex items-center justify-between pt-2 border-t-2 border-primary/20">
+                  <span className="font-medium">Зарплата каждого директора (50% остатка):</span>
+                  <span className="text-xl font-bold text-primary">{directorSalaryCheck.toLocaleString('ru-RU')} ₽</span>
+                </div>
+                
+                {Math.abs(directorSalaryCheck - directorSalary) > 1 && (
+                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                          Расхождение в расчётах
+                        </p>
+                        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                          Разница: {Math.abs(directorSalaryCheck - directorSalary).toLocaleString('ru-RU')} ₽
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </Card>
+      )}
     </div>
   );
 };
