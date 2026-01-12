@@ -1,4 +1,5 @@
 {
+  "director-finances": "https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec",
   "cleanup-old-schedules": "https://functions.poehali.dev/3d052c34-5e62-42e8-840c-ce2fcc665eef",
   "cleanup-orphaned-assignments": "https://functions.poehali.dev/ebdade58-dd83-497b-bd3b-570e724eed8b",
   "producer-stats": "https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b",

@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Save director finances",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "period_start": "2026-01-01",
+        "period_end": "2026-01-07",
+        "expenses": 50000,
+        "issued_funds": 30000
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "expenses": 50000,
+        "issued_funds": 30000
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get director finances",
+      "method": "GET",
+      "path": "/?period_start=2026-01-01&period_end=2026-01-07",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "expenses": 50000,
+        "issued_funds": 30000
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

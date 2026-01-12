@@ -38,11 +38,41 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const [issuedFunds, setIssuedFunds] = useState<number>(0);
 
+  const saveFinances = async (expenses: number, funds: number) => {
+    if (!period?.startDate || !period?.endDate) return;
+    
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const periodStart = formatDate(period.startDate);
+    const periodEnd = formatDate(period.endDate);
+    
+    try {
+      await fetch('https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          period_start: periodStart,
+          period_end: periodEnd,
+          expenses: expenses,
+          issued_funds: funds
+        })
+      });
+    } catch (error) {
+      console.error('Error saving finances:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchDirectorStats = async () => {
       if (!period?.startDate || !period?.endDate) return;
       
-      // Форматируем даты в YYYY-MM-DD
       const formatDate = (date: Date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -55,12 +85,25 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       
       setLoading(true);
       try {
-        const response = await fetch(
-          `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
-        );
-        const data = await response.json();
-        if (data.producers) {
-          setProducersData(data.producers);
+        const [statsResponse, financesResponse] = await Promise.all([
+          fetch(
+            `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
+          ),
+          fetch(
+            `https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec?period_start=${periodStart}&period_end=${periodEnd}`
+          )
+        ]);
+        
+        const statsData = await statsResponse.json();
+        const financesData = await financesResponse.json();
+        
+        if (statsData.producers) {
+          setProducersData(statsData.producers);
+        }
+        
+        if (financesData) {
+          setTotalExpenses(financesData.expenses || 0);
+          setIssuedFunds(financesData.issued_funds || 0);
         }
       } catch (error) {
         console.error('Error fetching director stats:', error);
@@ -200,7 +243,11 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             <Input
               type="number"
               value={totalExpenses}
-              onChange={(e) => setTotalExpenses(Math.max(0, parseFloat(e.target.value) || 0))}
+              onChange={(e) => {
+                const newValue = Math.max(0, parseFloat(e.target.value) || 0);
+                setTotalExpenses(newValue);
+                saveFinances(newValue, issuedFunds);
+              }}
               className="w-48 text-right font-semibold"
               placeholder="0"
             />
@@ -224,7 +271,11 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             <Input
               type="number"
               value={issuedFunds}
-              onChange={(e) => setIssuedFunds(Math.max(0, parseFloat(e.target.value) || 0))}
+              onChange={(e) => {
+                const newValue = Math.max(0, parseFloat(e.target.value) || 0);
+                setIssuedFunds(newValue);
+                saveFinances(totalExpenses, newValue);
+              }}
               className="w-48 text-right font-semibold"
               placeholder="0"
             />
