@@ -250,8 +250,23 @@ const ModelFinances = ({
 
       if (response.ok) {
         const data = await response.json();
-        const dates = data.blocked_dates.map((bd: any) => bd.date);
-        setBlockedDates(dates);
+        // Создаём объект с информацией о блокировках по датам
+        const blockedMap: Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }> = {};
+        
+        data.blocked_dates.forEach((bd: any) => {
+          if (!blockedMap[bd.date]) {
+            blockedMap[bd.date] = {};
+          }
+          if (bd.platform === 'all') {
+            blockedMap[bd.date].all = true;
+          } else if (bd.platform === 'chaturbate') {
+            blockedMap[bd.date].chaturbate = true;
+          } else if (bd.platform === 'stripchat') {
+            blockedMap[bd.date].stripchat = true;
+          }
+        });
+        
+        setBlockedDates(Object.keys(blockedMap));
       }
     } catch (error) {
       console.error("Failed to load blocked dates:", error);

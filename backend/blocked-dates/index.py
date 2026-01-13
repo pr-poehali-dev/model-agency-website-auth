@@ -40,7 +40,7 @@ def handler(event: dict, context) -> dict:
         if method == 'GET':
             # Получить список заблокированных дат
             cursor.execute("""
-                SELECT blocked_date, reason, created_by, created_at
+                SELECT blocked_date, reason, created_by, created_at, platform
                 FROM t_p35405502_model_agency_website.blocked_dates
                 ORDER BY blocked_date DESC
             """)
@@ -52,7 +52,8 @@ def handler(event: dict, context) -> dict:
                     'date': row[0].isoformat() if row[0] else None,
                     'reason': row[1],
                     'created_by': row[2],
-                    'created_at': row[3].isoformat() if row[3] else None
+                    'created_at': row[3].isoformat() if row[3] else None,
+                    'platform': row[4] or 'all'
                 })
             
             return {
@@ -66,6 +67,7 @@ def handler(event: dict, context) -> dict:
             body = json.loads(event.get('body', '{}'))
             blocked_date = body.get('date')
             reason = body.get('reason', '')
+            platform = body.get('platform', 'all')  # all, chaturbate, stripchat
             
             if not blocked_date:
                 return {
@@ -74,13 +76,20 @@ def handler(event: dict, context) -> dict:
                     'body': json.dumps({'error': 'Date is required'})
                 }
             
+            if platform not in ['all', 'chaturbate', 'stripchat']:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Invalid platform'})
+                }
+            
             cursor.execute("""
                 INSERT INTO t_p35405502_model_agency_website.blocked_dates 
-                (blocked_date, reason, created_by)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (blocked_date) DO NOTHING
+                (blocked_date, reason, created_by, platform)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (blocked_date, platform) DO NOTHING
                 RETURNING id
-            """, (blocked_date, reason, director_email))
+            """, (blocked_date, reason, director_email, platform))
             
             result = cursor.fetchone()
             conn.commit()
@@ -95,13 +104,14 @@ def handler(event: dict, context) -> dict:
                 return {
                     'statusCode': 409,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Date already blocked'})
+                    'body': json.dumps({'error': 'Date already blocked for this platform'})
                 }
         
         elif method == 'DELETE':
             # Разблокировать дату
             params = event.get('queryStringParameters', {})
             blocked_date = params.get('date')
+            platform = params.get('platform', 'all')
             
             if not blocked_date:
                 return {
@@ -112,8 +122,8 @@ def handler(event: dict, context) -> dict:
             
             cursor.execute("""
                 DELETE FROM t_p35405502_model_agency_website.blocked_dates
-                WHERE blocked_date = %s
-            """, (blocked_date,))
+                WHERE blocked_date = %s AND platform = %s
+            """, (blocked_date, platform))
             
             conn.commit()
             

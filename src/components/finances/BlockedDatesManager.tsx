@@ -7,6 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -22,6 +29,7 @@ interface BlockedDate {
   reason: string;
   created_by: string;
   created_at: string;
+  platform: 'all' | 'chaturbate' | 'stripchat';
 }
 
 interface BlockedDatesManagerProps {
@@ -33,9 +41,11 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [newDate, setNewDate] = useState("");
   const [newReason, setNewReason] = useState("");
+  const [newPlatform, setNewPlatform] = useState<'all' | 'chaturbate' | 'stripchat'>('all');
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [rangeReason, setRangeReason] = useState("");
+  const [rangePlatform, setRangePlatform] = useState<'all' | 'chaturbate' | 'stripchat'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteStartDate, setDeleteStartDate] = useState("");
@@ -91,6 +101,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
         body: JSON.stringify({
           date: newDate,
           reason: newReason,
+          platform: newPlatform,
         }),
       });
 
@@ -101,6 +112,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
         });
         setNewDate("");
         setNewReason("");
+        setNewPlatform('all');
         setIsDialogOpen(false);
         fetchBlockedDates();
       } else {
@@ -164,6 +176,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
           body: JSON.stringify({
             date,
             reason: rangeReason,
+            platform: rangePlatform,
           }),
         });
 
@@ -187,13 +200,14 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     setStartDate("");
     setEndDate("");
     setRangeReason("");
+    setRangePlatform('all');
     setIsDialogOpen(false);
     fetchBlockedDates();
   };
 
-  const handleUnblockDate = async (date: string) => {
+  const handleUnblockDate = async (date: string, platform: string) => {
     try {
-      const response = await fetch(`${BLOCKED_DATES_API}?date=${date}`, {
+      const response = await fetch(`${BLOCKED_DATES_API}?date=${date}&platform=${platform}`, {
         method: "DELETE",
         headers: {
           "X-User-Id": userEmail,
@@ -224,10 +238,12 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
   };
 
   const handleMassDelete = async () => {
-    let datesToDelete: string[] = [];
+    let itemsToDelete: Array<{date: string, platform: string}> = [];
 
     if (selectedDates.length > 0) {
-      datesToDelete = selectedDates;
+      itemsToDelete = blockedDates
+        .filter(bd => selectedDates.includes(bd.date))
+        .map(bd => ({ date: bd.date, platform: bd.platform }));
     } else if (deleteStartDate && deleteEndDate) {
       const start = new Date(deleteStartDate);
       const end = new Date(deleteEndDate);
@@ -241,15 +257,15 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
         return;
       }
 
-      datesToDelete = blockedDates
-        .map(bd => bd.date)
-        .filter(date => {
-          const d = new Date(date);
+      itemsToDelete = blockedDates
+        .filter(bd => {
+          const d = new Date(bd.date);
           return d >= start && d <= end;
-        });
+        })
+        .map(bd => ({ date: bd.date, platform: bd.platform }));
     }
 
-    if (datesToDelete.length === 0) {
+    if (itemsToDelete.length === 0) {
       toast({
         title: "Ошибка",
         description: "Нет дат для удаления",
@@ -261,9 +277,9 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     let successCount = 0;
     let errorCount = 0;
 
-    for (const date of datesToDelete) {
+    for (const item of itemsToDelete) {
       try {
-        const response = await fetch(`${BLOCKED_DATES_API}?date=${date}`, {
+        const response = await fetch(`${BLOCKED_DATES_API}?date=${item.date}&platform=${item.platform}`, {
           method: "DELETE",
           headers: {
             "X-User-Id": userEmail,
@@ -384,6 +400,37 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
 
                 <div>
                   <label className="text-sm font-medium mb-2 block">
+                    Площадка
+                  </label>
+                  <Select value={newPlatform} onValueChange={(value: 'all' | 'chaturbate' | 'stripchat') => setNewPlatform(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        <div className="flex items-center gap-2">
+                          <Icon name="Globe" size={16} />
+                          <span>Все площадки</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="chaturbate">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-amber-500" />
+                          <span>Chaturbate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="stripchat">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500" />
+                          <span>Stripchat</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
                     Причина (опционально)
                   </label>
                   <Textarea
@@ -442,6 +489,37 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
                     </div>
                   );
                 })()}
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Площадка
+                  </label>
+                  <Select value={rangePlatform} onValueChange={(value: 'all' | 'chaturbate' | 'stripchat') => setRangePlatform(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        <div className="flex items-center gap-2">
+                          <Icon name="Globe" size={16} />
+                          <span>Все площадки</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="chaturbate">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-amber-500" />
+                          <span>Chaturbate</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="stripchat">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500" />
+                          <span>Stripchat</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -632,36 +710,64 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {blockedDates.map((blocked) => (
-            <div
-              key={blocked.date}
-              className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon name="Calendar" size={16} className="text-muted-foreground" />
-                  <span className="font-medium">{formatDate(blocked.date)}</span>
+          {blockedDates.map((blocked) => {
+            const getPlatformBadge = () => {
+              if (blocked.platform === 'chaturbate') {
+                return (
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded text-xs">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span>Chaturbate</span>
+                  </div>
+                );
+              }
+              if (blocked.platform === 'stripchat') {
+                return (
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded text-xs">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <span>Stripchat</span>
+                  </div>
+                );
+              }
+              return (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-muted border rounded text-xs">
+                  <Icon name="Globe" size={12} />
+                  <span>Все площадки</span>
                 </div>
-                {blocked.reason && (
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {blocked.reason}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground mt-2 ml-6">
-                  Заблокировал: {blocked.created_by}
-                </p>
-              </div>
+              );
+            };
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleUnblockDate(blocked.date)}
-                className="text-destructive hover:text-destructive"
+            return (
+              <div
+                key={`${blocked.date}-${blocked.platform}`}
+                className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <Icon name="Trash2" size={16} />
-              </Button>
-            </div>
-          ))}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon name="Calendar" size={16} className="text-muted-foreground" />
+                    <span className="font-medium">{formatDate(blocked.date)}</span>
+                    {getPlatformBadge()}
+                  </div>
+                  {blocked.reason && (
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {blocked.reason}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2 ml-6">
+                    Заблокировал: {blocked.created_by}
+                  </p>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUnblockDate(blocked.date, blocked.platform)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Icon name="Trash2" size={16} />
+                </Button>
+              </div>
+            );
+          })}
         </div>
       )}
     </Card>
