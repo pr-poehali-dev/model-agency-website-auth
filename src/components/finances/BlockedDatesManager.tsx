@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/icon";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,9 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [newDate, setNewDate] = useState("");
   const [newReason, setNewReason] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [rangeReason, setRangeReason] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -113,6 +117,76 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     }
   };
 
+  const handleBlockRange = async () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Ошибка",
+        description: "Выберите начальную и конечную даты",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > end) {
+      toast({
+        title: "Ошибка",
+        description: "Начальная дата должна быть раньше конечной",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const dates: string[] = [];
+    const current = new Date(start);
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const date of dates) {
+      try {
+        const response = await fetch(BLOCKED_DATES_API, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Id": userEmail,
+          },
+          body: JSON.stringify({
+            date,
+            reason: rangeReason,
+          }),
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast({
+        title: "Успешно",
+        description: `Заблокировано дат: ${successCount}${errorCount > 0 ? `, ошибок: ${errorCount}` : ''}`,
+      });
+    }
+
+    setStartDate("");
+    setEndDate("");
+    setRangeReason("");
+    setIsDialogOpen(false);
+    fetchBlockedDates();
+  };
+
   const handleUnblockDate = async (date: string) => {
     try {
       const response = await fetch(`${BLOCKED_DATES_API}?date=${date}`, {
@@ -184,50 +258,124 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
               Заблокировать дату
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Заблокировать дату</DialogTitle>
+              <DialogTitle>Заблокировать даты</DialogTitle>
               <DialogDescription>
-                Выберите дату, когда модели не смогут вводить токены
+                Выберите одну дату или диапазон дат для блокировки
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 mt-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Дата
-                </label>
-                <Input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                />
-              </div>
+            <Tabs defaultValue="single" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="single">
+                  <Icon name="Calendar" size={16} className="mr-2" />
+                  Одна дата
+                </TabsTrigger>
+                <TabsTrigger value="range">
+                  <Icon name="CalendarRange" size={16} className="mr-2" />
+                  Диапазон
+                </TabsTrigger>
+              </TabsList>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Причина (опционально)
-                </label>
-                <Textarea
-                  value={newReason}
-                  onChange={(e) => setNewReason(e.target.value)}
-                  placeholder="Например: Технические работы, выходной день..."
-                  rows={3}
-                />
-              </div>
+              <TabsContent value="single" className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Дата
+                  </label>
+                  <Input
+                    type="date"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                  />
+                </div>
 
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Отмена
-                </Button>
-                <Button onClick={handleBlockDate}>
-                  Заблокировать
-                </Button>
-              </div>
-            </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Причина (опционально)
+                  </label>
+                  <Textarea
+                    value={newReason}
+                    onChange={(e) => setNewReason(e.target.value)}
+                    placeholder="Например: Технические работы, выходной день..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Отмена
+                  </Button>
+                  <Button onClick={handleBlockDate}>
+                    Заблокировать
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="range" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      С (начало)
+                    </label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      По (конец)
+                    </label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {startDate && endDate && (() => {
+                  const start = new Date(startDate);
+                  const end = new Date(endDate);
+                  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  return days > 0 && (
+                    <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                      <Icon name="Info" size={16} className="inline mr-2" />
+                      Будет заблокировано дней: <span className="font-semibold">{days}</span>
+                    </div>
+                  );
+                })()}
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Причина (опционально)
+                  </label>
+                  <Textarea
+                    value={rangeReason}
+                    onChange={(e) => setRangeReason(e.target.value)}
+                    placeholder="Например: Праздничные дни, отпуск..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Отмена
+                  </Button>
+                  <Button onClick={handleBlockRange}>
+                    Заблокировать диапазон
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </div>
