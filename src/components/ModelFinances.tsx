@@ -77,6 +77,8 @@ const USERS_API_URL =
   "https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066";
 const PRODUCER_API_URL =
   "https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6";
+const BLOCKED_DATES_API =
+  "https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c";
 
 const ModelFinances = ({
   modelId,
@@ -98,6 +100,7 @@ const ModelFinances = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const { toast } = useToast();
 
   const isReadOnly = userRole === "content_maker";
@@ -105,6 +108,7 @@ const ModelFinances = ({
   useEffect(() => {
     loadFinancialData();
     loadOperators();
+    loadBlockedDates();
   }, [modelId, currentPeriod]);
 
   const loadOperators = async () => {
@@ -233,6 +237,24 @@ const ModelFinances = ({
       setOperators(assignedOperators);
     } catch (error) {
       console.error("Failed to load operators:", error);
+    }
+  };
+
+  const loadBlockedDates = async () => {
+    try {
+      const response = await fetch(BLOCKED_DATES_API, {
+        headers: {
+          "X-User-Id": currentUserEmail || "",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const dates = data.blocked_dates.map((bd: any) => bd.date);
+        setBlockedDates(dates);
+      }
+    } catch (error) {
+      console.error("Failed to load blocked dates:", error);
     }
   };
 
@@ -550,17 +572,24 @@ const ModelFinances = ({
             <h3 className="font-semibold">По дням</h3>
             <Badge>{totalIncome.toFixed(0)}$</Badge>
           </div>
-          {onlineData.map((d, idx) => (
-            <Card key={d.date} className="p-4 mb-3 bg-muted/30">
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-semibold">{formatDate(d.date)}</p>
-                <Badge
-                  variant="outline"
-                  className={d.shift ? "bg-green-500/20" : ""}
-                >
-                  {d.shift ? "Смена" : "Нет смены"}
-                </Badge>
-              </div>
+          {onlineData.map((d, idx) => {
+            const isBlocked = blockedDates.includes(d.date);
+            return (
+              <Card key={d.date} className={`p-4 mb-3 ${isBlocked ? 'bg-muted/50 opacity-70' : 'bg-muted/30'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{formatDate(d.date)}</p>
+                    {isBlocked && (
+                      <Icon name="Lock" size={14} className="text-destructive" />
+                    )}
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={d.shift ? "bg-green-500/20" : ""}
+                  >
+                    {d.shift ? "Смена" : "Нет смены"}
+                  </Badge>
+                </div>
 
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
@@ -569,7 +598,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.cb || ""}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isBlocked}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "cb", val === "" ? 0 : Number(val));
@@ -584,7 +613,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.cbIncome || ""}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isBlocked}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
@@ -603,7 +632,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.sp || ""}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isBlocked}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "sp", val === "" ? 0 : Number(val));
@@ -618,7 +647,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.spIncome || ""}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isBlocked}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
@@ -646,7 +675,8 @@ const ModelFinances = ({
                 </div>
               </div>
             </Card>
-          ))}
+          );
+          })}
         </Card>
       </div>
 
@@ -658,14 +688,22 @@ const ModelFinances = ({
                 <th className="p-2 text-left font-semibold text-foreground sticky left-0 bg-muted/50 min-w-[140px]">
                   Настоящий период
                 </th>
-                {onlineData.map((d) => (
-                  <th
-                    key={d.date}
-                    className="p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50"
-                  >
-                    {formatDate(d.date)}
-                  </th>
-                ))}
+                {onlineData.map((d) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <th
+                      key={d.date}
+                      className={`p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50 ${isBlocked ? 'opacity-50' : ''}`}
+                    >
+                      {formatDate(d.date)}
+                      {isBlocked && (
+                        <div className="text-xs text-destructive mt-1">
+                          <Icon name="Lock" size={12} className="inline" />
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
                 <th className="p-2 text-center font-semibold text-foreground bg-accent/10 min-w-[80px]">
                   Tokens
                 </th>
@@ -676,26 +714,29 @@ const ModelFinances = ({
                 <td className="p-2 font-medium sticky left-0 bg-background">
                   Online CB
                 </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={d.cb || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        handleCellChange(
-                          idx,
-                          "cb",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
+                {onlineData.map((d, idx) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <td key={d.date} className="p-2 text-center">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={d.cb || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          handleCellChange(
+                            idx,
+                            "cb",
+                            val === "" ? 0 : Number(val),
+                          );
+                        }}
+                        className="w-14 h-8 text-center text-xs p-1"
+                        disabled={isReadOnly || isBlocked}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="p-2 text-center"></td>
               </tr>
 
@@ -703,25 +744,28 @@ const ModelFinances = ({
                 <td className="p-2 font-medium sticky left-0 bg-amber-400/20">
                   Chaturbate
                 </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.cbIncome || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, "");
-                        handleCellChange(
-                          idx,
-                          "cbIncome",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
+                {onlineData.map((d, idx) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <td key={d.date} className="p-2 text-center">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={d.cbIncome || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, "");
+                          handleCellChange(
+                            idx,
+                            "cbIncome",
+                            val === "" ? 0 : Number(val),
+                          );
+                        }}
+                        className="w-14 h-8 text-center text-xs p-1"
+                        disabled={isReadOnly || isBlocked}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="p-2 text-center font-bold bg-amber-400/30">
                   {onlineData
                     .reduce((sum, d) => sum + d.cbIncome, 0)
@@ -733,26 +777,29 @@ const ModelFinances = ({
                 <td className="p-2 font-medium sticky left-0 bg-background">
                   Online SP
                 </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={d.sp || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        handleCellChange(
-                          idx,
-                          "sp",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
+                {onlineData.map((d, idx) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <td key={d.date} className="p-2 text-center">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={d.sp || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          handleCellChange(
+                            idx,
+                            "sp",
+                            val === "" ? 0 : Number(val),
+                          );
+                        }}
+                        className="w-14 h-8 text-center text-xs p-1"
+                        disabled={isReadOnly || isBlocked}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="p-2 text-center"></td>
               </tr>
 
@@ -760,25 +807,28 @@ const ModelFinances = ({
                 <td className="p-2 font-medium sticky left-0 bg-red-500/20">
                   Stripchat
                 </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.spIncome || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, "");
-                        handleCellChange(
-                          idx,
-                          "spIncome",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
+                {onlineData.map((d, idx) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <td key={d.date} className="p-2 text-center">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={d.spIncome || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, "");
+                          handleCellChange(
+                            idx,
+                            "spIncome",
+                            val === "" ? 0 : Number(val),
+                          );
+                        }}
+                        className="w-14 h-8 text-center text-xs p-1"
+                        disabled={isReadOnly || isBlocked}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="p-2 text-center font-bold bg-red-500/30">
                   {onlineData
                     .reduce((sum, d) => sum + d.spIncome, 0)
@@ -790,25 +840,28 @@ const ModelFinances = ({
                 <td className="p-2 font-medium sticky left-0 bg-background">
                   Переводы
                 </td>
-                {onlineData.map((d, idx) => (
-                  <td key={d.date} className="p-2 text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={d.transfers || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9.]/g, "");
-                        handleCellChange(
-                          idx,
-                          "transfers",
-                          val === "" ? 0 : Number(val),
-                        );
-                      }}
-                      className="w-14 h-8 text-center text-xs p-1"
-                      disabled={isReadOnly}
-                    />
-                  </td>
-                ))}
+                {onlineData.map((d, idx) => {
+                  const isBlocked = blockedDates.includes(d.date);
+                  return (
+                    <td key={d.date} className="p-2 text-center">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={d.transfers || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9.]/g, "");
+                          handleCellChange(
+                            idx,
+                            "transfers",
+                            val === "" ? 0 : Number(val),
+                          );
+                        }}
+                        className="w-14 h-8 text-center text-xs p-1"
+                        disabled={isReadOnly || isBlocked}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="p-2 text-center font-bold bg-accent/5">
                   {onlineData
                     .reduce((sum, d) => sum + d.transfers, 0)

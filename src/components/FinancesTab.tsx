@@ -5,6 +5,7 @@ import ChartsSection from './finances/ChartsSection';
 import PlatformTables from './finances/PlatformTables';
 import ProductionMonitoring from './finances/ProductionMonitoring';
 import DirectorsSalary from './finances/DirectorsSalary';
+import BlockedDatesManager from './finances/BlockedDatesManager';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, getCurrentWeek, getPreviousWeek, getNextWeek, getWeeksBetween, Period } from '@/utils/periodUtils';
 
 interface Transaction {
@@ -116,12 +117,15 @@ const FinancesTab = ({ transactions, monthlyRevenue, modelPerformance, userEmail
           onDataLoaded={handleDataLoaded}
         />
         {userRole === 'director' && (
-          <DirectorsSalary 
-            userEmail={userEmail}
-            period={directorsPeriod}
-            onPreviousPeriod={handleDirectorsPreviousPeriod}
-            onNextPeriod={handleDirectorsNextPeriod}
-          />
+          <>
+            <DirectorsSalary 
+              userEmail={userEmail}
+              period={directorsPeriod}
+              onPreviousPeriod={handleDirectorsPreviousPeriod}
+              onNextPeriod={handleDirectorsNextPeriod}
+            />
+            <BlockedDatesManager userEmail={userEmail} />
+          </>
         )}
       </div>
     );
