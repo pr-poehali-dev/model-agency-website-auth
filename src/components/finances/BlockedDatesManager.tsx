@@ -1,26 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/icon";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import BlockDateDialog from "./BlockDateDialog";
+import MassDeleteDialog from "./MassDeleteDialog";
+import BlockedDatesList from "./BlockedDatesList";
 
 const BLOCKED_DATES_API = "https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c";
 
@@ -39,17 +23,8 @@ interface BlockedDatesManagerProps {
 const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newDate, setNewDate] = useState("");
-  const [newReason, setNewReason] = useState("");
-  const [newPlatform, setNewPlatform] = useState<'all' | 'chaturbate' | 'stripchat'>('all');
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [rangeReason, setRangeReason] = useState("");
-  const [rangePlatform, setRangePlatform] = useState<'all' | 'chaturbate' | 'stripchat'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteStartDate, setDeleteStartDate] = useState("");
-  const [deleteEndDate, setDeleteEndDate] = useState("");
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -81,8 +56,8 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     fetchBlockedDates();
   }, [userEmail]);
 
-  const handleBlockDate = async () => {
-    if (!newDate) {
+  const handleBlockDate = async (date: string, reason: string, platform: 'all' | 'chaturbate' | 'stripchat') => {
+    if (!date) {
       toast({
         title: "Ошибка",
         description: "Выберите дату для блокировки",
@@ -99,9 +74,9 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
           "X-User-Id": userEmail,
         },
         body: JSON.stringify({
-          date: newDate,
-          reason: newReason,
-          platform: newPlatform,
+          date,
+          reason,
+          platform,
         }),
       });
 
@@ -110,9 +85,6 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
           title: "Успешно",
           description: "Дата заблокирована",
         });
-        setNewDate("");
-        setNewReason("");
-        setNewPlatform('all');
         setIsDialogOpen(false);
         fetchBlockedDates();
       } else {
@@ -133,7 +105,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     }
   };
 
-  const handleBlockRange = async () => {
+  const handleBlockRange = async (startDate: string, endDate: string, reason: string, platform: 'all' | 'chaturbate' | 'stripchat') => {
     if (!startDate || !endDate) {
       toast({
         title: "Ошибка",
@@ -175,8 +147,8 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
           },
           body: JSON.stringify({
             date,
-            reason: rangeReason,
-            platform: rangePlatform,
+            reason,
+            platform,
           }),
         });
 
@@ -197,10 +169,6 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
       });
     }
 
-    setStartDate("");
-    setEndDate("");
-    setRangeReason("");
-    setRangePlatform('all');
     setIsDialogOpen(false);
     fetchBlockedDates();
   };
@@ -237,7 +205,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     }
   };
 
-  const handleMassDelete = async () => {
+  const handleMassDelete = async (deleteStartDate: string, deleteEndDate: string) => {
     let itemsToDelete: Array<{date: string, platform: string}> = [];
 
     if (selectedDates.length > 0) {
@@ -303,8 +271,6 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
       });
     }
 
-    setDeleteStartDate("");
-    setDeleteEndDate("");
     setSelectedDates([]);
     setIsDeleteDialogOpen(false);
     fetchBlockedDates();
@@ -359,417 +325,33 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
         </div>
 
         <div className="flex gap-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Icon name="Plus" size={16} className="mr-2" />
-                Заблокировать
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Заблокировать даты</DialogTitle>
-              <DialogDescription>
-                Выберите одну дату или диапазон дат для блокировки
-              </DialogDescription>
-            </DialogHeader>
+          <BlockDateDialog
+            isOpen={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            onBlockDate={handleBlockDate}
+            onBlockRange={handleBlockRange}
+          />
 
-            <Tabs defaultValue="single" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="single">
-                  <Icon name="Calendar" size={16} className="mr-2" />
-                  Одна дата
-                </TabsTrigger>
-                <TabsTrigger value="range">
-                  <Icon name="CalendarRange" size={16} className="mr-2" />
-                  Диапазон
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="single" className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Дата
-                  </label>
-                  <Input
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Площадка
-                  </label>
-                  <Select value={newPlatform} onValueChange={(value: 'all' | 'chaturbate' | 'stripchat') => setNewPlatform(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        <div className="flex items-center gap-2">
-                          <Icon name="Globe" size={16} />
-                          <span>Все площадки</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="chaturbate">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-amber-500" />
-                          <span>Chaturbate</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="stripchat">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-red-500" />
-                          <span>Stripchat</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Причина (опционально)
-                  </label>
-                  <Textarea
-                    value={newReason}
-                    onChange={(e) => setNewReason(e.target.value)}
-                    placeholder="Например: Технические работы, выходной день..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button onClick={handleBlockDate}>
-                    Заблокировать
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="range" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      С (начало)
-                    </label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      По (конец)
-                    </label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {startDate && endDate && (() => {
-                  const start = new Date(startDate);
-                  const end = new Date(endDate);
-                  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                  return days > 0 && (
-                    <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                      <Icon name="Info" size={16} className="inline mr-2" />
-                      Будет заблокировано дней: <span className="font-semibold">{days}</span>
-                    </div>
-                  );
-                })()}
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Площадка
-                  </label>
-                  <Select value={rangePlatform} onValueChange={(value: 'all' | 'chaturbate' | 'stripchat') => setRangePlatform(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        <div className="flex items-center gap-2">
-                          <Icon name="Globe" size={16} />
-                          <span>Все площадки</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="chaturbate">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-amber-500" />
-                          <span>Chaturbate</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="stripchat">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-red-500" />
-                          <span>Stripchat</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Причина (опционально)
-                  </label>
-                  <Textarea
-                    value={rangeReason}
-                    onChange={(e) => setRangeReason(e.target.value)}
-                    placeholder="Например: Праздничные дни, отпуск..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button onClick={handleBlockRange}>
-                    Заблокировать диапазон
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
-
-        {blockedDates.length > 0 && (
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Icon name="Trash2" size={16} className="mr-2" />
-                Массовое удаление
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Массовое удаление дат</DialogTitle>
-                <DialogDescription>
-                  Выберите даты для разблокировки
-                </DialogDescription>
-              </DialogHeader>
-
-              <Tabs defaultValue="range" className="mt-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="range">
-                    <Icon name="CalendarRange" size={16} className="mr-2" />
-                    По диапазону
-                  </TabsTrigger>
-                  <TabsTrigger value="select">
-                    <Icon name="ListChecks" size={16} className="mr-2" />
-                    Выбрать вручную
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="range" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        С (начало)
-                      </label>
-                      <Input
-                        type="date"
-                        value={deleteStartDate}
-                        onChange={(e) => setDeleteStartDate(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        По (конец)
-                      </label>
-                      <Input
-                        type="date"
-                        value={deleteEndDate}
-                        onChange={(e) => setDeleteEndDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {deleteStartDate && deleteEndDate && (() => {
-                    const start = new Date(deleteStartDate);
-                    const end = new Date(deleteEndDate);
-                    const count = blockedDates.filter(bd => {
-                      const d = new Date(bd.date);
-                      return d >= start && d <= end;
-                    }).length;
-                    return count > 0 && (
-                      <div className="bg-destructive/10 p-3 rounded-lg text-sm">
-                        <Icon name="AlertTriangle" size={16} className="inline mr-2" />
-                        Будет разблокировано дат: <span className="font-semibold">{count}</span>
-                      </div>
-                    );
-                  })()}
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsDeleteDialogOpen(false)}
-                    >
-                      Отмена
-                    </Button>
-                    <Button variant="destructive" onClick={handleMassDelete}>
-                      Разблокировать диапазон
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="select" className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">
-                      Выбрано: {selectedDates.length} из {blockedDates.length}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={selectAllDates}
-                    >
-                      {selectedDates.length === blockedDates.length ? 'Снять всё' : 'Выбрать всё'}
-                    </Button>
-                  </div>
-
-                  <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-lg p-3">
-                    {blockedDates.map((blocked) => (
-                      <div
-                        key={blocked.date}
-                        onClick={() => toggleDateSelection(blocked.date)}
-                        className={`p-3 border rounded cursor-pointer transition-colors ${
-                          selectedDates.includes(blocked.date)
-                            ? 'bg-destructive/10 border-destructive'
-                            : 'hover:bg-muted/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                            selectedDates.includes(blocked.date)
-                              ? 'bg-destructive border-destructive'
-                              : 'border-muted-foreground'
-                          }`}>
-                            {selectedDates.includes(blocked.date) && (
-                              <Icon name="Check" size={14} className="text-white" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <span className="font-medium">{formatDate(blocked.date)}</span>
-                            {blocked.reason && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {blocked.reason}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedDates([]);
-                        setIsDeleteDialogOpen(false);
-                      }}
-                    >
-                      Отмена
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleMassDelete}
-                      disabled={selectedDates.length === 0}
-                    >
-                      Разблокировать ({selectedDates.length})
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
-        )}
+          {blockedDates.length > 0 && (
+            <MassDeleteDialog
+              isOpen={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+              blockedDates={blockedDates}
+              selectedDates={selectedDates}
+              onToggleDateSelection={toggleDateSelection}
+              onSelectAllDates={selectAllDates}
+              onMassDelete={handleMassDelete}
+              formatDate={formatDate}
+            />
+          )}
         </div>
       </div>
 
-      {blockedDates.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Icon name="CalendarCheck" size={48} className="mx-auto mb-3 opacity-50" />
-          <p>Нет заблокированных дат</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {blockedDates.map((blocked) => {
-            const getPlatformBadge = () => {
-              if (blocked.platform === 'chaturbate') {
-                return (
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded text-xs">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Chaturbate</span>
-                  </div>
-                );
-              }
-              if (blocked.platform === 'stripchat') {
-                return (
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded text-xs">
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                    <span>Stripchat</span>
-                  </div>
-                );
-              }
-              return (
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-muted border rounded text-xs">
-                  <Icon name="Globe" size={12} />
-                  <span>Все площадки</span>
-                </div>
-              );
-            };
-
-            return (
-              <div
-                key={`${blocked.date}-${blocked.platform}`}
-                className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon name="Calendar" size={16} className="text-muted-foreground" />
-                    <span className="font-medium">{formatDate(blocked.date)}</span>
-                    {getPlatformBadge()}
-                  </div>
-                  {blocked.reason && (
-                    <p className="text-sm text-muted-foreground ml-6">
-                      {blocked.reason}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2 ml-6">
-                    Заблокировал: {blocked.created_by}
-                  </p>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleUnblockDate(blocked.date, blocked.platform)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Icon name="Trash2" size={16} />
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <BlockedDatesList
+        blockedDates={blockedDates}
+        onUnblockDate={handleUnblockDate}
+        formatDate={formatDate}
+      />
     </Card>
   );
 };

@@ -614,7 +614,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.cb || ""}
-                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.chaturbate}
+                    disabled={isReadOnly}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "cb", val === "" ? 0 : Number(val));
@@ -648,7 +648,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.sp || ""}
-                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.stripchat}
+                    disabled={isReadOnly}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "sp", val === "" ? 0 : Number(val));
@@ -732,8 +732,6 @@ const ModelFinances = ({
                   Online CB
                 </td>
                 {onlineData.map((d, idx) => {
-                  const dateBlocks = blockedDates[d.date];
-                  const isBlocked = dateBlocks?.all || dateBlocks?.chaturbate;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -750,7 +748,7 @@ const ModelFinances = ({
                           );
                         }}
                         className="w-14 h-8 text-center text-xs p-1"
-                        disabled={isReadOnly || isBlocked}
+                        disabled={isReadOnly}
                       />
                     </td>
                   );
@@ -797,8 +795,6 @@ const ModelFinances = ({
                   Online SP
                 </td>
                 {onlineData.map((d, idx) => {
-                  const dateBlocks = blockedDates[d.date];
-                  const isBlocked = dateBlocks?.all || dateBlocks?.stripchat;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -815,7 +811,7 @@ const ModelFinances = ({
                           );
                         }}
                         className="w-14 h-8 text-center text-xs p-1"
-                        disabled={isReadOnly || isBlocked}
+                        disabled={isReadOnly}
                       />
                     </td>
                   );
