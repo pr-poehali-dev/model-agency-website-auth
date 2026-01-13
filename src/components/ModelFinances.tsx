@@ -588,7 +588,8 @@ const ModelFinances = ({
             <Badge>{totalIncome.toFixed(0)}$</Badge>
           </div>
           {onlineData.map((d, idx) => {
-            const isBlocked = blockedDates.includes(d.date);
+            const dateBlocks = blockedDates[d.date];
+            const isBlocked = dateBlocks?.all;
             return (
               <Card key={d.date} className={`p-4 mb-3 ${isBlocked ? 'bg-muted/50 opacity-70' : 'bg-muted/30'}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -613,7 +614,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.cb || ""}
-                    disabled={isReadOnly || isBlocked}
+                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.chaturbate}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "cb", val === "" ? 0 : Number(val));
@@ -628,7 +629,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.cbIncome || ""}
-                    disabled={isReadOnly || isBlocked}
+                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.chaturbate}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
@@ -647,7 +648,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="numeric"
                     value={d.sp || ""}
-                    disabled={isReadOnly || isBlocked}
+                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.stripchat}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9]/g, "");
                       handleCellChange(idx, "sp", val === "" ? 0 : Number(val));
@@ -662,7 +663,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.spIncome || ""}
-                    disabled={isReadOnly || isBlocked}
+                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.stripchat}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
