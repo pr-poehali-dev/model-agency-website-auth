@@ -629,7 +629,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.cbIncome || ""}
-                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.chaturbate}
+                    disabled={isReadOnly || (userRole !== 'director' && (dateBlocks?.all || dateBlocks?.chaturbate))}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
@@ -663,7 +663,7 @@ const ModelFinances = ({
                     type="text"
                     inputMode="decimal"
                     value={d.spIncome || ""}
-                    disabled={isReadOnly || dateBlocks?.all || dateBlocks?.stripchat}
+                    disabled={isReadOnly || (userRole !== 'director' && (dateBlocks?.all || dateBlocks?.stripchat))}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[^0-9.]/g, "");
                       handleCellChange(
@@ -778,7 +778,7 @@ const ModelFinances = ({
                           );
                         }}
                         className="w-14 h-8 text-center text-xs p-1"
-                        disabled={isReadOnly || isBlocked}
+                        disabled={isReadOnly || (userRole !== 'director' && isBlocked)}
                       />
                     </td>
                   );
@@ -841,7 +841,7 @@ const ModelFinances = ({
                           );
                         }}
                         className="w-14 h-8 text-center text-xs p-1"
-                        disabled={isReadOnly || isBlocked}
+                        disabled={isReadOnly || (userRole !== 'director' && isBlocked)}
                       />
                     </td>
                   );
@@ -875,7 +875,7 @@ const ModelFinances = ({
                           );
                         }}
                         className="w-14 h-8 text-center text-xs p-1"
-                        disabled={isReadOnly || isBlocked}
+                        disabled={isReadOnly || (userRole !== 'director' && isBlocked)}
                       />
                     </td>
                   );
