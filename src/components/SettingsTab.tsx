@@ -4,8 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import BlockedDatesManager from './finances/BlockedDatesManager';
 
-const SettingsTab = () => {
+interface SettingsTabProps {
+  userEmail?: string;
+  userRole?: string;
+}
+
+const SettingsTab = ({ userEmail = '', userRole = '' }: SettingsTabProps) => {
   const [usdRate, setUsdRate] = useState('95');
   const { toast } = useToast();
 
@@ -72,6 +78,10 @@ const SettingsTab = () => {
           </div>
         </div>
       </Card>
+
+      {userRole === 'director' && (
+        <BlockedDatesManager userEmail={userEmail} />
+      )}
     </div>
   );
 };
