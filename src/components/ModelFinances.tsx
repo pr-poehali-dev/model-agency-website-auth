@@ -589,7 +589,7 @@ const ModelFinances = ({
           </div>
           {onlineData.map((d, idx) => {
             const dateBlocks = blockedDates[d.date];
-            const isBlocked = dateBlocks?.all;
+            const isBlocked = dateBlocks?.all || dateBlocks?.chaturbate || dateBlocks?.stripchat;
             return (
               <Card key={d.date} className={`p-4 mb-3 ${isBlocked && userRole !== 'director' ? 'bg-muted/50 opacity-70' : 'bg-muted/30'} ${isBlocked && userRole === 'director' ? 'border-amber-500/50 border-2' : ''}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -712,7 +712,7 @@ const ModelFinances = ({
                 </th>
                 {onlineData.map((d) => {
                   const dateBlocks = blockedDates[d.date];
-                  const isFullyBlocked = dateBlocks?.all;
+                  const isFullyBlocked = dateBlocks?.all || dateBlocks?.chaturbate || dateBlocks?.stripchat;
                   return (
                     <th
                       key={d.date}
