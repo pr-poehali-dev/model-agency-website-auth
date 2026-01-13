@@ -591,11 +591,17 @@ const ModelFinances = ({
             const dateBlocks = blockedDates[d.date];
             const isBlocked = dateBlocks?.all;
             return (
-              <Card key={d.date} className={`p-4 mb-3 ${isBlocked ? 'bg-muted/50 opacity-70' : 'bg-muted/30'}`}>
+              <Card key={d.date} className={`p-4 mb-3 ${isBlocked && userRole !== 'director' ? 'bg-muted/50 opacity-70' : 'bg-muted/30'} ${isBlocked && userRole === 'director' ? 'border-amber-500/50 border-2' : ''}`}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{formatDate(d.date)}</p>
-                    {isBlocked && (
+                    {isBlocked && userRole === 'director' && (
+                      <div className="flex items-center gap-1 text-xs bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+                        <Icon name="ShieldAlert" size={12} className="text-amber-600" />
+                        <span className="text-amber-600">Заблокировано (вы можете редактировать)</span>
+                      </div>
+                    )}
+                    {isBlocked && userRole !== 'director' && (
                       <Icon name="Lock" size={14} className="text-destructive" />
                     )}
                   </div>
@@ -710,10 +716,15 @@ const ModelFinances = ({
                   return (
                     <th
                       key={d.date}
-                      className={`p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50 ${isFullyBlocked ? 'opacity-50' : ''}`}
+                      className={`p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] ${isFullyBlocked && userRole === 'director' ? 'bg-amber-500/10 border-b-2 border-amber-500/50' : 'bg-muted/50'} ${isFullyBlocked && userRole !== 'director' ? 'opacity-50' : ''}`}
                     >
                       {formatDate(d.date)}
-                      {isFullyBlocked && (
+                      {isFullyBlocked && userRole === 'director' && (
+                        <div className="text-xs text-amber-600 mt-1 flex items-center justify-center gap-1">
+                          <Icon name="ShieldAlert" size={10} className="inline" />
+                        </div>
+                      )}
+                      {isFullyBlocked && userRole !== 'director' && (
                         <div className="text-xs text-destructive mt-1">
                           <Icon name="Lock" size={12} className="inline" />
                         </div>
