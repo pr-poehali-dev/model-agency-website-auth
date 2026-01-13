@@ -100,7 +100,7 @@ const ModelFinances = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
-  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [blockedDates, setBlockedDates] = useState<Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }>>({});
   const { toast } = useToast();
 
   const isReadOnly = userRole === "content_maker";
@@ -266,7 +266,7 @@ const ModelFinances = ({
           }
         });
         
-        setBlockedDates(Object.keys(blockedMap));
+        setBlockedDates(blockedMap);
       }
     } catch (error) {
       console.error("Failed to load blocked dates:", error);
@@ -704,14 +704,15 @@ const ModelFinances = ({
                   Настоящий период
                 </th>
                 {onlineData.map((d) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isFullyBlocked = dateBlocks?.all;
                   return (
                     <th
                       key={d.date}
-                      className={`p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50 ${isBlocked ? 'opacity-50' : ''}`}
+                      className={`p-2 text-center font-medium text-foreground whitespace-nowrap min-w-[60px] bg-muted/50 ${isFullyBlocked ? 'opacity-50' : ''}`}
                     >
                       {formatDate(d.date)}
-                      {isBlocked && (
+                      {isFullyBlocked && (
                         <div className="text-xs text-destructive mt-1">
                           <Icon name="Lock" size={12} className="inline" />
                         </div>
@@ -730,7 +731,8 @@ const ModelFinances = ({
                   Online CB
                 </td>
                 {onlineData.map((d, idx) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isBlocked = dateBlocks?.all || dateBlocks?.chaturbate;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -760,7 +762,8 @@ const ModelFinances = ({
                   Chaturbate
                 </td>
                 {onlineData.map((d, idx) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isBlocked = dateBlocks?.all || dateBlocks?.chaturbate;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -793,7 +796,8 @@ const ModelFinances = ({
                   Online SP
                 </td>
                 {onlineData.map((d, idx) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isBlocked = dateBlocks?.all || dateBlocks?.stripchat;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -823,7 +827,8 @@ const ModelFinances = ({
                   Stripchat
                 </td>
                 {onlineData.map((d, idx) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isBlocked = dateBlocks?.all || dateBlocks?.stripchat;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
@@ -856,7 +861,8 @@ const ModelFinances = ({
                   Переводы
                 </td>
                 {onlineData.map((d, idx) => {
-                  const isBlocked = blockedDates.includes(d.date);
+                  const dateBlocks = blockedDates[d.date];
+                  const isBlocked = dateBlocks?.all;
                   return (
                     <td key={d.date} className="p-2 text-center">
                       <Input
