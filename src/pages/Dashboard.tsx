@@ -93,6 +93,9 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
+    console.log('🚀 Dashboard mounted, checking token...');
+    console.log('authToken in localStorage:', localStorage.getItem('authToken'));
+    
     document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     
     const email = localStorage.getItem('userEmail') || '';
