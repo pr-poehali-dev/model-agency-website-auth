@@ -9,11 +9,7 @@ import os
 import psycopg2
 from typing import Dict, Any
 
-def escape_sql_string(s: str) -> str:
-    """Escape single quotes for SQL string literals"""
-    if s is None:
-        return 'NULL'
-    return s.replace("'", "''")
+
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -46,11 +42,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email = query_params.get('operator')
             
             if operator_email:
-                cur.execute(f"""
+                cur.execute("""
                     SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 
                     FROM t_p35405502_model_agency_website.operator_model_assignments 
-                    WHERE operator_email = '{escape_sql_string(operator_email)}'
-                """)
+                    WHERE operator_email = %s
+                """, (operator_email,))
             else:
                 cur.execute("""
                     SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 
@@ -94,18 +90,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_email = body_data.get('modelEmail')
             
             # Получить model_id по email модели
-            cur.execute(f"""
+            cur.execute("""
                 SELECT id FROM t_p35405502_model_agency_website.users 
-                WHERE email = '{escape_sql_string(model_email)}' AND role = 'content_maker'
-            """)
+                WHERE email = %s AND role = 'content_maker'
+            """, (model_email,))
             model_row = cur.fetchone()
             model_id = model_row[0] if model_row else 0
             
             # Проверить, не назначена ли уже
-            cur.execute(f"""
+            cur.execute("""
                 SELECT id FROM t_p35405502_model_agency_website.operator_model_assignments 
-                WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
-            """)
+                WHERE operator_email = %s AND model_email = %s
+            """, (operator_email, model_email))
             
             if cur.fetchone():
                 return {
@@ -117,12 +113,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Already assigned'})
                 }
             
-            cur.execute(f"""
+            cur.execute("""
                 INSERT INTO t_p35405502_model_agency_website.operator_model_assignments 
                 (operator_email, model_email, model_id, assigned_by) 
-                VALUES ('{escape_sql_string(operator_email)}', '{escape_sql_string(model_email)}', {model_id}, '{escape_sql_string(user_email)}') 
+                VALUES (%s, %s, %s, %s) 
                 RETURNING id
-            """)
+            """, (operator_email, model_email, model_id, user_email))
             
             assignment_id = cur.fetchone()[0]
             conn.commit()
@@ -173,11 +169,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Percentage must be between 0 and 30'})
                 }
             
-            cur.execute(f"""
+            cur.execute("""
                 UPDATE t_p35405502_model_agency_website.operator_model_assignments 
-                SET operator_percentage = {operator_percentage}
-                WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
-            """)
+                SET operator_percentage = %s
+                WHERE operator_email = %s AND model_email = %s
+            """, (operator_percentage, operator_email, model_email))
             
             conn.commit()
             
@@ -206,10 +202,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email = body_data.get('operatorEmail')
             model_email = body_data.get('modelEmail')
             
-            cur.execute(f"""
+            cur.execute("""
                 DELETE FROM t_p35405502_model_agency_website.operator_model_assignments 
-                WHERE operator_email = '{escape_sql_string(operator_email)}' AND model_email = '{escape_sql_string(model_email)}'
-            """)
+                WHERE operator_email = %s AND model_email = %s
+            """, (operator_email, model_email))
             
             conn.commit()
             

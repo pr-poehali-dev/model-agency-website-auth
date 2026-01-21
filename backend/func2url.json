@@ -1,4 +1,5 @@
 {
+  "migrate-passwords": "https://functions.poehali.dev/2bb7593a-a13f-433a-b83b-f2202e90abaa",
   "blocked-dates": "https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c",
   "director-finances": "https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec",
   "cleanup-old-schedules": "https://functions.poehali.dev/3d052c34-5e62-42e8-840c-ce2fcc665eef",
