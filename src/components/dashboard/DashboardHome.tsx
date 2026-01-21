@@ -69,11 +69,24 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
+      const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
+        method: 'GET',
+        headers: {
+          'X-Auth-Token': localStorage.getItem('authToken') || ''
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        setUsers([]);
+        return;
+      }
+      
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load users', err);
+      setUsers([]);
     }
   };
 
@@ -167,10 +180,25 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const assignment = producerData.find((a: any) => a.modelEmail === userEmail);
       
       if (assignment) {
-        const usersRes = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
-        const usersData = await usersRes.json();
-        const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
-        setMyProducer(producer?.fullName || assignment.producerEmail);
+        const usersRes = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
+          method: 'GET',
+          headers: {
+            'X-Auth-Token': localStorage.getItem('authToken') || ''
+          },
+          credentials: 'include'
+        });
+        
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          if (Array.isArray(usersData)) {
+            const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
+            setMyProducer(producer?.fullName || assignment.producerEmail);
+          } else {
+            setMyProducer('MBA Production');
+          }
+        } else {
+          setMyProducer('MBA Production');
+        }
       } else {
         setMyProducer('MBA Production');
       }
