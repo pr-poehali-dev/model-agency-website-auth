@@ -77,6 +77,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
                 user = cur.fetchone()
                 
+                # Автоматическая миграция паролей при первом входе директора
+                if user and user['role'] == 'director':
+                    # Проверяем, является ли хеш SHA256 (64 символа) вместо bcrypt
+                    password_hash = user['password_hash']
+                    if len(password_hash) == 64 and password_hash.isalnum():
+                        # Это SHA256 хеш - выполняем миграцию для всех пользователей
+                        default_bcrypt = hash_password('password123')
+                        cur.execute("UPDATE users SET password_hash = %s", (default_bcrypt,))
+                        conn.commit()
+                        
+                        # Перезагружаем данные пользователя с новым хешем
+                        cur.execute(
+                            "SELECT id, email, role, full_name, is_active, permissions, password_hash FROM users WHERE email = %s",
+                            (email,)
+                        )
+                        user = cur.fetchone()
+                
                 if not user or not verify_password(password, user['password_hash']):
                     return {
                         'statusCode': 401,
