@@ -40,9 +40,7 @@ const Login = () => {
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userRole', data.user.role);
       localStorage.setItem('userName', data.user.fullName);
-      if (!document.cookie.includes('auth_token=')) {
-        localStorage.setItem('authToken', data.token);
-      }
+      localStorage.setItem('authToken', data.token);
       
       addAuditLog(data.user.email, 'Вход в систему', 'Успешная авторизация', 'auth');
       navigate('/dashboard');
