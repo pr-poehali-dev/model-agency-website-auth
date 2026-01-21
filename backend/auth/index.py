@@ -47,13 +47,16 @@ def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
+    origin = event.get('headers', {}).get('origin', 'https://preview--model-agency-website-auth.poehali.dev')
+    
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
             'headers': {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': origin,
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-User-Email',
+                'Access-Control-Allow-Credentials': 'true',
                 'Access-Control-Max-Age': '86400'
             },
             'body': ''
@@ -104,7 +107,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not user['is_active']:
                     return {
                         'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'headers': {
+                            'Content-Type': 'application/json', 
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
                         'body': json.dumps({'error': 'Учетная запись деактивирована'})
                     }
                 
@@ -126,9 +133,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 200,
                     'headers': {
                         'Content-Type': 'application/json', 
-                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Origin': origin,
                         'Access-Control-Allow-Credentials': 'true',
-                        'X-Set-Cookie': f'auth_token={token}; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax'
+                        'X-Set-Cookie': f'auth_token={token}; Path=/; Max-Age=604800; SameSite=None; Secure'
                     },
                     'body': json.dumps({
                         'user': {
@@ -160,7 +167,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 return {
                     'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({
                         'id': new_user['id'],
                         'email': new_user['email'],
@@ -192,7 +203,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if user_data['role'] != 'director' and 'manage_users' not in permissions:
                 return {
                     'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Недостаточно прав'})
                 }
             
@@ -201,7 +216,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             return {
                 'statusCode': 200,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'headers': {
+                    'Content-Type': 'application/json', 
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true'
+                },
                 'body': json.dumps([{
                     'id': u['id'],
                     'email': u['email'],
@@ -226,7 +245,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not user_data:
                 return {
                     'statusCode': 401,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Требуется авторизация'})
                 }
             
@@ -237,7 +260,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not has_manage_users:
                 return {
                     'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Недостаточно прав для управления пользователями'})
                 }
             
@@ -246,7 +273,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if user and user['role'] == 'director':
                 return {
                     'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Нельзя изменять права директора'})
                 }
             
@@ -282,7 +313,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if 'manage_users' in new_permissions and not is_director:
                     return {
                         'statusCode': 403,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'headers': {
+                            'Content-Type': 'application/json', 
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
                         'body': json.dumps({'error': 'Только директор может выдавать права на управление пользователями'})
                     }
                 
@@ -298,7 +333,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 return {
                     'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({
                         'id': updated_user['id'],
                         'email': updated_user['email'],
@@ -322,7 +361,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not user_data:
                 return {
                     'statusCode': 401,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Требуется авторизация'})
                 }
             
@@ -333,7 +376,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not has_manage_users:
                 return {
                     'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Недостаточно прав для управления пользователями'})
                 }
             
@@ -342,14 +389,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not user:
                 return {
                     'statusCode': 404,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Пользователь не найден'})
                 }
             
             if user['role'] == 'director':
                 return {
                     'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Нельзя удалить директора'})
                 }
             
@@ -367,13 +422,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             return {
                 'statusCode': 200,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'headers': {
+                    'Content-Type': 'application/json', 
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true'
+                },
                 'body': json.dumps({'success': True, 'message': f'Пользователь {user_email} и все его назначения удалены'})
             }
         
         return {
             'statusCode': 405,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'headers': {
+                'Content-Type': 'application/json', 
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true'
+            },
             'body': json.dumps({'error': 'Method not allowed'})
         }
     
