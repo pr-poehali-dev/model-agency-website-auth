@@ -111,7 +111,19 @@ const Dashboard = () => {
         headers: getAuthHeaders(),
         credentials: 'include'
       });
+      
+      if (!response.ok) {
+        console.error('Failed to load models: HTTP', response.status);
+        return;
+      }
+      
       const users = await response.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid response format:', users);
+        return;
+      }
+      
       const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
       
       const modelsFromUsers = contentMakers.map((user: any) => ({
@@ -155,7 +167,19 @@ const Dashboard = () => {
         headers: getAuthHeaders(),
         credentials: 'include'
       });
+      
+      if (!response.ok) {
+        console.error('Failed to load user permissions: HTTP', response.status);
+        return;
+      }
+      
       const users = await response.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid response format:', users);
+        return;
+      }
+      
       const currentUser = users.find((u: any) => u.email === email);
       if (currentUser) {
         setUserRole(currentUser.role);
