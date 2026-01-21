@@ -1,18 +1,20 @@
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 
 function getAuthToken(): string | null {
+  const localToken = localStorage.getItem('authToken');
+  if (localToken) {
+    return localToken;
+  }
+  
   const cookies = document.cookie.split(';');
-  console.log('🍪 All cookies:', document.cookie);
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
     if (name === 'auth_token') {
-      console.log('✅ Found auth_token in cookie:', value);
       return value;
     }
   }
-  const localToken = localStorage.getItem('authToken');
-  console.log('📦 localStorage authToken:', localToken);
-  return localToken;
+  
+  return null;
 }
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
