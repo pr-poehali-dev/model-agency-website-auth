@@ -10,6 +10,7 @@ import ContentMakersSection from './checks/ContentMakersSection';
 import SoloMakersSection from './checks/SoloMakersSection';
 import { producerData } from './checks/mockData';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
+import { authenticatedFetch } from '@/lib/api';
 
 const ChecksTab = () => {
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());

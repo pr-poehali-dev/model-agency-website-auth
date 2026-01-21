@@ -49,4 +49,32 @@ export function getAuthHeaders(): Record<string, string> {
   return token ? { 'X-Auth-Token': token } : {};
 }
 
+export async function authenticatedFetch(url: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('authToken');
+  
+  const headers = new Headers(options.headers || {});
+  if (token) {
+    headers.set('X-Auth-Token', token);
+  }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include'
+  });
+  
+  if (response.status === 401) {
+    document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    window.location.href = '/';
+    throw new Error('Unauthorized');
+  }
+  
+  return response;
+}
+
 export { API_URL };
