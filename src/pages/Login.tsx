@@ -36,6 +36,9 @@ const Login = () => {
         return;
       }
 
+      console.log('Login response:', data);
+      console.log('Token from response:', data.token);
+
       document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       
       localStorage.setItem('isAuthenticated', 'true');
@@ -43,6 +46,8 @@ const Login = () => {
       localStorage.setItem('userRole', data.user.role);
       localStorage.setItem('userName', data.user.fullName);
       localStorage.setItem('authToken', data.token);
+      
+      console.log('Token saved to localStorage:', localStorage.getItem('authToken'));
       
       addAuditLog(data.user.email, 'Вход в систему', 'Успешная авторизация', 'auth');
       navigate('/dashboard');
