@@ -38,4 +38,9 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   return response;
 }
 
+export function getAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { 'X-Auth-Token': token } : {};
+}
+
 export { API_URL };
