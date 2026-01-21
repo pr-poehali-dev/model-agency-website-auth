@@ -35,9 +35,9 @@ def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
     cur = conn.cursor()
     cur.execute(
         """SELECT u.id, u.email, u.role, u.full_name, u.permissions 
-           FROM sessions s 
-           JOIN users u ON s.user_id = u.id 
-           WHERE s.token = %s AND s.expires_at > NOW() AND u.is_active = true""",
+           FROM auth_tokens at 
+           JOIN users u ON at.user_id = u.id 
+           WHERE at.token = %s AND at.expires_at > NOW() AND at.is_active = true AND u.is_active = true""",
         (token,)
     )
     user = cur.fetchone()
@@ -125,12 +125,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 # Сохраняем токен в базу
                 expires_at = datetime.now() + timedelta(days=7)
-                ip_address = event.get('requestContext', {}).get('identity', {}).get('sourceIp', '')
-                user_agent = event.get('headers', {}).get('user-agent', '')
                 
                 cur.execute(
-                    "INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (%s, %s, %s, %s, %s)",
-                    (user['id'], token, expires_at, ip_address, user_agent)
+                    "INSERT INTO auth_tokens (user_id, token, expires_at, is_active) VALUES (%s, %s, %s, %s)",
+                    (user['id'], token, expires_at, True)
                 )
                 conn.commit()
                 
