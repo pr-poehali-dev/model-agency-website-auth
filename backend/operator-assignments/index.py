@@ -42,11 +42,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             operator_email = query_params.get('operator')
             
             if operator_email:
-                cur.execute(f"""
+                cur.execute("""
                     SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 
                     FROM t_p35405502_model_agency_website.operator_model_assignments 
-                    WHERE operator_email = '{escape_sql_string(operator_email)}'
-                """)
+                    WHERE operator_email = %s
+                """, (operator_email,))
             else:
                 cur.execute("""
                     SELECT id, operator_email, model_email, model_id, assigned_by, assigned_at, operator_percentage 

@@ -1,8 +1,7 @@
 '''
-Business: Authentication API for login and user management
-Args: event with httpMethod (GET/POST/PUT/DELETE), body, queryStringParameters
-      context with request_id, function_name attributes
-Returns: HTTP response with user data or auth status
+Аутентификация и управление пользователями с защитой через bcrypt и токены сессий
+Args: event с httpMethod (GET/POST/PUT/DELETE), headers с X-Auth-Token
+Returns: HTTP response с данными пользователя или статусом авторизации
 '''
 
 import json
