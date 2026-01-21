@@ -6,7 +6,7 @@
       "path": "/",
       "body": {
         "action": "login",
-        "email": "director@mba-corp.com",
+        "email": "mbadir@mba.com",
         "password": "password123"
       },
       "expectedStatus": 200,
@@ -20,10 +20,18 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Get all users",
-      "method": "GET",
+      "name": "Login with invalid credentials",
+      "method": "POST",
       "path": "/",
-      "expectedStatus": 200,
+      "body": {
+        "action": "login",
+        "email": "fake@mba-corp.com",
+        "password": "wrongpass"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     }
   ]

@@ -7,8 +7,9 @@ Returns: HTTP response with user data or auth status
 
 import json
 import os
-import hashlib
 import secrets
+import bcrypt
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -18,13 +19,31 @@ def get_db_connection():
     return psycopg2.connect(dsn, cursor_factory=RealDictCursor)
 
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def verify_password(password: str, password_hash: str) -> bool:
-    return hash_password(password) == password_hash
+    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
 
 def generate_token() -> str:
     return secrets.token_urlsafe(32)
+
+def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
+    """Проверяет токен и возвращает данные пользователя"""
+    if not token:
+        return None
+    
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT u.id, u.email, u.role, u.full_name, u.permissions 
+           FROM sessions s 
+           JOIN users u ON s.user_id = u.id 
+           WHERE s.token = %s AND s.expires_at > NOW() AND u.is_active = true""",
+        (token,)
+    )
+    user = cur.fetchone()
+    cur.close()
+    return dict(user) if user else None
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -54,12 +73,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 password = body_data.get('password', '')
                 
                 cur.execute(
-                    "SELECT id, email, role, full_name, is_active, permissions FROM users WHERE email = %s AND password_hash = %s",
-                    (email, hash_password(password))
+                    "SELECT id, email, role, full_name, is_active, permissions, password_hash FROM users WHERE email = %s",
+                    (email,)
                 )
                 user = cur.fetchone()
                 
-                if not user:
+                if not user or not verify_password(password, user['password_hash']):
                     return {
                         'statusCode': 401,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -76,9 +95,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 token = generate_token()
                 permissions = json.loads(user['permissions']) if user['permissions'] else []
                 
+                # Сохраняем токен в базу
+                expires_at = datetime.now() + timedelta(days=7)
+                ip_address = event.get('requestContext', {}).get('identity', {}).get('sourceIp', '')
+                user_agent = event.get('headers', {}).get('user-agent', '')
+                
+                cur.execute(
+                    "INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (%s, %s, %s, %s, %s)",
+                    (user['id'], token, expires_at, ip_address, user_agent)
+                )
+                conn.commit()
+                
                 return {
                     'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({
                         'user': {
                             'id': user['id'],
@@ -121,6 +155,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
         
         elif method == 'GET':
+            # Проверяем токен
+            auth_token = event.get('headers', {}).get('x-auth-token', '')
+            user_data = verify_token(conn, auth_token)
+            
+            if not user_data:
+                return {
+                    'statusCode': 401,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Требуется авторизация'})
+                }
+            
+            # Только директор или пользователь с правами может видеть список
+            permissions = json.loads(user_data.get('permissions', '[]')) if user_data.get('permissions') else []
+            if user_data['role'] != 'director' and 'manage_users' not in permissions:
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно прав'})
+                }
+            
             cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage FROM users ORDER BY created_at DESC")
             users = cur.fetchall()
             
@@ -144,31 +198,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             user_id = body_data.get('id')
             
-            headers = event.get('headers', {})
-            print(f"All headers: {headers}")
-            requesting_email = headers.get('x-user-email', headers.get('X-User-Email', '')).lower()
-            print(f"PUT request from email: {requesting_email}")
+            # Проверяем токен
+            auth_token = event.get('headers', {}).get('x-auth-token', '')
+            user_data = verify_token(conn, auth_token)
             
-            if not requesting_email:
+            if not user_data:
                 return {
-                    'statusCode': 400,
+                    'statusCode': 401,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Отсутствует заголовок x-user-email'})
+                    'body': json.dumps({'error': 'Требуется авторизация'})
                 }
             
-            cur.execute("SELECT role, permissions FROM users WHERE LOWER(email) = %s", (requesting_email,))
-            requesting_user = cur.fetchone()
-            
-            if not requesting_user:
-                print(f"User not found: {requesting_email}")
-                return {
-                    'statusCode': 403,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': f'Пользователь не найден: {requesting_email}'})
-                }
-            
-            requesting_permissions = json.loads(requesting_user['permissions']) if requesting_user['permissions'] else []
-            is_director = requesting_user['role'] == 'director'
+            requesting_permissions = json.loads(user_data.get('permissions', '[]')) if user_data.get('permissions') else []
+            is_director = user_data['role'] == 'director'
             has_manage_users = 'manage_users' in requesting_permissions or is_director
             
             if not has_manage_users:
@@ -251,6 +293,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'DELETE':
             query_params = event.get('queryStringParameters', {})
             user_id = query_params.get('id')
+            
+            # Проверяем токен
+            auth_token = event.get('headers', {}).get('x-auth-token', '')
+            user_data = verify_token(conn, auth_token)
+            
+            if not user_data:
+                return {
+                    'statusCode': 401,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Требуется авторизация'})
+                }
+            
+            requesting_permissions = json.loads(user_data.get('permissions', '[]')) if user_data.get('permissions') else []
+            is_director = user_data['role'] == 'director'
+            has_manage_users = 'manage_users' in requesting_permissions or is_director
+            
+            if not has_manage_users:
+                return {
+                    'statusCode': 403,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недостаточно прав для управления пользователями'})
+                }
             
             cur.execute("SELECT role, email FROM users WHERE id = %s", (user_id,))
             user = cur.fetchone()

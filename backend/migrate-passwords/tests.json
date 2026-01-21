@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Migration with valid secret",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "secret": "temp-secret-key-12345"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
