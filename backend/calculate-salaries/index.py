@@ -89,7 +89,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """)
         producer_assignments = cur.fetchall()
         
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 mf.model_id,
                 mf.date,
@@ -103,8 +103,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.transfers,
                 mf.operator_name
             FROM model_finances mf
-            WHERE mf.date BETWEEN %s AND %s
-        """, (period_start, period_end))
+            WHERE mf.date BETWEEN '{period_start}' AND '{period_end}'
+        """)
         all_finances = cur.fetchall()
         
         finances = [f for f in all_finances if (

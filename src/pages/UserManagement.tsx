@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { addAuditLog } from '@/lib/auditLog';
-import { getAuthHeaders } from '@/lib/api';
 import {
   ROLE_PERMISSIONS,
   type UserRole,
@@ -65,7 +64,7 @@ const UserManagement = () => {
   const loadCurrentUser = async () => {
     const email = localStorage.getItem('userEmail') || '';
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+      const response = await fetch(API_URL, { method: 'GET' });
       const allUsers = await response.json();
       const current = allUsers.find((u: User) => u.email === email);
       if (current) {
@@ -78,7 +77,7 @@ const UserManagement = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+      const response = await fetch(API_URL, { method: 'GET' });
       const data = await response.json();
       setUsers(data);
     } catch (err) {
@@ -114,7 +113,7 @@ const UserManagement = () => {
       
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create_user',
           email: newUserEmail,
@@ -206,7 +205,6 @@ const UserManagement = () => {
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': currentUserEmail,
-          ...getAuthHeaders()
         },
         body: JSON.stringify(updateData),
       });
@@ -261,7 +259,6 @@ const UserManagement = () => {
     try {
       const response = await fetch(`${API_URL}?id=${userId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
       });
 
       if (!response.ok) {

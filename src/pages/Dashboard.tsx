@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, type UserRole } from '@/lib/permissions';
-import { getAuthHeaders } from '@/lib/api';
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
 import ModelsTab from '@/components/dashboard/ModelsTab';
@@ -104,11 +103,7 @@ const Dashboard = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(API_URL, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
+      const response = await fetch(API_URL);
       const users = await response.json();
       const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
       
@@ -148,11 +143,7 @@ const Dashboard = () => {
 
   const loadUserPermissions = async (email: string) => {
     try {
-      const response = await fetch(API_URL, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
+      const response = await fetch(API_URL, { method: 'GET' });
       const users = await response.json();
       const currentUser = users.find((u: any) => u.email === email);
       if (currentUser) {
@@ -206,11 +197,7 @@ const Dashboard = () => {
       const assignments = await response.json();
       const assignment = assignments.find((a: any) => a.operatorEmail === operatorEmail);
       if (assignment) {
-        const usersResponse = await fetch(API_URL, {
-          method: 'GET',
-          headers: getAuthHeaders(),
-          credentials: 'include'
-        });
+        const usersResponse = await fetch(API_URL, { method: 'GET' });
         const users = await usersResponse.json();
         const producer = users.find((u: any) => u.email === assignment.producerEmail);
         setAssignedProducer(producer?.fullName || assignment.producerEmail);
