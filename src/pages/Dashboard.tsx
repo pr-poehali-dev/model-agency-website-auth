@@ -93,9 +93,6 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    console.log('🚀 Dashboard mounted, checking token...');
-    console.log('authToken in localStorage:', localStorage.getItem('authToken'));
-    
     document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     
     const email = localStorage.getItem('userEmail') || '';
@@ -109,17 +106,11 @@ const Dashboard = () => {
 
   const loadModels = async () => {
     try {
-      const headers = getAuthHeaders();
-      console.log('🔍 loadModels - headers:', headers);
-      console.log('🔍 loadModels - token in localStorage:', localStorage.getItem('authToken'));
-      
       const response = await fetch(API_URL, {
         method: 'GET',
-        headers: headers,
+        headers: getAuthHeaders(),
         credentials: 'include'
       });
-      
-      console.log('🔍 loadModels - response status:', response.status);
       
       if (!response.ok) {
         console.error('Failed to load models: HTTP', response.status);

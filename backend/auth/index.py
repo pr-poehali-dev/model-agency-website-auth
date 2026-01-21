@@ -188,11 +188,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'GET':
             # Проверяем токен
             headers = event.get('headers', {})
-            print(f"🔍 ALL HEADERS: {headers}")
             auth_token = headers.get('X-Auth-Token') or headers.get('x-auth-token', '')
-            print(f"🔑 Auth token extracted: '{auth_token}'")
             user_data = verify_token(conn, auth_token)
-            print(f"👤 User data from token: {user_data}")
             
             if not user_data:
                 return {
