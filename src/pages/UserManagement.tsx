@@ -65,7 +65,7 @@ const UserManagement = () => {
   const loadCurrentUser = async () => {
     const email = localStorage.getItem('userEmail') || '';
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders() });
+      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
       const allUsers = await response.json();
       const current = allUsers.find((u: User) => u.email === email);
       if (current) {
@@ -78,7 +78,7 @@ const UserManagement = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders() });
+      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
       const data = await response.json();
       setUsers(data);
     } catch (err) {

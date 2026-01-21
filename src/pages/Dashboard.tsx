@@ -106,7 +106,8 @@ const Dashboard = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        credentials: 'include'
       });
       const users = await response.json();
       const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
@@ -149,7 +150,8 @@ const Dashboard = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        credentials: 'include'
       });
       const users = await response.json();
       const currentUser = users.find((u: any) => u.email === email);
@@ -206,7 +208,8 @@ const Dashboard = () => {
       if (assignment) {
         const usersResponse = await fetch(API_URL, {
           method: 'GET',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
+          credentials: 'include'
         });
         const users = await usersResponse.json();
         const producer = users.find((u: any) => u.email === assignment.producerEmail);
