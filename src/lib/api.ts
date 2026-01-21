@@ -2,13 +2,17 @@ const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99
 
 function getAuthToken(): string | null {
   const cookies = document.cookie.split(';');
+  console.log('🍪 All cookies:', document.cookie);
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
     if (name === 'auth_token') {
+      console.log('✅ Found auth_token in cookie:', value);
       return value;
     }
   }
-  return localStorage.getItem('authToken');
+  const localToken = localStorage.getItem('authToken');
+  console.log('📦 localStorage authToken:', localToken);
+  return localToken;
 }
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
