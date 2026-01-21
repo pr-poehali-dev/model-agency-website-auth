@@ -117,11 +117,25 @@ const ModelsTab = ({
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await fetch(USERS_API_URL, {
+        method: 'GET',
+        headers: {
+          'X-Auth-Token': localStorage.getItem('authToken') || ''
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to load users: HTTP', response.status);
+        setUsers([]);
+        return;
+      }
+      
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading users:', error);
+      setUsers([]);
     }
   };
 
