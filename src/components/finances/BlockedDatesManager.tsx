@@ -5,6 +5,7 @@ import Icon from "@/components/ui/icon";
 import BlockDateDialog from "./BlockDateDialog";
 import MassDeleteDialog from "./MassDeleteDialog";
 import BlockedDatesList from "./BlockedDatesList";
+import { authenticatedFetch } from '@/lib/api';
 
 const BLOCKED_DATES_API = "https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c";
 
@@ -30,7 +31,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
 
   const fetchBlockedDates = async () => {
     try {
-      const response = await fetch(BLOCKED_DATES_API, {
+      const response = await authenticatedFetch(BLOCKED_DATES_API, {
         headers: {
           "X-User-Id": userEmail,
         },
@@ -67,7 +68,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
     }
 
     try {
-      const response = await fetch(BLOCKED_DATES_API, {
+      const response = await authenticatedFetch(BLOCKED_DATES_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,7 +140,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
 
     for (const date of dates) {
       try {
-        const response = await fetch(BLOCKED_DATES_API, {
+        const response = await authenticatedFetch(BLOCKED_DATES_API, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -175,7 +176,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
 
   const handleUnblockDate = async (date: string, platform: string) => {
     try {
-      const response = await fetch(`${BLOCKED_DATES_API}?date=${date}&platform=${platform}`, {
+      const response = await authenticatedFetch(`${BLOCKED_DATES_API}?date=${date}&platform=${platform}`, {
         method: "DELETE",
         headers: {
           "X-User-Id": userEmail,
@@ -247,7 +248,7 @@ const BlockedDatesManager = ({ userEmail }: BlockedDatesManagerProps) => {
 
     for (const item of itemsToDelete) {
       try {
-        const response = await fetch(`${BLOCKED_DATES_API}?date=${item.date}&platform=${item.platform}`, {
+        const response = await authenticatedFetch(`${BLOCKED_DATES_API}?date=${item.date}&platform=${item.platform}`, {
           method: "DELETE",
           headers: {
             "X-User-Id": userEmail,

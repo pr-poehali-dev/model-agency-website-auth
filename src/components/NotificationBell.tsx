@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { authenticatedFetch } from '@/lib/api';
 
 interface Notification {
   id: string;
@@ -38,7 +39,7 @@ const NotificationBell = () => {
 
   const checkNewAssignments = async () => {
     try {
-      const usersResponse = await fetch(USERS_API_URL);
+      const usersResponse = await authenticatedFetch(USERS_API_URL);
       const users = await usersResponse.json();
       const currentUser = users.find((u: any) => u.email === userEmail);
       
@@ -47,7 +48,7 @@ const NotificationBell = () => {
       const newNotifications: Notification[] = [];
 
       if (currentUser.role === 'operator') {
-        const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+        const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
         const assignments = await assignmentsResponse.json();
         const userAssignments = assignments.filter((a: any) => 
           a.operatorEmail === userEmail && 
@@ -67,7 +68,7 @@ const NotificationBell = () => {
           }
         }
 
-        const producerResponse = await fetch(`${PRODUCER_API_URL}?type=operator`);
+        const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=operator`);
         const producerAssignments = await producerResponse.json();
         const userProducerAssignment = producerAssignments.find(
           (pa: any) => pa.operatorEmail === userEmail && new Date(pa.assignedAt) > lastCheck
@@ -88,7 +89,7 @@ const NotificationBell = () => {
       }
 
       if (currentUser.role === 'content_maker') {
-        const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+        const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
         const producerAssignments = await producerResponse.json();
         const modelProducerAssignment = producerAssignments.find(
           (pa: any) => pa.modelEmail === userEmail && new Date(pa.assignedAt) > lastCheck
@@ -107,7 +108,7 @@ const NotificationBell = () => {
           }
         }
 
-        const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+        const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
         const assignments = await assignmentsResponse.json();
         const modelAssignments = assignments.filter((a: any) => {
           const model = users.find((u: any) => u.id === a.modelId);

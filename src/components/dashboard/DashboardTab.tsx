@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
+import { authenticatedFetch } from '@/lib/api';
 
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
@@ -60,7 +61,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
 
   const loadExchangeRate = async () => {
     try {
-      const response = await fetch(EXCHANGE_RATE_API_URL);
+      const response = await authenticatedFetch(EXCHANGE_RATE_API_URL);
       const data = await response.json();
       if (data.rate) {
         setExchangeRate(data.rate - 5);
@@ -72,7 +73,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
 
   const loadUserData = async (email: string) => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
       const users = await response.json();
       const currentUser = users.find((u: any) => u.email === email);
       
@@ -88,19 +89,19 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
 
   const loadProducerInfo = async (email: string) => {
     try {
-      const usersResponse = await fetch(USERS_API_URL);
+      const usersResponse = await authenticatedFetch(USERS_API_URL);
       const users = await usersResponse.json();
       const currentUser = users.find((u: any) => u.email === email);
       
       if (!currentUser) return;
       
       if (currentUser.role === 'operator') {
-        const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+        const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
         const assignments = await assignmentsResponse.json();
         const operatorAssignment = assignments.find((a: any) => a.operatorEmail === email);
         
         if (operatorAssignment) {
-          const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+          const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
           const producerAssignments = await producerResponse.json();
           const producerAssignment = producerAssignments.find(
             (pa: any) => pa.modelEmail === operatorAssignment.modelEmail
@@ -145,7 +146,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
-      const response = await fetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
         
@@ -179,7 +180,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
-      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
         const userAdj = data[userEmail] || {advance: 0, penalty: 0, expenses: 0};

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod } from '@/utils/periodUtils';
+import { authenticatedFetch } from '@/lib/api';
 
 interface Model {
   id: number;
@@ -59,7 +60,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
 
   const loadAssignments = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30');
+      const response = await authenticatedFetch('https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30');
       const data = await response.json();
       setAssignments(data);
     } catch (err) {
@@ -69,7 +70,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
+      const response = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
         method: 'GET',
         headers: {
           'X-Auth-Token': localStorage.getItem('authToken') || ''
@@ -93,7 +94,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const loadExchangeRate = async () => {
     setIsLoadingRate(true);
     try {
-      const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
       if (data.rate) {
         const cbr = data.rate;
@@ -126,9 +127,9 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       setCurrentPeriodLabel(currentPeriod.label);
 
       const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
-        fetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
-        fetch(`https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7?period_start=${periodStart}&period_end=${periodEnd}`),
-        fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a')
+        authenticatedFetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
+        authenticatedFetch(`https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7?period_start=${periodStart}&period_end=${periodEnd}`),
+        authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a')
       ]);
 
       const salaryData = await salaryRes.json();
@@ -174,13 +175,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
 
   const loadMyProducer = async () => {
     try {
-      const producerRes = await fetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
+      const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
       const producerData = await producerRes.json();
       
       const assignment = producerData.find((a: any) => a.modelEmail === userEmail);
       
       if (assignment) {
-        const usersRes = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
+        const usersRes = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
           method: 'GET',
           headers: {
             'X-Auth-Token': localStorage.getItem('authToken') || ''

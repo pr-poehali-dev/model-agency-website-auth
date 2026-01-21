@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { authenticatedFetch } from '@/lib/api';
 
 interface User {
   email: string;
@@ -44,7 +45,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
       const users = await response.json();
       setProducers(users.filter((u: User) => u.role === 'producer'));
       setOperators(users.filter((u: User) => u.role === 'operator'));
@@ -56,7 +57,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
   const loadAssignments = async () => {
     try {
-      const response = await fetch(PRODUCER_API_URL);
+      const response = await authenticatedFetch(PRODUCER_API_URL);
       const data = await response.json();
       setAssignments(data);
     } catch (err) {
@@ -83,7 +84,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        const response = await fetch(PRODUCER_API_URL, {
+        const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -101,7 +102,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         
         toast({ title: 'Модель откреплена', description: 'Модель убрана из доступа продюсера' });
       } else {
-        const response = await fetch(PRODUCER_API_URL, {
+        const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -132,7 +133,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
 
     try {
       if (assigned) {
-        const response = await fetch(PRODUCER_API_URL, {
+        const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -150,7 +151,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         
         toast({ title: 'Оператор откреплен', description: 'Продюсер больше не управляет этим оператором' });
       } else {
-        const response = await fetch(PRODUCER_API_URL, {
+        const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

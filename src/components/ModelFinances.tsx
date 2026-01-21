@@ -32,6 +32,7 @@ import {
   getNextPeriod,
   Period,
 } from "@/utils/periodUtils";
+import { authenticatedFetch } from '@/lib/api';
 
 interface ModelFinancesProps {
   modelId: number;
@@ -114,7 +115,7 @@ const ModelFinances = ({
   const loadOperators = async () => {
     try {
       // Load all users
-      const usersResponse = await fetch(USERS_API_URL);
+      const usersResponse = await authenticatedFetch(USERS_API_URL);
       const users = await usersResponse.json();
       
       // Check if current model is a solo maker
@@ -126,11 +127,11 @@ const ModelFinances = ({
       }
 
       // Load ALL assignments
-      const assignmentsResponse = await fetch(ASSIGNMENTS_API_URL);
+      const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
       const allAssignments = await assignmentsResponse.json();
 
       // Load producer assignments
-      const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+      const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
       const producerAssignments = await producerResponse.json();
 
       // Filter assignments for this specific model by modelId
@@ -242,7 +243,7 @@ const ModelFinances = ({
 
   const loadBlockedDates = async () => {
     try {
-      const response = await fetch(BLOCKED_DATES_API, {
+      const response = await authenticatedFetch(BLOCKED_DATES_API, {
         headers: {
           "X-User-Id": currentUserEmail || "",
         },
@@ -276,7 +277,7 @@ const ModelFinances = ({
   const loadFinancialData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}?modelId=${modelId}`);
+      const response = await authenticatedFetch(`${API_URL}?modelId=${modelId}`);
       console.log("📡 Response status:", response.status);
 
       if (response.ok) {
@@ -323,7 +324,7 @@ const ModelFinances = ({
       if (isReadOnly) return;
 
       try {
-        const response = await fetch(API_URL, {
+        const response = await authenticatedFetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ modelId, data }),
@@ -361,7 +362,7 @@ const ModelFinances = ({
     setIsSaving(true);
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await authenticatedFetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

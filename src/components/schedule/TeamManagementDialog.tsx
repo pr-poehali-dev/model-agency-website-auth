@@ -16,6 +16,7 @@ import {
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { authenticatedFetch } from '@/lib/api';
 
 interface TeamMember {
   id: number;
@@ -67,7 +68,7 @@ const TeamManagementDialog = ({
     }
 
     try {
-      const response = await fetch(assignmentsApiUrl, {
+      const response = await authenticatedFetch(assignmentsApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ operatorEmail, modelEmail })
@@ -93,7 +94,7 @@ const TeamManagementDialog = ({
 
   const handleDeleteTeam = async (team: Team) => {
     try {
-      const response = await fetch(assignmentsApiUrl, {
+      const response = await authenticatedFetch(assignmentsApiUrl, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

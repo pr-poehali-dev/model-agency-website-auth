@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { authenticatedFetch } from '@/lib/api';
 
 
 
@@ -68,7 +69,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
   const loadOperators = async (assignments?: any[]) => {
     try {
-      const response = await fetch(API_URL);
+      const response = await authenticatedFetch(API_URL);
       const users = await response.json();
       let ops = users.filter((u: User) => u.role === 'operator');
       
@@ -88,7 +89,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
   const loadModels = async (assignments?: any[]) => {
     try {
-      const response = await fetch(API_URL);
+      const response = await authenticatedFetch(API_URL);
       const users = await response.json();
       let contentMakers = users.filter((u: User) => u.role === 'content_maker');
       
@@ -108,7 +109,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
   const loadAssignments = async () => {
     try {
-      const response = await fetch(ASSIGNMENTS_API_URL);
+      const response = await authenticatedFetch(ASSIGNMENTS_API_URL);
       const data = await response.json();
       setAssignments(data);
       
@@ -125,7 +126,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
   const loadProducerAssignments = async () => {
     try {
-      const response = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(currentUserEmail)}`);
+      const response = await authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(currentUserEmail)}`);
       const data = await response.json();
       setProducerAssignments(data);
       return data;
@@ -157,7 +158,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     setPercentages(prev => ({ ...prev, [key]: newPercentage }));
 
     try {
-      const response = await fetch(ASSIGNMENTS_API_URL, {
+      const response = await authenticatedFetch(ASSIGNMENTS_API_URL, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +198,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
 
     try {
       if (assigned) {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await authenticatedFetch(ASSIGNMENTS_API_URL, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -215,7 +216,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         
         toast({ title: 'Модель откреплена', description: 'Модель успешно откреплена от оператора' });
       } else {
-        const response = await fetch(ASSIGNMENTS_API_URL, {
+        const response = await authenticatedFetch(ASSIGNMENTS_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -244,7 +245,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
       }
       
       if (currentUserRole === 'producer' && assigned) {
-        const updatedAssignments = await fetch(ASSIGNMENTS_API_URL).then(r => r.json());
+        const updatedAssignments = await authenticatedFetch(ASSIGNMENTS_API_URL).then(r => r.json());
         const operatorHasModels = updatedAssignments.some((a: Assignment) => a.operatorEmail === operatorEmail);
         if (!operatorHasModels && selectedOperator === operatorEmail) {
           setSelectedOperator('');

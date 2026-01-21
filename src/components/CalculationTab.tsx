@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { authenticatedFetch } from '@/lib/api';
 
 interface User {
   id: number;
@@ -62,7 +63,7 @@ const CalculationTab = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
       const data = await response.json();
       const employees = data.filter((u: User) => 
         u.role === 'operator' || u.role === 'content_maker' || u.role === 'producer' || u.role === 'solo_maker'
@@ -91,7 +92,7 @@ const CalculationTab = () => {
 
   const loadExchangeRate = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
       if (data.rate) {
         setExchangeRate(data.rate - 5);
@@ -127,7 +128,7 @@ const CalculationTab = () => {
       const periodStartStr = formatDate(periodStart);
       const periodEndStr = formatDate(periodEnd);
       
-      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStartStr}&period_end=${periodEndStr}`);
+      const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStartStr}&period_end=${periodEndStr}`);
       if (response.ok) {
         const data = await response.json();
         setAdjustments(data);

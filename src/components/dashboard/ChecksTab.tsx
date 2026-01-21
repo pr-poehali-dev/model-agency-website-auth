@@ -53,7 +53,7 @@ const ChecksTab = () => {
   const loadExchangeRate = async () => {
     setIsLoadingRate(true);
     try {
-      const response = await fetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
       console.log('CBR API response:', data);
       if (data.rate) {
@@ -72,7 +72,11 @@ const ChecksTab = () => {
 
   const loadUserRole = async (email: string) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
+      const response = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
+      if (!response.ok) {
+        setIsLoadingRole(false);
+        return;
+      }
       const users = await response.json();
       const user = users.find((u: any) => u.email === email);
       if (user) {
@@ -87,32 +91,37 @@ const ChecksTab = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
+      if (!response.ok) return;
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load users', err);
+      setUsers([]);
     }
   };
 
   const loadAllAssignments = async () => {
     try {
-      const response = await fetch(`${ASSIGNMENTS_API_URL}`);
+      const response = await authenticatedFetch(`${ASSIGNMENTS_API_URL}`);
+      if (!response.ok) return;
       const assignments = await response.json();
-      setAllAssignments(assignments);
+      setAllAssignments(Array.isArray(assignments) ? assignments : []);
     } catch (err) {
       console.error('Failed to load all assignments', err);
+      setAllAssignments([]);
     }
   };
 
   const loadProducerAssignments = async (email: string) => {
     try {
-      const response = await fetch(`${ASSIGNMENTS_API_URL}`);
+      const response = await authenticatedFetch(`${ASSIGNMENTS_API_URL}`);
+      if (!response.ok) return;
       const assignments = await response.json();
       
       const [producerModelResponse, producerOperatorResponse] = await Promise.all([
-        fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`),
-        fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=operator`)
+        authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`),
+        authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=operator`)
       ]);
       
       const producerModelsData = await producerModelResponse.json();
@@ -144,7 +153,7 @@ const ChecksTab = () => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
-      const response = await fetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
         setSalaries(data);
@@ -166,7 +175,7 @@ const ChecksTab = () => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
-      const response = await fetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
+      const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
         setAdjustments(data);
@@ -188,7 +197,7 @@ const ChecksTab = () => {
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       
-      await fetch(ADJUSTMENTS_API_URL, {
+      await authenticatedFetch(ADJUSTMENTS_API_URL, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -225,7 +234,7 @@ const ChecksTab = () => {
       const user = users.find(u => u.email === email);
       const role = user?.role === 'content_maker' ? 'model' : 'operator';
       
-      await fetch(ADJUSTMENTS_API_URL, {
+      await authenticatedFetch(ADJUSTMENTS_API_URL, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

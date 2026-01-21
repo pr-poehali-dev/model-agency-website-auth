@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { addAuditLog } from '@/lib/auditLog';
-import { getAuthHeaders } from '@/lib/api';
+import { getAuthHeaders, authenticatedFetch } from '@/lib/api';
 import {
   ROLE_PERMISSIONS,
   type UserRole,
@@ -65,7 +65,7 @@ const UserManagement = () => {
   const loadCurrentUser = async () => {
     const email = localStorage.getItem('userEmail') || '';
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+      const response = await authenticatedFetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
       const allUsers = await response.json();
       const current = allUsers.find((u: User) => u.email === email);
       if (current) {
@@ -78,7 +78,7 @@ const UserManagement = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+      const response = await authenticatedFetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
       const data = await response.json();
       setUsers(data);
     } catch (err) {
@@ -112,7 +112,7 @@ const UserManagement = () => {
         defaultPermissions.push('view_schedule');
       }
       
-      const response = await fetch(API_URL, {
+      const response = await authenticatedFetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
@@ -201,7 +201,7 @@ const UserManagement = () => {
         updateData.permissions = defaultPermissions;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await authenticatedFetch(API_URL, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -259,7 +259,7 @@ const UserManagement = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}?id=${userId}`, {
+      const response = await authenticatedFetch(`${API_URL}?id=${userId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -322,7 +322,7 @@ const UserManagement = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(CLEANUP_API_URL, {
+      const response = await authenticatedFetch(CLEANUP_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -361,7 +361,7 @@ const UserManagement = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await authenticatedFetch(API_URL, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

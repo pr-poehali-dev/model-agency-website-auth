@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import { authenticatedFetch } from '@/lib/api';
 
 interface TeamMember {
   id: number;
@@ -181,7 +182,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   const loadSchedule = async () => {
     try {
-      const response = await fetch(SCHEDULE_API_URL);
+      const response = await authenticatedFetch(SCHEDULE_API_URL);
       const data = await response.json();
       
       console.log('Schedule API response:', data);
@@ -275,7 +276,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   const loadTeamMembers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
       const users = await response.json();
       const operators = users.filter((u: any) => u.role === 'operator' || u.role === 'content_maker' || u.role === 'solo_maker');
       setTeamMembers(operators);
@@ -287,9 +288,9 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const loadTeams = async (currentUserEmail: string) => {
     try {
       const [usersResponse, assignmentsResponse, producerAssignmentsResponse] = await Promise.all([
-        fetch(USERS_API_URL),
-        fetch(ASSIGNMENTS_API_URL),
-        fetch(`https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?producer=${encodeURIComponent(currentUserEmail)}&type=model`)
+        authenticatedFetch(USERS_API_URL),
+        authenticatedFetch(ASSIGNMENTS_API_URL),
+        authenticatedFetch(`https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?producer=${encodeURIComponent(currentUserEmail)}&type=model`)
       ]);
       
       const users = await usersResponse.json();
@@ -412,7 +413,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     console.log('Saving cell:', payload);
 
     try {
-      const response = await fetch(SCHEDULE_API_URL, {
+      const response = await authenticatedFetch(SCHEDULE_API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

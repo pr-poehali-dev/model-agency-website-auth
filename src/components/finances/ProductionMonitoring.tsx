@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Period, getPreviousPeriod } from '@/utils/periodUtils';
+import { authenticatedFetch } from '@/lib/api';
 
 interface ModelStats {
   name: string;
@@ -71,7 +72,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
     const periodEnd = formatDate(period.endDate);
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `${API_URL}?user_email=${encodeURIComponent(userEmail)}&role=${userRole}&period_start=${periodStart}&period_end=${periodEnd}`
       );
       const result = await response.json();

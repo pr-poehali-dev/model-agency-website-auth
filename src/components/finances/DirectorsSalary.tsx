@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Period } from '@/utils/periodUtils';
+import { authenticatedFetch } from '@/lib/api';
 
 interface ModelStats {
   name: string;
@@ -59,7 +60,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
     const periodEnd = formatDate(period.endDate);
     
     try {
-      await fetch('https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec', {
+      await authenticatedFetch('https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -93,13 +94,13 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       setLoading(true);
       try {
         const [statsResponse, financesResponse, salariesResponse] = await Promise.all([
-          fetch(
+          authenticatedFetch(
             `https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b?role=director&email=${encodeURIComponent(userEmail)}&period_start=${periodStart}&period_end=${periodEnd}`
           ),
-          fetch(
+          authenticatedFetch(
             `https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec?period_start=${periodStart}&period_end=${periodEnd}`
           ),
-          fetch(
+          authenticatedFetch(
             `https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`
           )
         ]);
