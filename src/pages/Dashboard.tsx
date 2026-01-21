@@ -109,11 +109,17 @@ const Dashboard = () => {
 
   const loadModels = async () => {
     try {
+      const headers = getAuthHeaders();
+      console.log('🔍 loadModels - headers:', headers);
+      console.log('🔍 loadModels - token in localStorage:', localStorage.getItem('authToken'));
+      
       const response = await fetch(API_URL, {
         method: 'GET',
-        headers: getAuthHeaders(),
+        headers: headers,
         credentials: 'include'
       });
+      
+      console.log('🔍 loadModels - response status:', response.status);
       
       if (!response.ok) {
         console.error('Failed to load models: HTTP', response.status);
