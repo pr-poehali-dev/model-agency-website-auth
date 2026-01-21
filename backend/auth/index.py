@@ -127,7 +127,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'headers': {
                         'Content-Type': 'application/json', 
                         'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Credentials': 'true'
+                        'Access-Control-Allow-Credentials': 'true',
+                        'X-Set-Cookie': f'auth_token={token}; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax'
                     },
                     'body': json.dumps({
                         'user': {
