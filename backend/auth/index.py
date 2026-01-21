@@ -47,7 +47,8 @@ def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
-    origin = event.get('headers', {}).get('origin', 'https://preview--model-agency-website-auth.poehali.dev')
+    headers = event.get('headers', {})
+    origin = headers.get('origin') or headers.get('Origin') or 'https://mba-agency.ru'
     
     if method == 'OPTIONS':
         return {
