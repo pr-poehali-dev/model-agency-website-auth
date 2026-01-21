@@ -101,7 +101,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not user or not verify_password(password, user['password_hash']):
                     return {
                         'statusCode': 401,
-                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'headers': {
+                            'Content-Type': 'application/json', 
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
                         'body': json.dumps({'error': 'Неверный email или пароль'})
                     }
                 
@@ -195,7 +199,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not user_data:
                 return {
                     'statusCode': 401,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
                     'body': json.dumps({'error': 'Требуется авторизация'})
                 }
             
