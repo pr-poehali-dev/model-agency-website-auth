@@ -191,24 +191,17 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
     try {
       let assignment = null;
       
-      console.log('[loadMyProducer] userEmail:', userEmail, 'userRole:', userRole);
-      
       if (userRole === 'operator') {
         const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=operator');
         const producerData = await producerRes.json();
-        console.log('[loadMyProducer] operator assignments:', producerData);
         assignment = producerData.find((a: any) => a.operatorEmail === userEmail);
-        console.log('[loadMyProducer] found operator assignment:', assignment);
       } else if (userRole === 'content_maker' || userRole === 'solo_maker') {
         const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
         const producerData = await producerRes.json();
-        console.log('[loadMyProducer] model assignments:', producerData);
         assignment = producerData.find((a: any) => a.modelEmail === userEmail);
-        console.log('[loadMyProducer] found model assignment:', assignment);
       }
       
       if (assignment) {
-        console.log('[loadMyProducer] assignment.producerEmail:', assignment.producerEmail);
         const usersRes = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
           method: 'GET',
           headers: {
@@ -219,10 +212,8 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
         
         if (usersRes.ok) {
           const usersData = await usersRes.json();
-          console.log('[loadMyProducer] all users:', usersData.map((u: any) => ({ email: u.email, fullName: u.fullName })));
           if (Array.isArray(usersData)) {
             const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
-            console.log('[loadMyProducer] found producer:', producer);
             setMyProducer(producer?.fullName || assignment.producerEmail);
           } else {
             setMyProducer('MBA Production');

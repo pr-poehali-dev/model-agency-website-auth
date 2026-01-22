@@ -175,7 +175,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         'statusCode': 200,
         'headers': {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Credentials': 'true'
         },
         'body': json.dumps(result),
         'isBase64Encoded': False

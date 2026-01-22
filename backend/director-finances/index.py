@@ -31,7 +31,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not dsn:
         return {
             'statusCode': 500,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
             'body': json.dumps({'error': 'Database connection not configured'})
         }
     
@@ -131,7 +131,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         print(f"ERROR: {error_details}")
         return {
             'statusCode': 500,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
             'body': json.dumps(error_details),
             'isBase64Encoded': False
         }
