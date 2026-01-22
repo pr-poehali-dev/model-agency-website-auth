@@ -214,6 +214,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
         if (usersRes.ok) {
           const usersData = await usersRes.json();
           console.log('[DashboardHome] Users data loaded:', usersData);
+          console.log('[DashboardHome] All emails in array:', usersData.map((u: any) => u.email));
           if (Array.isArray(usersData)) {
             const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
             console.log('[DashboardHome] Producer found:', producer);
