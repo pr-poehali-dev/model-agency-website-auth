@@ -116,7 +116,18 @@ const ModelFinances = ({
     try {
       // Load all users
       const usersResponse = await authenticatedFetch(USERS_API_URL);
+      
+      if (!usersResponse.ok) {
+        console.error('Failed to load users for operators: HTTP', usersResponse.status);
+        return;
+      }
+      
       const users = await usersResponse.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid users response:', users);
+        return;
+      }
       
       // Check if current model is a solo maker
       const modelUser = users.find((u: any) => u.id === modelId);
@@ -128,11 +139,33 @@ const ModelFinances = ({
 
       // Load ALL assignments
       const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
+      
+      if (!assignmentsResponse.ok) {
+        console.error('Failed to load assignments: HTTP', assignmentsResponse.status);
+        return;
+      }
+      
       const allAssignments = await assignmentsResponse.json();
+      
+      if (!Array.isArray(allAssignments)) {
+        console.error('Invalid assignments response:', allAssignments);
+        return;
+      }
 
       // Load producer assignments
       const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
+      
+      if (!producerResponse.ok) {
+        console.error('Failed to load producer assignments: HTTP', producerResponse.status);
+        return;
+      }
+      
       const producerAssignments = await producerResponse.json();
+      
+      if (!Array.isArray(producerAssignments)) {
+        console.error('Invalid producer assignments response:', producerAssignments);
+        return;
+      }
 
       // Filter assignments for this specific model by modelId
       const modelAssignments = allAssignments.filter(

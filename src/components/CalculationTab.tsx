@@ -64,7 +64,19 @@ const CalculationTab = () => {
   const loadUsers = async () => {
     try {
       const response = await authenticatedFetch(USERS_API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load users: HTTP', response.status);
+        return;
+      }
+      
       const data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid users response:', data);
+        return;
+      }
+      
       const employees = data.filter((u: User) => 
         u.role === 'operator' || u.role === 'content_maker' || u.role === 'producer' || u.role === 'solo_maker'
       );
@@ -93,6 +105,12 @@ const CalculationTab = () => {
   const loadExchangeRate = async () => {
     try {
       const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      
+      if (!response.ok) {
+        console.error('Failed to load exchange rate: HTTP', response.status);
+        return;
+      }
+      
       const data = await response.json();
       if (data.rate) {
         setExchangeRate(data.rate - 5);
@@ -129,9 +147,14 @@ const CalculationTab = () => {
       const periodEndStr = formatDate(periodEnd);
       
       const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStartStr}&period_end=${periodEndStr}`);
-      if (response.ok) {
-        const data = await response.json();
-        setAdjustments(data);
+      
+      if (!response.ok) {
+        console.error('Failed to load adjustments: HTTP', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      setAdjustments(data);
         
         setCalculations(prev => {
           const updated = { ...prev };

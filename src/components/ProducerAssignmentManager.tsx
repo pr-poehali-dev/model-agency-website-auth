@@ -46,7 +46,19 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   const loadUsers = async () => {
     try {
       const response = await authenticatedFetch(USERS_API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load users: HTTP', response.status);
+        return;
+      }
+      
       const users = await response.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid users response:', users);
+        return;
+      }
+      
       setProducers(users.filter((u: User) => u.role === 'producer'));
       setOperators(users.filter((u: User) => u.role === 'operator'));
       setModels(users.filter((u: User) => u.role === 'content_maker'));
@@ -58,10 +70,25 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   const loadAssignments = async () => {
     try {
       const response = await authenticatedFetch(PRODUCER_API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load assignments: HTTP', response.status);
+        setAssignments([]);
+        return;
+      }
+      
       const data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid assignments response:', data);
+        setAssignments([]);
+        return;
+      }
+      
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments', err);
+      setAssignments([]);
     }
   };
 

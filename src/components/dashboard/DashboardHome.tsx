@@ -61,10 +61,25 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const loadAssignments = async () => {
     try {
       const response = await authenticatedFetch('https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30');
+      
+      if (!response.ok) {
+        console.error('Failed to load assignments: HTTP', response.status);
+        setAssignments([]);
+        return;
+      }
+      
       const data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid assignments response:', data);
+        setAssignments([]);
+        return;
+      }
+      
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments', err);
+      setAssignments([]);
     }
   };
 
@@ -95,6 +110,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
     setIsLoadingRate(true);
     try {
       const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
+      
+      if (!response.ok) {
+        console.error('Failed to load exchange rate: HTTP', response.status);
+        setIsLoadingRate(false);
+        return;
+      }
+      
       const data = await response.json();
       if (data.rate) {
         const cbr = data.rate;

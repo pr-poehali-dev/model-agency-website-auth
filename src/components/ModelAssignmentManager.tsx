@@ -70,7 +70,21 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const loadOperators = async (assignments?: any[]) => {
     try {
       const response = await authenticatedFetch(API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load operators: HTTP', response.status);
+        setOperators([]);
+        return;
+      }
+      
       const users = await response.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid users response:', users);
+        setOperators([]);
+        return;
+      }
+      
       let ops = users.filter((u: User) => u.role === 'operator');
       
       if (currentUserRole === 'producer') {
@@ -90,7 +104,21 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const loadModels = async (assignments?: any[]) => {
     try {
       const response = await authenticatedFetch(API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load models: HTTP', response.status);
+        setModels([]);
+        return;
+      }
+      
       const users = await response.json();
+      
+      if (!Array.isArray(users)) {
+        console.error('Invalid users response:', users);
+        setModels([]);
+        return;
+      }
+      
       let contentMakers = users.filter((u: User) => u.role === 'content_maker');
       
       if (currentUserRole === 'producer') {
@@ -110,7 +138,21 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const loadAssignments = async () => {
     try {
       const response = await authenticatedFetch(ASSIGNMENTS_API_URL);
+      
+      if (!response.ok) {
+        console.error('Failed to load assignments: HTTP', response.status);
+        setAssignments([]);
+        return;
+      }
+      
       const data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid assignments response:', data);
+        setAssignments([]);
+        return;
+      }
+      
       setAssignments(data);
       
       const percentageMap: { [key: string]: number } = {};
@@ -127,7 +169,21 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const loadProducerAssignments = async () => {
     try {
       const response = await authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(currentUserEmail)}`);
+      
+      if (!response.ok) {
+        console.error('Failed to load producer assignments: HTTP', response.status);
+        setProducerAssignments([]);
+        return [];
+      }
+      
       const data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid producer assignments response:', data);
+        setProducerAssignments([]);
+        return [];
+      }
+      
       setProducerAssignments(data);
       return data;
     } catch (err) {
