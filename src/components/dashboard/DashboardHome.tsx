@@ -311,6 +311,34 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
         </Card>
       )}
 
+      {userRole === 'producer' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card 
+            className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => onNavigate?.('checks')}
+          >
+            <div className="flex items-center mb-4">
+              <Icon name="Receipt" size={24} className="text-blue-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Чеки</h3>
+            <p className="text-3xl font-serif font-bold text-foreground mb-2">Проверка</p>
+            <p className="text-sm text-muted-foreground">Контроль выручки моделей</p>
+          </Card>
+
+          <Card 
+            className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => onNavigate?.('models')}
+          >
+            <div className="flex items-center mb-4">
+              <Icon name="Users" size={24} className="text-purple-600" />
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Мои модели</h3>
+            <p className="text-3xl font-serif font-bold text-foreground mb-2">Команда</p>
+            <p className="text-sm text-muted-foreground">Список моих моделей</p>
+          </Card>
+        </div>
+      )}
+
       {userRole === 'director' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
