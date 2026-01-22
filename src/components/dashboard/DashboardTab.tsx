@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
+import DashboardWelcomeCard from './DashboardWelcomeCard';
+import DashboardPeriodSelector from './DashboardPeriodSelector';
+import DashboardSalaryCard from './DashboardSalaryCard';
+import DashboardProducerCard from './DashboardProducerCard';
 
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
@@ -12,14 +12,6 @@ const EXCHANGE_RATE_API_URL = 'https://functions.poehali.dev/be3de232-e5c9-421e-
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
-
-const roleNames: Record<string, string> = {
-  'director': 'Директор',
-  'producer': 'Продюсер',
-  'operator': 'Оператор',
-  'content_maker': 'Контент-мейкер',
-  'model': 'Модель'
-};
 
 interface DashboardTabProps {
   monthlyRevenue?: any;
@@ -114,8 +106,8 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
             }
           }
         }
-      } else if (currentUser.role === 'content_maker') {
-        const producerResponse = await fetch(`${PRODUCER_API_URL}?type=model`);
+      } else if (currentUser.role === 'content_maker' || currentUser.role === 'solo_maker') {
+        const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
         const producerAssignments = await producerResponse.json();
         const producerAssignment = producerAssignments.find(
           (pa: any) => pa.modelEmail === email
@@ -191,13 +183,12 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
     }
   };
 
+  const handlePreviousPeriod = () => {
+    setCurrentPeriod(getPreviousPeriod(currentPeriod));
+  };
 
-
-  const getTimeGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Доброе утро';
-    if (hour < 18) return 'Добрый день';
-    return 'Добрый вечер';
+  const handleNextPeriod = () => {
+    setCurrentPeriod(getNextPeriod(currentPeriod));
   };
 
   const salaryInRubles = salaryData ? Math.round((salaryData.total * exchangeRate) + (adjustments.expenses || 0) - adjustments.advance - adjustments.penalty) : 0;
@@ -205,358 +196,27 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl p-8 border border-primary/20">
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-primary/20 rounded-full">
-              <Icon name="Sparkles" size={28} className="text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{getTimeGreeting()},</p>
-              <h1 className="text-3xl font-serif font-bold text-foreground">{userFullName}</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-              {roleNames[userRole] || userRole}
-            </Badge>
-            <Badge variant="outline" className="border-muted-foreground/30">
-              MBA Corporation
-            </Badge>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0"></div>
-      </div>
+      <DashboardWelcomeCard 
+        userFullName={userFullName}
+        userRole={userRole}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Ваша зарплата</p>
-              <p className="text-xs text-muted-foreground">{currentPeriod.label}</p>
-            </div>
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <Icon name="DollarSign" size={24} className="text-green-600" />
-            </div>
-          </div>
-          
-          <div className="space-y-3 mb-4">
-            {isLoading ? (
-              <div className="animate-pulse">
-                <div className="h-8 bg-muted rounded w-32 mb-2"></div>
-                <div className="h-6 bg-muted rounded w-24"></div>
-              </div>
-            ) : salaryData ? (
-              <>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Начислено</p>
-                  <p className="text-2xl font-bold text-foreground">{Math.round(salaryData.total * exchangeRate).toLocaleString()}₽</p>
-                  <p className="text-sm text-muted-foreground">${salaryInDollars.toLocaleString()}</p>
-                </div>
-                
-                {((adjustments.expenses || 0) > 0 || adjustments.advance > 0 || adjustments.penalty > 0) && (
-                  <div className="space-y-1 pt-2 border-t">
-                    {(adjustments.expenses || 0) > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Затраты:</span>
-                        <span className="text-green-600 font-medium">+{(adjustments.expenses || 0).toLocaleString()}₽</span>
-                      </div>
-                    )}
-                    {adjustments.advance > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Аванс:</span>
-                        <span className="text-red-600 font-medium">-{adjustments.advance.toLocaleString()}₽</span>
-                      </div>
-                    )}
-                    {adjustments.penalty > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Штраф:</span>
-                        <span className="text-red-600 font-medium">-{adjustments.penalty.toLocaleString()}₽</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-muted-foreground mb-1">К выплате</p>
-                  <p className="text-3xl font-bold text-green-600">{salaryInRubles.toLocaleString()}₽</p>
-                </div>
-              </>
-            ) : (
-              <p className="text-lg text-muted-foreground">Нет данных за период</p>
-            )}
-          </div>
+      <DashboardPeriodSelector
+        currentPeriod={currentPeriod}
+        onPreviousPeriod={handlePreviousPeriod}
+        onNextPeriod={handleNextPeriod}
+      />
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
-              className="h-8"
-            >
-              <Icon name="ChevronLeft" size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
-              className="h-8"
-            >
-              <Icon name="ChevronRight" size={16} />
-            </Button>
-          </div>
-        </Card>
+      <DashboardSalaryCard
+        isLoading={isLoading}
+        salaryInRubles={salaryInRubles}
+        salaryInDollars={salaryInDollars}
+        exchangeRate={exchangeRate}
+        adjustments={adjustments}
+        salaryData={salaryData}
+      />
 
-        {(userRole === 'director' || userRole === 'producer') ? (
-          <Card className="p-6 border-2 border-accent/20 bg-gradient-to-br from-background to-accent/5">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Текущий курс</p>
-                <p className="text-xs text-muted-foreground"></p>
-              </div>
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <Icon name="TrendingUp" size={24} className="text-accent" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-3xl font-bold text-accent">{exchangeRate.toFixed(2)}₽</p>
-              <p className="text-lg text-muted-foreground">за 1 доллар</p>
-            </div>
-          </Card>
-        ) : (
-          <Card className="p-6 border-2 border-amber-500/20 bg-gradient-to-br from-background to-amber-500/5">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Ваш продюсер</p>
-              </div>
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <Icon name="UserCheck" size={24} className="text-amber-500" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              {producerName ? (
-                <>
-                  <p className="text-2xl font-bold text-amber-500">{producerName}</p>
-                  <p className="text-sm text-muted-foreground">По любым вопросам обращайтесь к вашему продюсеру</p>
-                </>
-              ) : (
-                <p className="text-lg text-muted-foreground">Продюсер не назначен</p>
-              )}
-            </div>
-          </Card>
-        )}
-      </div>
-
-      {userRole === 'producer' && salaryData && salaryData.details && salaryData.details.length > 0 && (() => {
-        const details = salaryData.details;
-        const totalIncome = salaryData.total;
-        const modelsCount = [...new Set(details.map((d: any) => d.model_email))].length;
-        const shiftsCount = details.filter((d: any) => d.amount > 0).length;
-        const avgIncome = shiftsCount > 0 ? totalIncome / shiftsCount : 0;
-        const bestDay = Math.max(...details.map((d: any) => d.amount || 0));
-        const bestDayData = details.find((d: any) => d.amount === bestDay);
-
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Icon name="BarChart3" size={20} className="text-primary" />
-              Статистика за период {currentPeriod.label}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-emerald-600/20 rounded-xl border border-emerald-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Всего за период</p>
-                <p className="text-3xl font-bold text-emerald-400 relative z-10">${totalIncome.toFixed(2)}</p>
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-blue-500/20 via-cyan-500/10 to-blue-600/20 rounded-xl border border-blue-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '1s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Средний доход</p>
-                <p className="text-3xl font-bold text-blue-400 relative z-10">${avgIncome.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground relative z-10">за смену</p>
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 rounded-xl border border-amber-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
-                <p className="text-3xl font-bold text-amber-400 relative z-10">${bestDay.toFixed(2)}</p>
-                {bestDayData && (
-                  <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
-                )}
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-lime-500/20 via-green-500/10 to-lime-600/20 rounded-xl border border-lime-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '3s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Моделей</p>
-                <p className="text-3xl font-bold text-lime-400 relative z-10">{modelsCount}</p>
-              </div>
-            </div>
-          </Card>
-        );
-      })()}
-
-      {userRole === 'content_maker' && salaryData && salaryData.details && salaryData.details.length > 0 && (() => {
-        const details = salaryData.details;
-        const totalIncome = salaryData.total;
-        const shiftsCount = details.filter((d: any) => d.amount > 0).length;
-        const avgIncome = shiftsCount > 0 ? totalIncome / shiftsCount : 0;
-        const bestDay = Math.max(...details.map((d: any) => d.amount || 0));
-        const bestDayData = details.find((d: any) => d.amount === bestDay);
-
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Icon name="BarChart3" size={20} className="text-primary" />
-              Статистика за период {currentPeriod.label}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-emerald-600/20 rounded-xl border border-emerald-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Всего за период</p>
-                <p className="text-3xl font-bold text-emerald-400 relative z-10">${totalIncome.toFixed(2)}</p>
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-teal-600/20 rounded-xl border border-teal-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '1s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Средний доход</p>
-                <p className="text-3xl font-bold text-teal-400 relative z-10">${avgIncome.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground relative z-10">за смену</p>
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/20 rounded-xl border border-amber-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '2s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Лучший день</p>
-                <p className="text-3xl font-bold text-amber-400 relative z-10">${bestDay.toFixed(2)}</p>
-                {bestDayData && (
-                  <p className="text-xs text-muted-foreground relative z-10">{new Date(bestDayData.date).toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'})}</p>
-                )}
-              </div>
-              <div className="relative overflow-hidden p-4 bg-gradient-to-br from-orange-500/20 via-amber-500/10 to-orange-600/20 rounded-xl border border-orange-500/30 animate-gradient group hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{animationDelay: '3s'}}></div>
-                <p className="text-sm text-muted-foreground mb-1 relative z-10">Смен</p>
-                <p className="text-3xl font-bold text-orange-400 relative z-10">{shiftsCount}</p>
-              </div>
-            </div>
-          </Card>
-        );
-      })()}
-
-      {salaryData && salaryData.details && salaryData.details.length > 0 && userRole === 'producer' && (() => {
-        const modelStats = salaryData.details.reduce((acc: any, detail: any) => {
-          if (!detail.model_email) return acc;
-          if (!acc[detail.model_email]) {
-            acc[detail.model_email] = 0;
-          }
-          acc[detail.model_email] += detail.amount;
-          return acc;
-        }, {});
-
-        const modelList = Object.entries(modelStats)
-          .map(([email, amount]) => ({ email, amount: amount as number }))
-          .sort((a, b) => b.amount - a.amount);
-
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Icon name="Users" size={20} className="text-primary" />
-              Доход по моделям за период {currentPeriod.label}
-            </h3>
-            <div className="space-y-3">
-              {modelList.map((model, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Icon name="User" size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{model.email}</p>
-                      <p className="text-xs text-muted-foreground">Модель</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-green-600">
-                      {Math.round(model.amount * exchangeRate).toLocaleString()}₽
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ${model.amount.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        );
-      })()}
-
-      {salaryData && salaryData.details && salaryData.details.length > 0 && userRole !== 'producer' && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Icon name="FileText" size={20} className="text-primary" />
-            Детализация за период
-          </h3>
-          <div className="space-y-3">
-            {salaryData.details.slice(0, 5).map((detail: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Icon name="Calendar" size={16} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{new Date(detail.date).toLocaleDateString('ru-RU')}</p>
-                    {detail.model_email && (
-                      <p className="text-sm text-muted-foreground">{detail.model_email}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-green-600">
-                    {Math.round(detail.amount * exchangeRate).toLocaleString()}₽
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    ${Math.round(detail.amount * 100) / 100}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {salaryData.details.length > 5 && (
-              <p className="text-sm text-muted-foreground text-center pt-2">
-                и ещё {salaryData.details.length - 5} записей...
-              </p>
-            )}
-          </div>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {userRole === 'content_maker' && userId && (
-          <Card 
-            className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-green-500 hover:scale-105 transition-transform"
-            onClick={() => onViewFinances?.(userId, userFullName)}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <Icon name="DollarSign" size={20} className="text-green-600" />
-              </div>
-              <h4 className="font-semibold">Мои финансы</h4>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Просматривайте статистику своих доходов по платформам
-            </p>
-          </Card>
-        )}
-
-        <Card 
-          className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-l-purple-500 hover:scale-105 transition-transform"
-          onClick={() => onNavigate?.('schedule')}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Icon name="Calendar" size={20} className="text-purple-600" />
-            </div>
-            <h4 className="font-semibold">Расписание</h4>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Отслеживайте свои смены и планируйте рабочее время
-          </p>
-        </Card>
-      </div>
+      <DashboardProducerCard producerName={producerName} />
     </div>
   );
 };
