@@ -202,6 +202,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       }
       
       if (assignment) {
+        console.log('[DashboardHome] Assignment found:', assignment);
         const usersRes = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
           method: 'GET',
           headers: {
@@ -212,8 +213,11 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
         
         if (usersRes.ok) {
           const usersData = await usersRes.json();
+          console.log('[DashboardHome] Users data loaded:', usersData);
           if (Array.isArray(usersData)) {
             const producer = usersData.find((u: any) => u.email === assignment.producerEmail);
+            console.log('[DashboardHome] Producer found:', producer);
+            console.log('[DashboardHome] Looking for email:', assignment.producerEmail);
             setMyProducer(producer?.fullName || assignment.producerEmail);
           } else {
             setMyProducer('MBA Production');

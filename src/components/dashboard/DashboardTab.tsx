@@ -115,6 +115,9 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
         
         if (producerAssignment) {
           const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
+          console.log('[DashboardTab] Producer assignment:', producerAssignment);
+          console.log('[DashboardTab] All users:', users);
+          console.log('[DashboardTab] Producer found:', producer);
           if (producer) {
             setProducerName(producer.fullName || producer.email);
           }
