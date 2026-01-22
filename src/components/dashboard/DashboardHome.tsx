@@ -158,12 +158,6 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const adjustmentsData = await adjustmentsRes.json();
       const rateData = await rateRes.json();
 
-      console.log('=== DASHBOARD HOME SALARY CALCULATION ===');
-      console.log('User email:', userEmail);
-      console.log('User role:', userRole);
-      console.log('Full salary data:', JSON.stringify(salaryData, null, 2));
-      console.log('Full adjustments data:', JSON.stringify(adjustmentsData, null, 2));
-
       const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
 
       let baseSalaryUSD = 0;
@@ -174,14 +168,10 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       }
 
       const adjustments = adjustmentsData[userEmail] || { advance: 0, penalty: 0, expenses: 0 };
-      console.log('Base salary USD:', baseSalaryUSD);
-      console.log('Adjustments:', adjustments);
-      console.log('Exchange rate:', exchangeRate);
 
       const baseRUB = baseSalaryUSD * exchangeRate;
       const totalWithExpenses = baseRUB + (adjustments.expenses || 0);
       const totalRUB = totalWithExpenses - (adjustments.advance || 0) - (adjustments.penalty || 0);
-      console.log('Base RUB:', baseRUB, 'With expenses:', totalWithExpenses, 'Final:', totalRUB);
 
       setMySalary(totalRUB);
       setMyAdvance(adjustments.advance || 0);

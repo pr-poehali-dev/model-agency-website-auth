@@ -36,16 +36,11 @@ const Login = () => {
         return;
       }
 
-      console.log('[LOGIN] Token received:', data.token ? `${data.token.substring(0, 10)}...` : 'MISSING');
-      
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userRole', data.user.role);
       localStorage.setItem('userName', data.user.fullName);
-      
-      console.log('[LOGIN] Token saved to localStorage');
-      console.log('[LOGIN] Stored token:', localStorage.getItem('authToken') ? 'OK' : 'FAILED');
       
       addAuditLog(data.user.email, 'Вход в систему', 'Успешная авторизация', 'auth');
       navigate('/dashboard');

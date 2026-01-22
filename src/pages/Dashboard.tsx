@@ -183,19 +183,9 @@ const Dashboard = () => {
         setUserRole(currentUser.role);
         setUserName(currentUser.fullName || '');
         
-        console.log('[Dashboard] Current user:', currentUser.email, 'Role:', currentUser.role);
-        console.log('[Dashboard] Permissions from API:', currentUser.permissions);
-        console.log('[Dashboard] Permissions type:', typeof currentUser.permissions);
-        console.log('[Dashboard] Permissions is array:', Array.isArray(currentUser.permissions));
-        
-        // Для директора и других ролей используем права из ROLE_PERMISSIONS если в БД пусто
         const dbPermissions = currentUser.permissions || [];
         const rolePermissions = ROLE_PERMISSIONS[currentUser.role as UserRole] || [];
         const effectivePermissions = dbPermissions.length > 0 ? dbPermissions : rolePermissions;
-        
-        console.log('[Dashboard] DB permissions:', dbPermissions);
-        console.log('[Dashboard] Role permissions:', rolePermissions);
-        console.log('[Dashboard] Effective permissions:', effectivePermissions);
         
         setUserPermissions(effectivePermissions);
         setUserPhotoUrl(currentUser.photoUrl || '');
