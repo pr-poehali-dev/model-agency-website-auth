@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PERMISSIONS, type UserRole } from '@/lib/permissions';
+import { PERMISSIONS, ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
 import { getAuthHeaders } from '@/lib/api';
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
@@ -184,7 +184,13 @@ const Dashboard = () => {
       if (currentUser) {
         setUserRole(currentUser.role);
         setUserName(currentUser.fullName || '');
-        setUserPermissions(currentUser.permissions || []);
+        
+        // Для директора и других ролей используем права из ROLE_PERMISSIONS если в БД пусто
+        const dbPermissions = currentUser.permissions || [];
+        const rolePermissions = ROLE_PERMISSIONS[currentUser.role as UserRole] || [];
+        const effectivePermissions = dbPermissions.length > 0 ? dbPermissions : rolePermissions;
+        
+        setUserPermissions(effectivePermissions);
         setUserPhotoUrl(currentUser.photoUrl || '');
         
         if (currentUser.role === 'operator') {
