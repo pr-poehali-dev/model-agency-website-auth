@@ -156,30 +156,29 @@ const CalculationTab = () => {
       const data = await response.json();
       setAdjustments(data);
         
-        setCalculations(prev => {
-          const updated = { ...prev };
-          Object.keys(data).forEach(email => {
-            if (updated[email]) {
-              const user = users.find(u => u.email === email);
-              if (user?.role === 'producer') {
-                updated[email] = {
-                  ...updated[email],
-                  advance: String(data[email].advance || 0),
-                  penalty: String(data[email].penalty || 0),
-                  expenses: String(data[email].expenses || 0)
-                };
-              } else {
-                updated[email] = {
-                  ...updated[email],
-                  advance: String(data[email].advance || 0),
-                  penalty: String(data[email].penalty || 0)
-                };
-              }
+      setCalculations(prev => {
+        const updated = { ...prev };
+        Object.keys(data).forEach(email => {
+          if (updated[email]) {
+            const user = users.find(u => u.email === email);
+            if (user?.role === 'producer') {
+              updated[email] = {
+                ...updated[email],
+                advance: String(data[email].advance || 0),
+                penalty: String(data[email].penalty || 0),
+                expenses: String(data[email].expenses || 0)
+              };
+            } else {
+              updated[email] = {
+                ...updated[email],
+                advance: String(data[email].advance || 0),
+                penalty: String(data[email].penalty || 0)
+              };
             }
-          });
-          return updated;
+          }
         });
-      }
+        return updated;
+      });
     } catch (err) {
       console.error('Failed to load adjustments', err);
     }
