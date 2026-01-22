@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Update password successfully",
+      "method": "POST",
+      "body": {
+        "email": "test@example.com",
+        "password": "newpassword123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
