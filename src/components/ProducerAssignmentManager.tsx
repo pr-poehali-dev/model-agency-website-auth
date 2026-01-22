@@ -82,8 +82,11 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
   const handleToggleModel = async (producerEmail: string, modelEmail: string) => {
     const assigned = isModelAssigned(producerEmail, modelEmail);
 
+    console.log('Toggle model:', { producerEmail, modelEmail, assigned, currentUserEmail, currentUserRole });
+
     try {
       if (assigned) {
+        console.log('Deleting model assignment...');
         const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'DELETE',
           headers: {
@@ -94,6 +97,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           body: JSON.stringify({ producerEmail, modelEmail, assignmentType: 'model' })
         });
         
+        console.log('Delete response status:', response.status);
+        
         if (!response.ok) {
           const errorData = await response.json();
           console.error('Delete model failed:', errorData);
@@ -102,6 +107,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
         
         toast({ title: 'Модель откреплена', description: 'Модель убрана из доступа продюсера' });
       } else {
+        console.log('Creating model assignment...');
         const response = await authenticatedFetch(PRODUCER_API_URL, {
           method: 'POST',
           headers: {
@@ -111,6 +117,8 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
           },
           body: JSON.stringify({ producerEmail, modelEmail, assignmentType: 'model' })
         });
+        
+        console.log('Create response status:', response.status);
         
         if (!response.ok) {
           const errorData = await response.json();

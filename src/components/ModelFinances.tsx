@@ -361,6 +361,8 @@ const ModelFinances = ({
   const handleSave = async () => {
     setIsSaving(true);
 
+    console.log('Saving financial data:', { modelId, dataLength: onlineData.length });
+
     try {
       const response = await authenticatedFetch(API_URL, {
         method: "POST",
@@ -373,8 +375,12 @@ const ModelFinances = ({
         }),
       });
 
+      console.log('Save response status:', response.status);
+
       if (!response.ok) {
-        throw new Error("Failed to save data");
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Save failed:', errorData);
+        throw new Error(errorData.error || "Failed to save data");
       }
 
       const result = await response.json();
@@ -389,7 +395,7 @@ const ModelFinances = ({
       console.error("Save error:", error);
       toast({
         title: "Ошибка сохранения",
-        description: "Не удалось сохранить данные. Попробуйте снова.",
+        description: error instanceof Error ? error.message : "Не удалось сохранить данные. Попробуйте снова.",
         variant: "destructive",
       });
     } finally {
