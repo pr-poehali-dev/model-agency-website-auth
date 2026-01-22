@@ -93,8 +93,6 @@ const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
     if (email) {
