@@ -52,6 +52,8 @@ export function getAuthHeaders(): Record<string, string> {
 export async function authenticatedFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem('authToken');
   
+  console.log('[AUTH] Token from localStorage:', token ? `${token.substring(0, 10)}...` : 'MISSING');
+  
   const headers = new Headers(options.headers || {});
   if (token) {
     headers.set('X-Auth-Token', token);
@@ -64,7 +66,10 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       credentials: 'include'
     });
     
+    console.log('[AUTH] Response status:', response.status, 'for', url);
+    
     if (response.status === 401) {
+      console.error('[AUTH] Unauthorized - logging out');
       document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       localStorage.removeItem('authToken');
       localStorage.removeItem('isAuthenticated');
@@ -77,7 +82,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     
     return response;
   } catch (error) {
-    console.error('Fetch error:', error, 'for', url);
+    console.error('[AUTH] Fetch error:', error, 'for', url);
     throw error;
   }
 }
