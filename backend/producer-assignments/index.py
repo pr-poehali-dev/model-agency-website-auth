@@ -52,6 +52,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     FROM t_p35405502_model_agency_website.producer_assignments 
                     WHERE producer_email = %s AND assignment_type = %s
                 """, (producer_email, assignment_type))
+            elif assignment_type:
+                cur.execute("""
+                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
+                    FROM t_p35405502_model_agency_website.producer_assignments 
+                    WHERE assignment_type = %s
+                """, (assignment_type,))
             elif producer_email:
                 cur.execute("""
                     SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
