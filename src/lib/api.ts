@@ -57,24 +57,29 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     headers.set('X-Auth-Token', token);
   }
   
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include'
-  });
-  
-  if (response.status === 401) {
-    document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    window.location.href = '/';
-    throw new Error('Unauthorized');
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include'
+    });
+    
+    if (response.status === 401) {
+      document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
+      window.location.href = '/';
+      throw new Error('Unauthorized');
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('Fetch error:', error, 'for', url);
+    throw error;
   }
-  
-  return response;
 }
 
 export { API_URL };
