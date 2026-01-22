@@ -202,20 +202,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Требуется авторизация'})
                 }
             
-            # Только директор или пользователь с правами может видеть список
+            # Директор или пользователь с manage_users видит весь список
+            # Обычные пользователи видят только свои данные + всех content_maker для работы
             permissions = json.loads(user_data.get('permissions', '[]')) if user_data.get('permissions') else []
-            if user_data['role'] != 'director' and 'manage_users' not in permissions:
-                return {
-                    'statusCode': 403,
-                    'headers': {
-                        'Content-Type': 'application/json', 
-                        'Access-Control-Allow-Origin': origin,
-                        'Access-Control-Allow-Credentials': 'true'
-                    },
-                    'body': json.dumps({'error': 'Недостаточно прав'})
-                }
+            is_admin = user_data['role'] == 'director' or 'manage_users' in permissions
             
-            cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage FROM users ORDER BY created_at DESC")
+            if is_admin:
+                # Директор и администраторы видят всех
+                cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage FROM users ORDER BY created_at DESC")
+            else:
+                # Обычные пользователи видят себя + всех content_maker/solo_maker для списка моделей
+                cur.execute("""
+                    SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage 
+                    FROM users 
+                    WHERE email = %s OR role IN ('content_maker', 'solo_maker')
+                    ORDER BY created_at DESC
+                """, (user_data['email'],))
+            
             users = cur.fetchall()
             
             return {
