@@ -196,11 +196,20 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   };
 
   const loadMyProducer = async () => {
+    if (!userEmail || !userRole) return;
+    
     try {
-      const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
-      const producerData = await producerRes.json();
+      let assignment = null;
       
-      const assignment = producerData.find((a: any) => a.modelEmail === userEmail);
+      if (userRole === 'operator') {
+        const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=operator');
+        const producerData = await producerRes.json();
+        assignment = producerData.find((a: any) => a.operatorEmail === userEmail);
+      } else if (userRole === 'content_maker' || userRole === 'solo_maker') {
+        const producerRes = await authenticatedFetch('https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?type=model');
+        const producerData = await producerRes.json();
+        assignment = producerData.find((a: any) => a.modelEmail === userEmail);
+      }
       
       if (assignment) {
         const usersRes = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066', {
@@ -261,7 +270,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
               </Button>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата{currentPeriodLabel ? ` (${currentPeriodLabel})` : ''}</h3>
-            <p className="text-3xl font-serif font-bold text-foreground mb-3">
+            <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
               {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary).toLocaleString('ru-RU')} ₽` : '—'}
             </p>
             {!isLoadingSalary && mySalary !== null && (
@@ -308,7 +317,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
             <Icon name="User" size={24} className="text-purple-600" />
           </div>
           <h3 className="text-sm font-medium text-muted-foreground mb-1">Мой продюсер</h3>
-          <p className="text-2xl font-serif font-bold text-foreground">{myProducer}</p>
+          <p className="text-2xl font-serif font-bold text-foreground break-words">{myProducer}</p>
         </Card>
       )}
 
