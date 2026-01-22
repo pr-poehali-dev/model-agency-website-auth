@@ -211,11 +211,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 # Директор и администраторы видят всех
                 cur.execute("SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage FROM users ORDER BY created_at DESC")
             else:
-                # Обычные пользователи видят себя + всех content_maker/solo_maker для списка моделей
+                # Обычные пользователи видят себя + всех content_maker/solo_maker для списка моделей + всех producer для отображения имени продюсера
                 cur.execute("""
                     SELECT id, email, role, full_name, is_active, permissions, created_at, photo_url, solo_percentage 
                     FROM users 
-                    WHERE email = %s OR role IN ('content_maker', 'solo_maker')
+                    WHERE email = %s OR role IN ('content_maker', 'solo_maker', 'producer')
                     ORDER BY created_at DESC
                 """, (user_data['email'],))
             
