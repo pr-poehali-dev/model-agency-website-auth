@@ -55,11 +55,9 @@ const ChecksTab = () => {
     try {
       const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
       const data = await response.json();
-      console.log('CBR API response:', data);
       if (data.rate) {
         const cbrRate = data.rate;
         const workingRate = cbrRate - 5;
-        console.log(`CBR rate: ${cbrRate}, Working rate (CBR - 5): ${workingRate}`);
         setCbrRate(cbrRate);
         setExchangeRate(workingRate);
       }
@@ -377,16 +375,8 @@ const ChecksTab = () => {
     const assignedOperatorEmails = producerOperators.map((po: any) => po.operatorEmail);
     const assignedModelEmails = producerModels.map((pm: any) => pm.modelEmail);
     
-    console.log('Producer operators:', producerOperators);
-    console.log('Producer models:', producerModels);
-    console.log('Assigned operator emails:', assignedOperatorEmails);
-    console.log('Assigned model emails:', assignedModelEmails);
-    
     const operatorUsers = users.filter(u => u.role === 'operator' && assignedOperatorEmails.includes(u.email));
     const modelUsers = users.filter(u => u.role === 'content_maker' && assignedModelEmails.includes(u.email));
-    
-    console.log('Filtered operator users:', operatorUsers);
-    console.log('Filtered model users:', modelUsers);
     
     operators = operatorUsers.map(op => {
       const operatorAssignments = allAssignments.filter(a => a.operatorEmail === op.email);
