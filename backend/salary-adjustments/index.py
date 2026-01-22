@@ -55,6 +55,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 def handle_get(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    headers = event.get('headers', {})
+    origin = headers.get('origin') or headers.get('Origin') or 'https://mba-agency.ru'
+    
     params = event.get('queryStringParameters') or {}
     period_start = params.get('period_start')
     period_end = params.get('period_end')
@@ -86,12 +89,15 @@ def handle_get(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
         'body': json.dumps(result)
     }
 
 
 def handle_put(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    headers = event.get('headers', {})
+    origin = headers.get('origin') or headers.get('Origin') or 'https://mba-agency.ru'
+    
     body_data = json.loads(event.get('body', '{}'))
     email = body_data.get('email')
     role = body_data.get('role')
@@ -100,7 +106,6 @@ def handle_put(event: Dict[str, Any], conn) -> Dict[str, Any]:
     field = body_data.get('field')
     value = body_data.get('value', 0)
     
-    headers = event.get('headers', {})
     updated_by = headers.get('X-User-Email') or headers.get('x-user-email', '')
     
     if not all([email, role, period_start, period_end, field]):
@@ -134,6 +139,6 @@ def handle_put(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
         'body': json.dumps({'success': True})
     }

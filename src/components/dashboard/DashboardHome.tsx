@@ -132,12 +132,8 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   };
 
   const loadMySalary = async () => {
-    if (!userEmail) {
-      console.log('[SALARY] No userEmail, skipping');
-      return;
-    }
+    if (!userEmail) return;
     
-    console.log('[SALARY] Loading for:', userEmail, 'Role:', userRole);
     setIsLoadingSalary(true);
     try {
       const currentPeriod = getCurrentPeriod();
@@ -151,8 +147,6 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const periodStart = formatDate(currentPeriod.startDate);
       const periodEnd = formatDate(currentPeriod.endDate);
       setCurrentPeriodLabel(currentPeriod.label);
-      
-      console.log('[SALARY] Period:', periodStart, '-', periodEnd);
 
       const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
         authenticatedFetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
@@ -164,19 +158,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const adjustmentsData = await adjustmentsRes.json();
       const rateData = await rateRes.json();
 
-      console.log('[SALARY] Salary data:', salaryData);
-      console.log('[SALARY] Adjustments data:', adjustmentsData);
-      console.log('[SALARY] Rate data:', rateData);
-
       const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
 
       let baseSalaryUSD = 0;
       if (userRole === 'operator' && salaryData.operators?.[userEmail]) {
         baseSalaryUSD = salaryData.operators[userEmail].total || 0;
-        console.log('[SALARY] Operator base USD:', baseSalaryUSD);
       } else if ((userRole === 'content_maker' || userRole === 'solo_maker') && salaryData.models?.[userEmail]) {
         baseSalaryUSD = salaryData.models[userEmail].total || 0;
-        console.log('[SALARY] Model base USD:', baseSalaryUSD);
       }
 
       const adjustments = adjustmentsData[userEmail] || { advance: 0, penalty: 0, expenses: 0 };
@@ -184,8 +172,6 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const baseRUB = baseSalaryUSD * exchangeRate;
       const totalWithExpenses = baseRUB + (adjustments.expenses || 0);
       const totalRUB = totalWithExpenses - (adjustments.advance || 0) - (adjustments.penalty || 0);
-
-      console.log('[SALARY] Final calculation - Base:', baseRUB, 'Total:', totalRUB);
 
       setMySalary(totalRUB);
       setMyAdvance(adjustments.advance || 0);
