@@ -251,15 +251,21 @@ export const useUserManagement = () => {
 
     setLoading(true);
     try {
-      const response = await authenticatedFetchNoCreds(`${API_URL}?id=${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await authenticatedFetch(API_URL, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          action: 'delete_user',
+          id: userId
+        })
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка удаления пользователя');
+        const data = await response.json();
+        throw new Error(data.error || 'Ошибка удаления пользователя');
       }
 
       addAuditLog(
