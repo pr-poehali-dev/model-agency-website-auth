@@ -46,8 +46,10 @@ interface DayData {
   date: string;
   cb: number;
   sp: number;
+  soda: number;
   cbIncome: number;
   spIncome: number;
+  sodaIncome: number;
   stripchatTokens: number;
   transfers: number;
   operator: string;
@@ -61,8 +63,10 @@ const generateInitialData = (period: Period): DayData[] => {
     date,
     cb: 0,
     sp: 0,
+    soda: 0,
     cbIncome: 0,
     spIncome: 0,
+    sodaIncome: 0,
     stripchatTokens: 0,
     transfers: 0,
     operator: "",

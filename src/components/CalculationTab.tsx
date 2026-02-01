@@ -22,6 +22,7 @@ interface SoloModel {
   name: string;
   stripchat: string;
   chaturbate: string;
+  camsoda: string;
   advance: string;
   penalty: string;
   percentage: string;
@@ -37,6 +38,7 @@ const CalculationTab = () => {
   const [calculations, setCalculations] = useState<Record<string, {
     stripchat: string;
     chaturbate: string;
+    camsoda: string;
     advance: string;
     penalty: string;
     expenses?: string;
@@ -90,6 +92,7 @@ const CalculationTab = () => {
         initialCalc[user.email] = savedData[user.email] || {
           stripchat: '0',
           chaturbate: '0',
+          camsoda: '0',
           transfers: '0',
           advance: '0',
           penalty: '0',
@@ -229,6 +232,7 @@ const CalculationTab = () => {
 
     const stripchat = parseInt(calc.stripchat || '0');
     const chaturbate = parseInt(calc.chaturbate || '0');
+    const camsoda = parseInt(calc.camsoda || '0');
     const transfers = parseFloat(calc.transfers || '0');
     const advance = parseInt(calc.advance || '0');
     const penalty = parseInt(calc.penalty || '0');
@@ -236,7 +240,8 @@ const CalculationTab = () => {
 
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
-    const totalCheck = stripchatDollars + chaturbateDollars + transfers;
+    const camsodaDollars = camsoda * 0.05;
+    const totalCheck = stripchatDollars + chaturbateDollars + camsodaDollars + transfers;
 
     let salaryDollars = 0;
     if (role === 'content_maker') {
@@ -244,7 +249,7 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      salaryDollars = (stripchatDollars * 0.1) + (chaturbateDollars * 0.3) + (transfers * 0.2);
+      salaryDollars = (stripchatDollars * 0.1) + (chaturbateDollars * 0.3) + (camsodaDollars * 0.2) + (transfers * 0.2);
     }
 
     let salaryRubles = 0;
@@ -280,12 +285,14 @@ const CalculationTab = () => {
   const totalSolo = soloModels.reduce((sum, solo) => {
     const stripchat = parseInt(solo.stripchat || '0');
     const chaturbate = parseInt(solo.chaturbate || '0');
+    const camsoda = parseInt(solo.camsoda || '0');
     const advance = parseInt(solo.advance || '0');
     const penalty = parseInt(solo.penalty || '0');
     const percentage = parseInt(solo.percentage || '50');
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
-    const totalCheck = stripchatDollars + chaturbateDollars;
+    const camsodaDollars = camsoda * 0.05;
+    const totalCheck = stripchatDollars + chaturbateDollars + camsodaDollars;
     const salaryDollars = totalCheck * (percentage / 100);
     const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
     return sum + salaryRubles;
@@ -426,6 +433,13 @@ const CalculationTab = () => {
                         placeholder="Chaturbate"
                         value={calc.chaturbate || ''}
                         onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
+                        placeholder="CamSoda"
+                        value={calc.camsoda || ''}
+                        onChange={(e) => handleInputChange(user.email, 'camsoda', e.target.value)}
                         className="text-center text-xs h-8"
                       />
                       <Input
@@ -591,6 +605,13 @@ const CalculationTab = () => {
                       />
                       <Input
                         type="text"
+                        placeholder="CamSoda"
+                        value={calc.camsoda || ''}
+                        onChange={(e) => handleInputChange(user.email, 'camsoda', e.target.value)}
+                        className="text-center text-xs h-8"
+                      />
+                      <Input
+                        type="text"
                         placeholder="Переводы $"
                         value={calc.transfers || ''}
                         onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
@@ -738,6 +759,20 @@ const CalculationTab = () => {
                         const numValue = e.target.value.replace(/[^0-9]/g, '');
                         const updated = soloModels.map(s => 
                           s.id === solo.id ? { ...s, chaturbate: numValue } : s
+                        );
+                        setSoloModels(updated);
+                        localStorage.setItem('soloModels', JSON.stringify(updated));
+                      }}
+                      className="text-center text-xs h-8"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="CamSoda"
+                      value={solo.camsoda}
+                      onChange={(e) => {
+                        const numValue = e.target.value.replace(/[^0-9]/g, '');
+                        const updated = soloModels.map(s => 
+                          s.id === solo.id ? { ...s, camsoda: numValue } : s
                         );
                         setSoloModels(updated);
                         localStorage.setItem('soloModels', JSON.stringify(updated));

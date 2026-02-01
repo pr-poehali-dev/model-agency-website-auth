@@ -96,6 +96,22 @@ const FinancialTable = ({ onlineData, operators, isReadOnly, onCellChange }: Fin
           </tr>
 
           <tr>
+            <td className="border border-border bg-card p-3 font-medium sticky left-0 z-10">CamSoda</td>
+            {onlineData.map((day, index) => (
+              <td key={day.date} className="border border-border bg-card p-2">
+                <Input
+                  type="number"
+                  value={day.camsoda || ''}
+                  onChange={(e) => onCellChange(index, 'camsoda', parseFloat(e.target.value) || 0)}
+                  className="h-9 text-center bg-background/50 border-0"
+                  placeholder="0"
+                  disabled={isReadOnly}
+                />
+              </td>
+            ))}
+          </tr>
+
+          <tr>
             <td className="border border-border bg-card p-3 font-medium sticky left-0 z-10">Переводы</td>
             {onlineData.map((day, index) => (
               <td key={day.date} className="border border-border bg-card p-2">

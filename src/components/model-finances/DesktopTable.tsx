@@ -23,6 +23,7 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
                 <th className="text-left p-3 font-medium sticky left-0 bg-muted/50 z-10">Дата</th>
                 <th className="text-right p-3 font-medium">Chaturbate</th>
                 <th className="text-right p-3 font-medium">Stripchat</th>
+                <th className="text-right p-3 font-medium">CamSoda</th>
                 <th className="text-right p-3 font-medium">Переводы $</th>
                 <th className="text-center p-3 font-medium">Оператор</th>
                 <th className="text-center p-3 font-medium">Смена</th>
@@ -56,6 +57,15 @@ const DesktopTable = ({ onlineData, operators, isReadOnly, onCellChange }: Deskt
                         type="number"
                         value={d.stripchat || ''}
                         onChange={(e) => onCellChange(idx, 'stripchat', Number(e.target.value))}
+                        className="w-24 h-9 text-right"
+                        disabled={isReadOnly}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <Input
+                        type="number"
+                        value={d.camsoda || ''}
+                        onChange={(e) => onCellChange(idx, 'camsoda', Number(e.target.value))}
                         className="w-24 h-9 text-right"
                         disabled={isReadOnly}
                       />

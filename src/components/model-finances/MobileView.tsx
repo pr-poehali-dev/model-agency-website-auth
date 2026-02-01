@@ -53,6 +53,16 @@ const MobileView = ({ onlineData, operators, isReadOnly, onCellChange }: MobileV
                 />
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">CamSoda:</span>
+                <Input
+                  type="number"
+                  value={d.camsoda || ''}
+                  onChange={(e) => onCellChange(idx, 'camsoda', Number(e.target.value))}
+                  className="w-24 h-8 text-right"
+                  disabled={isReadOnly}
+                />
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Переводы:</span>
                 <Input
                   type="number"
