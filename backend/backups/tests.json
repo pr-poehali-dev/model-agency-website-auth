@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "Get backups list",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "type"
+    },
+    {
+      "name": "Create backup",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "create",
+        "description": "Test backup"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "name": "string",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
