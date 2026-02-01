@@ -115,14 +115,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for platform, credentials in accounts.items():
                 login = credentials.get('login', '')
                 password = credentials.get('password', '')
-                encrypted_password = encrypt_password(password) if password else ''
                 
                 cur.execute(
-                    "SELECT login FROM model_accounts WHERE model_id = %s AND platform = %s",
+                    "SELECT login, password FROM model_accounts WHERE model_id = %s AND platform = %s",
                     (int(model_id), platform)
                 )
                 result = cur.fetchone()
                 old_login = result[0] if result else None
+                old_encrypted_password = result[1] if result else None
+                
+                # Проверяем, изменился ли пароль
+                if old_encrypted_password:
+                    try:
+                        old_decrypted = decrypt_password(old_encrypted_password)
+                        # Если пароль не изменился, используем старый зашифрованный
+                        if password == old_decrypted:
+                            encrypted_password = old_encrypted_password
+                        else:
+                            # Пароль изменился, шифруем новый
+                            encrypted_password = encrypt_password(password) if password else ''
+                    except:
+                        # Если не удалось расшифровать старый, шифруем новый
+                        encrypted_password = encrypt_password(password) if password else ''
+                else:
+                    # Новая запись, шифруем пароль
+                    encrypted_password = encrypt_password(password) if password else ''
                 
                 cur.execute("""
                     INSERT INTO model_accounts (model_id, model_name, platform, login, password, updated_at)
