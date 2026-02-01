@@ -217,15 +217,15 @@ const FinancesTable = ({
                     <>
                       <td className="p-2">
                         <Select
-                          value={day.operator}
-                          onValueChange={(value) => onOperatorChange(day.date, value)}
+                          value={day.operator || "none"}
+                          onValueChange={(value) => onOperatorChange(day.date, value === "none" ? "" : value)}
                           disabled={isReadOnly}
                         >
                           <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Не выбран" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Не выбран</SelectItem>
+                            <SelectItem value="none">Не выбран</SelectItem>
                             {operators.map((op) => (
                               <SelectItem key={op.email} value={op.email}>
                                 {op.name}
