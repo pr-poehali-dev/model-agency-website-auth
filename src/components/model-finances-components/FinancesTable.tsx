@@ -70,7 +70,6 @@ const FinancesTable = ({
     { key: 'spIncome', label: 'Stripchat', type: 'income', platform: 'stripchat' },
     { key: 'soda', label: 'Online Soda', type: 'tokens', platform: 'camsoda' },
     { key: 'sodaIncome', label: 'CamSoda', type: 'income', platform: 'camsoda' },
-    { key: 'stripchatTokens', label: 'SP токены', type: 'tokens', platform: 'stripchat' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
   ];
 
