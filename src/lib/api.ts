@@ -31,16 +31,6 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     credentials: 'include'
   });
   
-  if (response.status === 401) {
-    document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    window.location.href = '/';
-  }
-  
   return response;
 }
 
@@ -84,17 +74,6 @@ export async function authenticatedFetchNoCreds(url: string, options: RequestIni
       ...options,
       headers
     });
-    
-    if (response.status === 401) {
-      document.cookie = 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('userName');
-      window.location.href = '/';
-      throw new Error('Unauthorized');
-    }
     
     return response;
   } catch (error) {
