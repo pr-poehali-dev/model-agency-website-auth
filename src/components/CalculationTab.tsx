@@ -1,9 +1,10 @@
 import { useState, useEffect, memo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetch } from '@/lib/api';
+import OperatorCalculation from './calculation-components/OperatorCalculation';
+import ProducerCalculation from './calculation-components/ProducerCalculation';
+import SoloMakerCalculation from './calculation-components/SoloMakerCalculation';
 
 interface User {
   id: number;
@@ -260,562 +261,129 @@ const CalculationTab = () => {
     }
 
     return {
-      dollars: Math.round(salaryDollars * 100) / 100,
-      rubles: Math.round(salaryRubles * 100) / 100,
-      totalCheck: Math.round(totalCheck * 100) / 100
+      dollars: salaryDollars,
+      rubles: salaryRubles
     };
   };
 
-  const operators = users.filter(u => u.role === 'operator');
-  const models = users.filter(u => u.role === 'content_maker');
-  const producers = users.filter(u => u.role === 'producer');
+  const handleAddSoloModel = () => {
+    const newModel: SoloModel = {
+      id: Date.now().toString(),
+      email: '',
+      name: '',
+      stripchat: '0',
+      chaturbate: '0',
+      camsoda: '0',
+      advance: '0',
+      penalty: '0',
+      percentage: '50'
+    };
+    const updated = [...soloModels, newModel];
+    setSoloModels(updated);
+    localStorage.setItem('soloModels', JSON.stringify(updated));
+  };
 
-  const totalOperators = operators.reduce((sum, op) => {
-    return sum + calculateSalary(op.email, op.role).rubles;
-  }, 0);
+  const handleRemoveSoloModel = (id: string) => {
+    const updated = soloModels.filter(m => m.id !== id);
+    setSoloModels(updated);
+    localStorage.setItem('soloModels', JSON.stringify(updated));
+  };
 
-  const totalModels = models.reduce((sum, model) => {
-    return sum + calculateSalary(model.email, model.role).rubles;
-  }, 0);
+  const handleSoloInputChange = (id: string, field: string, value: string) => {
+    const numValue = ['stripchat', 'chaturbate', 'camsoda', 'advance', 'penalty', 'percentage'].includes(field) 
+      ? value.replace(/[^0-9]/g, '') 
+      : value;
+    
+    const updated = soloModels.map(m => 
+      m.id === id ? { ...m, [field]: numValue } : m
+    );
+    setSoloModels(updated);
+    localStorage.setItem('soloModels', JSON.stringify(updated));
+  };
 
-  const totalProducers = producers.reduce((sum, prod) => {
-    return sum + calculateSalary(prod.email, prod.role).rubles;
-  }, 0);
+  const calculateSoloSalary = (model: SoloModel) => {
+    const stripchat = parseInt(model.stripchat || '0');
+    const chaturbate = parseInt(model.chaturbate || '0');
+    const camsoda = parseInt(model.camsoda || '0');
+    const advance = parseInt(model.advance || '0');
+    const penalty = parseInt(model.penalty || '0');
+    const percentage = parseInt(model.percentage || '50');
 
-  const totalSolo = soloModels.reduce((sum, solo) => {
-    const stripchat = parseInt(solo.stripchat || '0');
-    const chaturbate = parseInt(solo.chaturbate || '0');
-    const camsoda = parseInt(solo.camsoda || '0');
-    const advance = parseInt(solo.advance || '0');
-    const penalty = parseInt(solo.penalty || '0');
-    const percentage = parseInt(solo.percentage || '50');
     const stripchatDollars = stripchat * 0.05;
     const chaturbateDollars = chaturbate * 0.05;
     const camsodaDollars = camsoda * 0.05;
     const totalCheck = stripchatDollars + chaturbateDollars + camsodaDollars;
+
     const salaryDollars = totalCheck * (percentage / 100);
     const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
-    return sum + salaryRubles;
-  }, 0);
-  
-  const totalAll = totalOperators + totalModels + totalProducers + totalSolo;
+
+    return {
+      dollars: salaryDollars,
+      rubles: salaryRubles
+    };
+  };
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="animate-fade-in space-y-6">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
-          <p className="text-muted-foreground">Загрузка данных...</p>
-        </div>
-        <Card className="p-12">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Загружаем данные из раздела "Чеки"...</p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка данных...</p>
+          <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
+          <p className="text-muted-foreground">Загрузка...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
-          <p className="text-muted-foreground">Ручной расчёт по токенам для проверки</p>
+          <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Подсчёт зарплат</h2>
+          <p className="text-muted-foreground">Расчет заработной платы команды</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={handleClearData}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <Icon name="Trash2" size={16} />
-            Очистить токены
-          </Button>
-          <Button
-            onClick={handleRefresh}
+          <Button 
+            onClick={handleRefresh} 
             disabled={refreshing}
             variant="outline"
-            size="sm"
-            className="gap-2"
           >
-            <Icon name={refreshing ? "Loader2" : "RefreshCw"} size={16} className={refreshing ? "animate-spin" : ""} />
-            {refreshing ? "Обновление..." : "Обновить данные"}
+            <Icon name={refreshing ? "Loader2" : "RefreshCw"} size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Обновить аванс/штраф
+          </Button>
+          <Button 
+            onClick={handleClearData}
+            variant="outline"
+          >
+            <Icon name="Trash2" size={16} className="mr-2" />
+            Очистить токены
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <Card className="p-4 bg-blue-500/10 border-blue-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Операторы</div>
-          <div className="text-2xl font-bold text-blue-600">{Math.round(totalOperators).toLocaleString()} ₽</div>
-        </Card>
+      <OperatorCalculation
+        users={users}
+        calculations={calculations}
+        exchangeRate={exchangeRate}
+        onInputChange={handleInputChange}
+        calculateSalary={calculateSalary}
+      />
 
-        <Card className="p-4 bg-purple-500/10 border-purple-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Мейкеры</div>
-          <div className="text-2xl font-bold text-purple-600">{Math.round(totalModels).toLocaleString()} ₽</div>
-        </Card>
+      <ProducerCalculation
+        users={users}
+        calculations={calculations}
+        exchangeRate={exchangeRate}
+        onInputChange={handleInputChange}
+        calculateSalary={calculateSalary}
+      />
 
-        <Card className="p-4 bg-cyan-500/10 border-cyan-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Продюсеры</div>
-          <div className="text-2xl font-bold text-cyan-600">{Math.round(totalProducers).toLocaleString()} ₽</div>
-        </Card>
-
-        <Card className="p-4 bg-orange-500/10 border-orange-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Соло</div>
-          <div className="text-2xl font-bold text-orange-600">{Math.round(totalSolo).toLocaleString()} ₽</div>
-        </Card>
-
-        <Card className="p-4 bg-green-500/10 border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Общ</div>
-          <div className="text-2xl font-bold text-green-600">{Math.round(totalAll).toLocaleString()} ₽</div>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        {producers.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-cyan-400">Продюсеры</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {producers.map(user => {
-                const calc = calculations[user.email] || {};
-                const salary = calculateSalary(user.email, user.role);
-                return (
-                  <Card key={user.id} className="p-3 bg-cyan-500/5 border-cyan-500/20">
-                    <h4 className="font-semibold mb-2 text-center text-sm">{user.fullName || user.email}</h4>
-                    
-                    <div className="space-y-1.5 mb-2">
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="text-muted-foreground">Чек $ / 10%</div>
-                        <div className="font-semibold text-right">${salary.totalCheck} / ${salary.dollars}</div>
-                        
-                        <div className="text-muted-foreground">Курс / ₽</div>
-                        <div className="font-semibold text-right">{exchangeRate} / {Math.round(salary.dollars * exchangeRate)} ₽</div>
-                        
-                        <div className="text-muted-foreground">Затраты</div>
-                        <div className="font-semibold text-right text-green-600">+{calc.expenses || 0} ₽</div>
-                        
-                        <div className="text-muted-foreground">Аванс / Штраф</div>
-                        <div className="font-semibold text-right text-red-600">-{calc.advance || 0} / -{calc.penalty || 0} ₽</div>
-                      </div>
-                      
-                      <div className="border-t pt-1.5">
-                        <div className="grid grid-cols-2 gap-1 text-xs font-bold">
-                          <div>Итог</div>
-                          <div className="text-right text-green-600">{salary.rubles} ₽</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5 border-t pt-2">
-                      <Input
-                        type="text"
-                        placeholder="StripChat"
-                        value={calc.stripchat || ''}
-                        onChange={(e) => handleInputChange(user.email, 'stripchat', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Chaturbate"
-                        value={calc.chaturbate || ''}
-                        onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="CamSoda"
-                        value={calc.camsoda || ''}
-                        onChange={(e) => handleInputChange(user.email, 'camsoda', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Переводы $"
-                        value={calc.transfers || ''}
-                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Затраты"
-                        value={calc.expenses || ''}
-                        onChange={(e) => handleInputChange(user.email, 'expenses', e.target.value)}
-                        className="text-center bg-green-500/10 text-green-600 font-semibold text-xs h-8"
-                      />
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Input
-                          type="text"
-                          placeholder="Аванс"
-                          value={calc.advance || ''}
-                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                        <Input
-                          type="text"
-                          placeholder="Штраф"
-                          value={calc.penalty || ''}
-                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {operators.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Операторы</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {operators.map(user => {
-                const calc = calculations[user.email] || {};
-                const salary = calculateSalary(user.email, user.role);
-                return (
-                  <Card key={user.id} className="p-3">
-                    <h4 className="font-semibold mb-2 text-center text-sm">{user.fullName || user.email}</h4>
-                  
-                    <div className="space-y-1.5 mb-2">
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="text-muted-foreground">Чек $ / 20%</div>
-                        <div className="font-semibold text-right">${salary.totalCheck} / ${salary.dollars}</div>
-                        
-                        <div className="text-muted-foreground">Курс / ₽</div>
-                        <div className="font-semibold text-right">{exchangeRate} / {Math.round(salary.dollars * exchangeRate)} ₽</div>
-                        
-                        <div className="text-muted-foreground">Аванс / Штраф</div>
-                        <div className="font-semibold text-right text-red-600">-{calc.advance || 0} / -{calc.penalty || 0} ₽</div>
-                      </div>
-                      
-                      <div className="border-t pt-1.5">
-                        <div className="grid grid-cols-2 gap-1 text-xs font-bold">
-                          <div>Итог</div>
-                          <div className="text-right text-green-600">{salary.rubles} ₽</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5 border-t pt-2">
-                      <Input
-                        type="text"
-                        placeholder="StripChat"
-                        value={calc.stripchat || ''}
-                        onChange={(e) => handleInputChange(user.email, 'stripchat', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Chaturbate"
-                        value={calc.chaturbate || ''}
-                        onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Переводы $"
-                        value={calc.transfers || ''}
-                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Input
-                          type="text"
-                          placeholder="Аванс"
-                          value={calc.advance || ''}
-                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                        <Input
-                          type="text"
-                          placeholder="Штраф"
-                          value={calc.penalty || ''}
-                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {models.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-yellow-400">Мейкеры</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {models.map(user => {
-                const calc = calculations[user.email] || {};
-                const salary = calculateSalary(user.email, user.role);
-                return (
-                  <Card key={user.id} className="p-3 bg-yellow-500/5 border-yellow-500/20">
-                    <h4 className="font-semibold mb-2 text-center text-sm">{user.fullName || user.email}</h4>
-                    
-                    <div className="space-y-1.5 mb-2">
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="text-muted-foreground">Чек $ / 30%</div>
-                        <div className="font-semibold text-right">${salary.totalCheck} / ${salary.dollars}</div>
-                        
-                        <div className="text-muted-foreground">Курс / ₽</div>
-                        <div className="font-semibold text-right">{exchangeRate} / {Math.round(salary.dollars * exchangeRate)} ₽</div>
-                        
-                        <div className="text-muted-foreground">Аванс / Штраф</div>
-                        <div className="font-semibold text-right text-red-600">-{calc.advance || 0} / -{calc.penalty || 0} ₽</div>
-                      </div>
-                      
-                      <div className="border-t pt-1.5">
-                        <div className="grid grid-cols-2 gap-1 text-xs font-bold">
-                          <div>Итог</div>
-                          <div className="text-right text-green-600">{salary.rubles} ₽</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5 border-t pt-2">
-                      <Input
-                        type="text"
-                        placeholder="StripChat"
-                        value={calc.stripchat || ''}
-                        onChange={(e) => handleInputChange(user.email, 'stripchat', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Chaturbate"
-                        value={calc.chaturbate || ''}
-                        onChange={(e) => handleInputChange(user.email, 'chaturbate', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="CamSoda"
-                        value={calc.camsoda || ''}
-                        onChange={(e) => handleInputChange(user.email, 'camsoda', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Переводы $"
-                        value={calc.transfers || ''}
-                        onChange={(e) => handleInputChange(user.email, 'transfers', e.target.value)}
-                        className="text-center text-xs h-8"
-                      />
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Input
-                          type="text"
-                          placeholder="Аванс"
-                          value={calc.advance || ''}
-                          onChange={(e) => handleInputChange(user.email, 'advance', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                        <Input
-                          type="text"
-                          placeholder="Штраф"
-                          value={calc.penalty || ''}
-                          onChange={(e) => handleInputChange(user.email, 'penalty', e.target.value)}
-                          className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-purple-400">Соло</h3>
-            <select
-              onChange={(e) => {
-                if (!e.target.value) return;
-                const user = users.find(u => u.email === e.target.value);
-                if (!user) return;
-                
-                if (soloModels.find(s => s.email === user.email)) {
-                  alert('Этот соло-мейкер уже добавлен');
-                  e.target.value = '';
-                  return;
-                }
-                
-                const newSolo: SoloModel = {
-                  id: `solo-${Date.now()}`,
-                  email: user.email,
-                  name: user.fullName,
-                  stripchat: '0',
-                  chaturbate: '0',
-                  advance: '0',
-                  penalty: '0',
-                  percentage: user.soloPercentage || '50'
-                };
-                const updated = [...soloModels, newSolo];
-                setSoloModels(updated);
-                localStorage.setItem('soloModels', JSON.stringify(updated));
-                e.target.value = '';
-              }}
-              className="px-3 py-1.5 text-sm rounded-md border border-border bg-background"
-            >
-              <option value="">+ Добавить соло-мейкера</option>
-              {users.filter(u => u.role === 'solo_maker').map(u => (
-                <option key={u.email} value={u.email}>{u.fullName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {soloModels.map(solo => {
-              const stripchat = parseInt(solo.stripchat || '0');
-              const chaturbate = parseInt(solo.chaturbate || '0');
-              const advance = parseInt(solo.advance || '0');
-              const penalty = parseInt(solo.penalty || '0');
-              const percentage = parseInt(solo.percentage || '50');
-              
-              const stripchatDollars = stripchat * 0.05;
-              const chaturbateDollars = chaturbate * 0.05;
-              const totalCheck = stripchatDollars + chaturbateDollars;
-              const salaryDollars = totalCheck * (percentage / 100);
-              const salaryRubles = (salaryDollars * exchangeRate) - advance - penalty;
-              
-              return (
-                <Card key={solo.id} className="p-3 bg-purple-500/5 border-purple-500/20">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-semibold text-purple-600 flex-1">
-                      {solo.name}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const updated = soloModels.filter(s => s.id !== solo.id);
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Icon name="X" size={14} />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-1.5 mb-2">
-                    <div className="grid grid-cols-2 gap-1 text-xs">
-                      <div className="text-muted-foreground">Чек $ / {percentage}%</div>
-                      <div className="font-semibold text-right">${Math.round(totalCheck * 100) / 100} / ${Math.round(salaryDollars * 100) / 100}</div>
-                      
-                      <div className="text-muted-foreground">Курс / ₽</div>
-                      <div className="font-semibold text-right">{exchangeRate} / {Math.round(salaryDollars * exchangeRate)} ₽</div>
-                      
-                      <div className="text-muted-foreground">Аванс / Штраф</div>
-                      <div className="font-semibold text-right text-red-600">-{advance} / -{penalty} ₽</div>
-                    </div>
-                    
-                    <div className="border-t pt-1.5">
-                      <div className="grid grid-cols-2 gap-1 text-xs font-bold">
-                        <div>Итог</div>
-                        <div className="text-right text-green-600">{Math.round(salaryRubles * 100) / 100} ₽</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 border-t pt-2">
-                    <div className="text-center text-xs text-muted-foreground mb-1">
-                      Процент: <span className="font-semibold text-purple-600">{solo.percentage}%</span>
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder="StripChat"
-                      value={solo.stripchat}
-                      onChange={(e) => {
-                        const numValue = e.target.value.replace(/[^0-9]/g, '');
-                        const updated = soloModels.map(s => 
-                          s.id === solo.id ? { ...s, stripchat: numValue } : s
-                        );
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="text-center text-xs h-8"
-                    />
-                    <Input
-                      type="text"
-                      placeholder="Chaturbate"
-                      value={solo.chaturbate}
-                      onChange={(e) => {
-                        const numValue = e.target.value.replace(/[^0-9]/g, '');
-                        const updated = soloModels.map(s => 
-                          s.id === solo.id ? { ...s, chaturbate: numValue } : s
-                        );
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="text-center text-xs h-8"
-                    />
-                    <Input
-                      type="text"
-                      placeholder="CamSoda"
-                      value={solo.camsoda}
-                      onChange={(e) => {
-                        const numValue = e.target.value.replace(/[^0-9]/g, '');
-                        const updated = soloModels.map(s => 
-                          s.id === solo.id ? { ...s, camsoda: numValue } : s
-                        );
-                        setSoloModels(updated);
-                        localStorage.setItem('soloModels', JSON.stringify(updated));
-                      }}
-                      className="text-center text-xs h-8"
-                    />
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <Input
-                        type="text"
-                        placeholder="Аванс"
-                        value={solo.advance}
-                        onChange={(e) => {
-                          const numValue = e.target.value.replace(/[^0-9]/g, '');
-                          const updated = soloModels.map(s => 
-                            s.id === solo.id ? { ...s, advance: numValue } : s
-                          );
-                          setSoloModels(updated);
-                          localStorage.setItem('soloModels', JSON.stringify(updated));
-                        }}
-                        className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Штраф"
-                        value={solo.penalty}
-                        onChange={(e) => {
-                          const numValue = e.target.value.replace(/[^0-9]/g, '');
-                          const updated = soloModels.map(s => 
-                            s.id === solo.id ? { ...s, penalty: numValue } : s
-                          );
-                          setSoloModels(updated);
-                          localStorage.setItem('soloModels', JSON.stringify(updated));
-                        }}
-                        className="text-center bg-red-500/10 text-red-600 font-semibold text-xs h-8"
-                      />
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <SoloMakerCalculation
+        soloModels={soloModels}
+        exchangeRate={exchangeRate}
+        onAddModel={handleAddSoloModel}
+        onRemoveModel={handleRemoveSoloModel}
+        onSoloInputChange={handleSoloInputChange}
+        calculateSoloSalary={calculateSoloSalary}
+      />
     </div>
   );
 };
