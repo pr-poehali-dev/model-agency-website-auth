@@ -1,23 +1,9 @@
 import { useState, useEffect, memo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import Icon from '@/components/ui/icon';
 import { authenticatedFetch } from '@/lib/api';
+import ScheduleHeader from './schedule-components/ScheduleHeader';
+import ScheduleTable from './schedule-components/ScheduleTable';
+import EditDialog from './schedule-components/EditDialog';
 
 interface TeamMember {
   id: number;
@@ -133,21 +119,18 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0); // Смещение недель от текущей
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [userEmail, setUserEmail] = useState('');
   const { toast } = useToast();
   
-  // Функция для получения дат недели с учетом смещения
   const getWeekDates = (weekOffset: number) => {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 (воскр) - 6 (суб)
+    const dayOfWeek = today.getDay();
     const monday = new Date(today);
     
-    // Находим понедельник текущей недели
     const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     monday.setDate(today.getDate() + diff);
     
-    // Применяем смещение недель
     monday.setDate(monday.getDate() + (weekOffset * 7));
     
     const dates = [];
@@ -301,7 +284,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       console.log('Assignments loaded:', assignments);
       console.log('Producer models:', producerModels);
       
-      // Если пользователь продюсер, фильтруем только его команды
       let filteredAssignments = assignments;
       if (userRole === 'producer' && producerModels.length > 0) {
         const producerModelEmails = producerModels.map((pm: any) => pm.modelEmail);
@@ -317,12 +299,10 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           const operator = users.find((u: any) => u.email === assignment.operatorEmail);
           const model = users.find((u: any) => u.email === assignment.modelEmail);
           
-          // Пропускаем команды, где хотя бы один пользователь не найден или неактивен
           if (!operator || !model || !operator.isActive || !model.isActive) {
             return null;
           }
           
-          // Берем только первое слово (имя) из fullName
           const operatorFirstName = operator.fullName.split(' ')[0];
           const modelFirstName = model.fullName.split(' ')[0];
           
@@ -347,7 +327,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     const apartment = scheduleData.apartments[aptIndex];
     const sourceWeek = apartment.weeks[weekIndex];
     
-    // Получаем даты для следующей недели
     const nextWeekDates = getWeekDates(currentWeekOffset + 1);
 
     try {
@@ -376,7 +355,6 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         description: `Локация "${sourceWeek.weekNumber}" скопирована на следующую неделю`,
       });
       
-      // Переключаемся на следующую неделю чтобы показать результат
       setCurrentWeekOffset(currentWeekOffset + 1);
     } catch (err) {
       toast({
@@ -457,220 +435,35 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Расписание</h2>
-          <p className="text-muted-foreground">График работы по квартирам</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Переключение недель */}
-          <div className="flex items-center gap-2 border border-border rounded-lg p-1">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
-              disabled={currentWeekOffset <= -1}
-            >
-              <Icon name="ChevronLeft" size={16} />
-            </Button>
-            <span className="text-sm font-medium px-2 min-w-[120px] text-center">
-              {currentWeekOffset === 0 ? 'Эта неделя' : 
-               currentWeekOffset === 1 ? 'След. неделя' :
-               currentWeekOffset === -1 ? 'Прош. неделя' :
-               currentWeekOffset > 0 ? `+${currentWeekOffset} нед.` : `${currentWeekOffset} нед.`}
-            </span>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
-              disabled={currentWeekOffset >= 1}
-            >
-              <Icon name="ChevronRight" size={16} />
-            </Button>
-          </div>
-          
-          <Select value={filterTeam || "all"} onValueChange={(val) => setFilterTeam(val === "all" ? "" : val)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Все команды" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Все команды</SelectItem>
-              {teams.map((team) => (
-                <SelectItem key={team.displayName} value={team.displayName}>
-                  {team.displayName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {canEdit && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Icon name="Info" size={16} />
-              <span className="hidden lg:inline">Нажмите на ячейку</span>
-            </div>
-          )}
-        </div>
-      </div>
+      <ScheduleHeader
+        currentWeekOffset={currentWeekOffset}
+        onWeekOffsetChange={setCurrentWeekOffset}
+        filterTeam={filterTeam}
+        onFilterTeamChange={setFilterTeam}
+        teams={teams}
+        canEdit={canEdit}
+      />
 
       {scheduleData.apartments.map((apartment, aptIndex) => (
-        <div key={aptIndex} className="space-y-4">
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-              <table className="w-full text-xs sm:text-sm border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    <td colSpan={8} className="p-3 font-bold text-foreground text-base bg-muted/30">
-                      {apartment.name}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="p-3 font-semibold text-foreground bg-muted/20">{apartment.address}</td>
-                    <td className="p-3 text-center bg-blue-900/30 dark:bg-blue-900/30 font-medium">Утро<br/>{apartment.shifts.morning}</td>
-                    <td className="p-3 text-center bg-orange-900/30 dark:bg-orange-900/30 font-medium">День<br/>{apartment.shifts.day}</td>
-                    <td className="p-3 text-center bg-slate-700 dark:bg-slate-700 font-medium">Ночь<br/>{apartment.shifts.night}</td>
-                    <td className="p-3"></td>
-                    <td className="p-3"></td>
-                    <td className="p-3"></td>
-                    <td className="p-3"></td>
-                  </tr>
-                </thead>
-                <tbody>
-                  {apartment.weeks.map((week, weekIndex) => {
-                    return (
-                    <tr key={weekIndex}>
-                      <td colSpan={8} className="p-0">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-border bg-purple-900/20 dark:bg-purple-900/20">
-                              <th className="p-2 text-left font-semibold text-foreground w-20">
-                                <div className="flex items-center gap-2">
-                                  <span>Лок. {weekIndex + 1}</span>
-                                  {canEdit && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                      onClick={() => handleCopyWeek(aptIndex, weekIndex)}
-                                      title="Скопировать локацию"
-                                    >
-                                      <Icon name="Copy" size={14} />
-                                    </Button>
-                                  )}
-                                </div>
-                              </th>
-                              {week.dates.map((date, dateIndex) => (
-                                <th key={dateIndex} className="p-2 text-center font-medium text-foreground border-l border-border">
-                                  <div className="whitespace-nowrap">{date.day}</div>
-                                  <div className="text-xs font-normal text-muted-foreground">{date.date}</div>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
-                              <td className="p-2 text-center font-medium">10:00</td>
-                              {week.dates.map((date, dateIndex) => {
-                                const cellValue = date.times['10:00'];
-                                const isFiltered = filterTeam && cellValue !== filterTeam;
-                                const isOccupied = cellValue && cellValue.trim() !== '';
-                                return (
-                                  <td 
-                                    key={dateIndex} 
-                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '10:00', cellValue) : undefined}
-                                  >
-                                    {cellValue}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                            <tr className="border-b border-border bg-orange-900/20 dark:bg-orange-900/20">
-                              <td className="p-2 text-center font-medium">17:00</td>
-                              {week.dates.map((date, dateIndex) => {
-                                const cellValue = date.times['17:00'];
-                                const isFiltered = filterTeam && cellValue !== filterTeam;
-                                const isOccupied = cellValue && cellValue.trim() !== '';
-                                return (
-                                  <td 
-                                    key={dateIndex} 
-                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '17:00', cellValue) : undefined}
-                                  >
-                                    {cellValue}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                            <tr className="border-b border-border bg-slate-700/50 dark:bg-slate-700/50">
-                              <td className="p-2 text-center font-medium">00:00</td>
-                              {week.dates.map((date, dateIndex) => {
-                                const cellValue = date.times['00:00'];
-                                const isFiltered = filterTeam && cellValue !== filterTeam;
-                                const isOccupied = cellValue && cellValue.trim() !== '';
-                                return (
-                                  <td 
-                                    key={dateIndex} 
-                                    className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                    onClick={canEdit ? () => handleCellClick(aptIndex, weekIndex, dateIndex, '00:00', cellValue) : undefined}
-                                  >
-                                    {cellValue}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-                  );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </div>
+        <ScheduleTable
+          key={aptIndex}
+          apartment={apartment}
+          aptIndex={aptIndex}
+          filterTeam={filterTeam}
+          canEdit={canEdit}
+          onCellClick={handleCellClick}
+          onCopyWeek={handleCopyWeek}
+        />
       ))}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Редактировать смену</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Команда (оператор/модель)</label>
-              <Select value={selectedTeam || 'empty'} onValueChange={(val) => setSelectedTeam(val === 'empty' ? '' : val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите команду" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="empty">Пусто</SelectItem>
-                  {teams.map((team, index) => (
-                    <SelectItem key={index} value={team.displayName}>
-                      {team.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Или введите вручную</label>
-              <Input 
-                value={selectedTeam} 
-                onChange={(e) => setSelectedTeam(e.target.value)}
-                placeholder="Например: Иван / Мария"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Отмена
-              </Button>
-              <Button onClick={handleSaveCell}>
-                Сохранить
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        selectedTeam={selectedTeam}
+        onSelectedTeamChange={setSelectedTeam}
+        teams={teams}
+        onSave={handleSaveCell}
+      />
     </div>
   );
 };
