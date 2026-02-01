@@ -64,12 +64,12 @@ const FinancesTable = ({
   };
 
   const fields = [
-    { key: 'cb', label: 'Online CB', type: 'tokens', platform: 'chaturbate' },
-    { key: 'cbIncome', label: 'Chaturbate', type: 'income', platform: 'chaturbate' },
-    { key: 'sp', label: 'Online SP', type: 'tokens', platform: 'stripchat' },
-    { key: 'spIncome', label: 'Stripchat', type: 'income', platform: 'stripchat' },
-    { key: 'soda', label: 'Online Soda', type: 'tokens', platform: 'camsoda' },
-    { key: 'sodaIncome', label: 'CamSoda', type: 'income', platform: 'camsoda' },
+    { key: 'cb', label: 'Online CB', type: 'tokens', platform: 'chaturbate', incomeKey: 'cbIncome' },
+    { key: 'cbIncome', label: 'Chaturbate', type: 'calculated', platform: 'chaturbate', tokenKey: 'cb' },
+    { key: 'sp', label: 'Online SP', type: 'tokens', platform: 'stripchat', incomeKey: 'spIncome' },
+    { key: 'spIncome', label: 'Stripchat', type: 'calculated', platform: 'stripchat', tokenKey: 'sp' },
+    { key: 'soda', label: 'Online Soda', type: 'tokens', platform: 'camsoda', incomeKey: 'sodaIncome' },
+    { key: 'sodaIncome', label: 'CamSoda', type: 'calculated', platform: 'camsoda', tokenKey: 'soda' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
   ];
 
@@ -133,21 +133,33 @@ const FinancesTable = ({
                       return '';
                     };
 
+                    const isCalculatedField = field.type === 'calculated';
+                    const tokenKey = (field as any).tokenKey;
+                    const calculatedValue = isCalculatedField && tokenKey 
+                      ? ((day as any)[tokenKey] * 0.05 * 0.6).toFixed(2)
+                      : (day as any)[field.key];
+
                     return (
                       <td key={day.date} className={`p-2 border-r border-border ${getCellBg()}`}>
-                        <Input
-                          type="number"
-                          value={(day as any)[field.key]}
-                          onChange={(e) => onInputChange(day.date, field.key, e.target.value)}
-                          className={`text-center w-full font-medium transition-all ${
-                            isBlocked 
-                              ? "bg-red-500/10 border-red-500/50" 
-                              : ""
-                          }`}
-                          disabled={isReadOnly || isBlocked}
-                          min="0"
-                          step={field.type === 'income' ? '0.01' : '1'}
-                        />
+                        {isCalculatedField ? (
+                          <div className="text-center py-2 font-semibold text-foreground">
+                            ${calculatedValue}
+                          </div>
+                        ) : (
+                          <Input
+                            type="number"
+                            value={(day as any)[field.key]}
+                            onChange={(e) => onInputChange(day.date, field.key, e.target.value)}
+                            className={`text-center w-full font-medium transition-all ${
+                              isBlocked 
+                                ? "bg-red-500/10 border-red-500/50" 
+                                : ""
+                            }`}
+                            disabled={isReadOnly || isBlocked}
+                            min="0"
+                            step={field.type === 'income' ? '0.01' : '1'}
+                          />
+                        )}
                       </td>
                     );
                   })}

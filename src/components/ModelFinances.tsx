@@ -376,9 +376,21 @@ const ModelFinances = ({
   const handleInputChange = (date: string, field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setOnlineData((prev) =>
-      prev.map((day) =>
-        day.date === date ? { ...day, [field]: numValue } : day,
-      ),
+      prev.map((day) => {
+        if (day.date !== date) return day;
+        
+        const updatedDay = { ...day, [field]: numValue };
+        
+        if (field === 'cb') {
+          updatedDay.cbIncome = numValue * 0.05 * 0.6;
+        } else if (field === 'sp') {
+          updatedDay.spIncome = numValue * 0.05 * 0.6;
+        } else if (field === 'soda') {
+          updatedDay.sodaIncome = numValue * 0.05 * 0.6;
+        }
+        
+        return updatedDay;
+      }),
     );
     scheduleAutoSave();
   };
