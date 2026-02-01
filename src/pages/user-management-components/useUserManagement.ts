@@ -234,7 +234,6 @@ export const useUserManagement = () => {
   };
 
   const handleDeleteUser = async (userId: number, email: string) => {
-    console.log('handleDeleteUser called', { userId, email });
     const currentUserEmail = localStorage.getItem('userEmail') || '';
     
     if (email === currentUserEmail) {
@@ -247,17 +246,17 @@ export const useUserManagement = () => {
     }
 
     if (!confirm(`Удалить пользователя ${email}?`)) {
-      console.log('User cancelled deletion');
       return;
     }
-    
-    console.log('Proceeding with deletion...');
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch(`${API_URL}?id=${userId}`, {
+      const response = await fetch(`${API_URL}?id=${userId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
       });
 
       if (!response.ok) {
