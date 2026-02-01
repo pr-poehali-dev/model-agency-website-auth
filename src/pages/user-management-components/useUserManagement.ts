@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { addAuditLog } from '@/lib/auditLog';
-import { getAuthHeaders, authenticatedFetch } from '@/lib/api';
+import { getAuthHeaders, authenticatedFetch, authenticatedFetchNoCreds } from '@/lib/api';
 import { ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
@@ -251,11 +251,10 @@ export const useUserManagement = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}?id=${userId}`, {
+      const response = await authenticatedFetchNoCreds(`${API_URL}?id=${userId}`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          'Content-Type': 'application/json'
         }
       });
 
