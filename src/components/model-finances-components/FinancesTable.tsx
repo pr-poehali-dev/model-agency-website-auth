@@ -14,6 +14,9 @@ interface DayData {
   cb: number;
   sp: number;
   soda: number;
+  cbTokens: number;
+  spTokens: number;
+  sodaTokens: number;
   cbIncome: number;
   spIncome: number;
   sodaIncome: number;
@@ -64,12 +67,15 @@ const FinancesTable = ({
   };
 
   const fields = [
-    { key: 'cb', label: 'Online CB', type: 'tokens', platform: 'chaturbate', incomeKey: 'cbIncome' },
-    { key: 'cbIncome', label: 'Chaturbate', type: 'calculated', platform: 'chaturbate', tokenKey: 'cb' },
-    { key: 'sp', label: 'Online SP', type: 'tokens', platform: 'stripchat', incomeKey: 'spIncome' },
-    { key: 'spIncome', label: 'Stripchat', type: 'calculated', platform: 'stripchat', tokenKey: 'sp' },
-    { key: 'soda', label: 'Online Soda', type: 'tokens', platform: 'camsoda', incomeKey: 'sodaIncome' },
-    { key: 'sodaIncome', label: 'CamSoda', type: 'calculated', platform: 'camsoda', tokenKey: 'soda' },
+    { key: 'cb', label: 'Online CB', type: 'online', platform: 'chaturbate' },
+    { key: 'cbTokens', label: 'Chaturbate (токены)', type: 'tokens', platform: 'chaturbate' },
+    { key: 'cbIncome', label: 'Chaturbate ($)', type: 'calculated', platform: 'chaturbate', tokenKey: 'cbTokens' },
+    { key: 'sp', label: 'Online SP', type: 'online', platform: 'stripchat' },
+    { key: 'spTokens', label: 'Stripchat (токены)', type: 'tokens', platform: 'stripchat' },
+    { key: 'spIncome', label: 'Stripchat ($)', type: 'calculated', platform: 'stripchat', tokenKey: 'spTokens' },
+    { key: 'soda', label: 'Online Soda', type: 'online', platform: 'camsoda' },
+    { key: 'sodaTokens', label: 'CamSoda (токены)', type: 'tokens', platform: 'camsoda' },
+    { key: 'sodaIncome', label: 'CamSoda ($)', type: 'calculated', platform: 'camsoda', tokenKey: 'sodaTokens' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
   ];
 

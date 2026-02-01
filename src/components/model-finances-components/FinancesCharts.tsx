@@ -17,6 +17,9 @@ interface DayData {
   cb: number;
   sp: number;
   soda: number;
+  cbTokens: number;
+  spTokens: number;
+  sodaTokens: number;
   cbIncome: number;
   spIncome: number;
   sodaIncome: number;

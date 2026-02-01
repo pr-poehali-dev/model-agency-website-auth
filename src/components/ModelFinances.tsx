@@ -25,6 +25,9 @@ interface DayData {
   cb: number;
   sp: number;
   soda: number;
+  cbTokens: number;
+  spTokens: number;
+  sodaTokens: number;
   cbIncome: number;
   spIncome: number;
   sodaIncome: number;
@@ -42,6 +45,9 @@ const generateInitialData = (period: Period): DayData[] => {
     cb: 0,
     sp: 0,
     soda: 0,
+    cbTokens: 0,
+    spTokens: 0,
+    sodaTokens: 0,
     cbIncome: 0,
     spIncome: 0,
     sodaIncome: 0,
@@ -305,6 +311,9 @@ const ModelFinances = ({
             cb: savedDay.cb || 0,
             sp: savedDay.sp || 0,
             soda: savedDay.soda || 0,
+            cbTokens: savedDay.cbTokens || 0,
+            spTokens: savedDay.spTokens || 0,
+            sodaTokens: savedDay.sodaTokens || 0,
             cbIncome: savedDay.cbIncome || 0,
             spIncome: savedDay.spIncome || 0,
             sodaIncome: savedDay.sodaIncome || 0,
@@ -381,11 +390,11 @@ const ModelFinances = ({
         
         const updatedDay = { ...day, [field]: numValue };
         
-        if (field === 'cb') {
+        if (field === 'cbTokens') {
           updatedDay.cbIncome = numValue * 0.05 * 0.6;
-        } else if (field === 'sp') {
+        } else if (field === 'spTokens') {
           updatedDay.spIncome = numValue * 0.05 * 0.6;
-        } else if (field === 'soda') {
+        } else if (field === 'sodaTokens') {
           updatedDay.sodaIncome = numValue * 0.05 * 0.6;
         }
         
