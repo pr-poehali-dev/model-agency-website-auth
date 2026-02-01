@@ -137,17 +137,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['stripchat_tokens'] or 0)
             soda_tokens = float(finance['soda_tokens'] or 0)
-            cb_income_tokens = float(finance['cb_income'] or 0)
-            sp_income_tokens = float(finance['sp_income'] or 0)
-            soda_income_tokens = float(finance['soda_income'] or 0)
+            cb_income_dollars = float(finance['cb_income'] or 0)
+            sp_income_dollars = float(finance['sp_income'] or 0)
+            soda_income_dollars = float(finance['soda_income'] or 0)
             cam4_income_dollars = float(finance['cam4_income'] or 0)
             transfers_dollars = float(finance['transfers'] or 0)
             
-            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income_tokens}, sp_income={sp_income_tokens}, transfers={transfers_dollars}")
+            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income_dollars}, sp_income={sp_income_dollars}, transfers={transfers_dollars}")
             
-            cb_dollars = cb_income_tokens * 0.05 if cb_income_tokens > 0 else cb_tokens * 0.05
-            sp_dollars = sp_income_tokens * 0.05 if sp_income_tokens > 0 else sp_tokens * 0.05
-            soda_dollars = soda_income_tokens * 0.05 if soda_income_tokens > 0 else soda_tokens * 0.05
+            # cb_income/sp_income/soda_income уже содержат готовые доллары (после миграции)
+            # Если они есть - используем их, иначе рассчитываем из токенов
+            cb_dollars = cb_income_dollars if cb_income_dollars > 0 else cb_tokens * 0.05
+            sp_dollars = sp_income_dollars if sp_income_dollars > 0 else sp_tokens * 0.05
+            soda_dollars = soda_income_dollars if soda_income_dollars > 0 else soda_tokens * 0.05
             
             total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income_dollars + transfers_dollars
             

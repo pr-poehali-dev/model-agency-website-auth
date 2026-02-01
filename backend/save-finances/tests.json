@@ -9,15 +9,16 @@
         "data": [
           {
             "date": "2024-10-16",
-            "cb": 41,
-            "sp": 106,
-            "soda": 0,
+            "cbTokens": 1200,
+            "spTokens": 800,
+            "sodaTokens": 0,
             "cam4": 0,
-            "cbIncome": 44.01,
-            "spIncome": 0,
+            "cbIncome": 36.0,
+            "spIncome": 24.0,
             "sodaIncome": 0,
             "cam4Income": 0,
             "stripchatTokens": 0,
+            "transfers": 0,
             "operator": "Женя",
             "shift": true
           }

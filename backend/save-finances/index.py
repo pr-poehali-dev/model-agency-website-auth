@@ -65,7 +65,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         query = '''
-            SELECT date, cb_tokens, sp_online, soda_tokens, cam4_tokens,
+            SELECT date, cb_tokens, sp_tokens, soda_tokens, cam4_tokens,
                    cb_income, sp_income, soda_income, cam4_income, 
                    stripchat_tokens, operator_name, has_shift, transfers
             FROM t_p35405502_model_agency_website.model_finances
@@ -84,9 +84,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             date_obj = row['date']
             data.append({
                 'date': f"{date_obj.year}-{date_obj.month:02d}-{date_obj.day:02d}",
-                'cb': row['cb_tokens'] or 0,
-                'sp': row['sp_online'] or 0,
-                'soda': row['soda_tokens'] or 0,
+                'cbTokens': row['cb_tokens'] or 0,
+                'spTokens': row['sp_tokens'] or 0,
+                'sodaTokens': row['soda_tokens'] or 0,
                 'cam4': float(row['cam4_tokens'] or 0),
                 'cbIncome': float(row['cb_income'] or 0),
                 'spIncome': float(row['sp_income'] or 0),
@@ -150,9 +150,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         values.append((
             model_id,
             full_date,
-            record.get('cb', 0),
-            record.get('sp', 0),
-            record.get('soda', 0),
+            record.get('cbTokens', 0),
+            record.get('spTokens', 0),
+            record.get('sodaTokens', 0),
             record.get('cam4', 0),
             record.get('cbIncome', 0),
             record.get('spIncome', 0),
@@ -167,14 +167,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     # Use ON CONFLICT to update existing records
     query = '''
         INSERT INTO t_p35405502_model_agency_website.model_finances 
-        (model_id, date, cb_tokens, sp_online, soda_tokens, cam4_tokens, 
+        (model_id, date, cb_tokens, sp_tokens, soda_tokens, cam4_tokens, 
          cb_income, sp_income, soda_income, cam4_income, stripchat_tokens, 
          transfers, operator_name, has_shift, updated_at)
         VALUES %s
         ON CONFLICT (model_id, date) 
         DO UPDATE SET
             cb_tokens = EXCLUDED.cb_tokens,
-            sp_online = EXCLUDED.sp_online,
+            sp_tokens = EXCLUDED.sp_tokens,
             soda_tokens = EXCLUDED.soda_tokens,
             cam4_tokens = EXCLUDED.cam4_tokens,
             cb_income = EXCLUDED.cb_income,
