@@ -390,6 +390,7 @@ const ModelFinances = ({
         
         const updatedDay = { ...day, [field]: numValue };
         
+        // Пересчитываем доход для каждой площадки (для графиков)
         if (field === 'cbTokens') {
           updatedDay.cbIncome = numValue * 0.05 * 0.6;
         } else if (field === 'spTokens') {

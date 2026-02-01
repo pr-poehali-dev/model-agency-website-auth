@@ -69,14 +69,12 @@ const FinancesTable = ({
   const fields = [
     { key: 'cb', label: 'Online CB', type: 'online', platform: 'chaturbate' },
     { key: 'cbTokens', label: 'Chaturbate (токены)', type: 'tokens', platform: 'chaturbate' },
-    { key: 'cbIncome', label: 'Chaturbate ($)', type: 'calculated', platform: 'chaturbate', tokenKey: 'cbTokens' },
     { key: 'sp', label: 'Online SP', type: 'online', platform: 'stripchat' },
     { key: 'spTokens', label: 'Stripchat (токены)', type: 'tokens', platform: 'stripchat' },
-    { key: 'spIncome', label: 'Stripchat ($)', type: 'calculated', platform: 'stripchat', tokenKey: 'spTokens' },
     { key: 'soda', label: 'Online Soda', type: 'online', platform: 'camsoda' },
     { key: 'sodaTokens', label: 'CamSoda (токены)', type: 'tokens', platform: 'camsoda' },
-    { key: 'sodaIncome', label: 'CamSoda ($)', type: 'calculated', platform: 'camsoda', tokenKey: 'sodaTokens' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
+    { key: 'totalIncome', label: 'Income ($)', type: 'totalCalculated', platform: 'none' },
   ];
 
   return (
@@ -139,17 +137,16 @@ const FinancesTable = ({
                       return '';
                     };
 
-                    const isCalculatedField = field.type === 'calculated';
-                    const tokenKey = (field as any).tokenKey;
-                    const calculatedValue = isCalculatedField && tokenKey 
-                      ? ((day as any)[tokenKey] * 0.05 * 0.6).toFixed(2)
-                      : (day as any)[field.key];
+                    const isTotalCalculated = field.type === 'totalCalculated';
+                    const totalIncome = isTotalCalculated
+                      ? ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6).toFixed(2)
+                      : null;
 
                     return (
                       <td key={day.date} className={`p-2 border-r border-border ${getCellBg()}`}>
-                        {isCalculatedField ? (
-                          <div className="text-center py-2 font-semibold text-foreground">
-                            ${calculatedValue}
+                        {isTotalCalculated ? (
+                          <div className="text-center py-2 font-bold text-lg text-green-600 dark:text-green-400">
+                            ${totalIncome}
                           </div>
                         ) : (
                           <Input

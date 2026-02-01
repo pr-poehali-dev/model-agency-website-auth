@@ -49,7 +49,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
     cbIncome: day.cbIncome,
     spIncome: day.spIncome,
     sodaIncome: day.sodaIncome,
-    totalIncome: day.cbIncome + day.spIncome + day.sodaIncome + day.transfers,
+    totalIncome: (day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6,
   }));
 
   const totalCb = onlineData.reduce((sum, day) => sum + day.cb, 0);
@@ -59,7 +59,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
   const totalSpIncome = onlineData.reduce((sum, day) => sum + day.spIncome, 0);
   const totalSodaIncome = onlineData.reduce((sum, day) => sum + day.sodaIncome, 0);
   const totalTransfers = onlineData.reduce((sum, day) => sum + day.transfers, 0);
-  const totalIncome = totalCbIncome + totalSpIncome + totalSodaIncome + totalTransfers;
+  const totalIncome = onlineData.reduce((sum, day) => sum + ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6), 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
