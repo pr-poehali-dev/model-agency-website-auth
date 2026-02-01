@@ -1,258 +1,31 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import ExchangeRateCard from './checks/ExchangeRateCard';
-import ProducerSalaryCard from './checks/ProducerSalaryCard';
-import ProducersSection from './checks/ProducersSection';
-import OperatorsSection from './checks/OperatorsSection';
-import ContentMakersSection from './checks/ContentMakersSection';
-import SoloMakersSection from './checks/SoloMakersSection';
+import { getCurrentPeriod, Period } from '@/utils/periodUtils';
+import { useChecksData } from './checks-components/useChecksData';
+import ChecksHeader from './checks-components/ChecksHeader';
+import ChecksContent from './checks-components/ChecksContent';
 import { producerData } from './checks/mockData';
-import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
-import { authenticatedFetch } from '@/lib/api';
 
 const ChecksTab = () => {
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
-  const [exchangeRate, setExchangeRate] = useState(72.47);
-  const [cbrRate, setCbrRate] = useState(79.47);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState('');
-  const [isLoadingRole, setIsLoadingRole] = useState(true);
-  const [isLoadingRate, setIsLoadingRate] = useState(false);
-  const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
-  const [producerModels, setProducerModels] = useState<any[]>([]);
-  const [producerOperators, setProducerOperators] = useState<any[]>([]);
-  const [allAssignments, setAllAssignments] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
-  const [adjustments, setAdjustments] = useState<any>({});
-  const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
-  const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
-  const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-  const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
-  const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
-
-  useEffect(() => {
-    const email = localStorage.getItem('userEmail') || '';
-    setUserEmail(email);
-    loadUserRole(email);
-    loadExchangeRate();
-    loadUsers();
-    loadAllAssignments();
-    if (email) {
-      loadProducerAssignments(email);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSalaries();
-    loadAdjustments();
-  }, [currentPeriod]);
-
-  const loadExchangeRate = async () => {
-    setIsLoadingRate(true);
-    try {
-      const response = await authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a');
-      const data = await response.json();
-      if (data.rate) {
-        const cbrRate = data.rate;
-        const workingRate = cbrRate - 5;
-        setCbrRate(cbrRate);
-        setExchangeRate(workingRate);
-      }
-    } catch (err) {
-      console.error('Failed to load exchange rate from CBR', err);
-    } finally {
-      setIsLoadingRate(false);
-    }
-  };
-
-  const loadUserRole = async (email: string) => {
-    try {
-      const response = await authenticatedFetch('https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066');
-      if (!response.ok) {
-        setIsLoadingRole(false);
-        return;
-      }
-      const users = await response.json();
-      const user = users.find((u: any) => u.email === email);
-      if (user) {
-        setUserRole(user.role);
-      }
-    } catch (err) {
-      console.error('Failed to load user role', err);
-    } finally {
-      setIsLoadingRole(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const response = await authenticatedFetch(USERS_API_URL);
-      if (!response.ok) return;
-      const data = await response.json();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to load users', err);
-      setUsers([]);
-    }
-  };
-
-  const loadAllAssignments = async () => {
-    try {
-      const response = await authenticatedFetch(`${ASSIGNMENTS_API_URL}`);
-      if (!response.ok) return;
-      const assignments = await response.json();
-      setAllAssignments(Array.isArray(assignments) ? assignments : []);
-    } catch (err) {
-      console.error('Failed to load all assignments', err);
-      setAllAssignments([]);
-    }
-  };
-
-  const loadProducerAssignments = async (email: string) => {
-    try {
-      const response = await authenticatedFetch(`${ASSIGNMENTS_API_URL}`);
-      if (!response.ok) return;
-      const assignments = await response.json();
-      
-      const [producerModelResponse, producerOperatorResponse] = await Promise.all([
-        authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`),
-        authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=operator`)
-      ]);
-      
-      const producerModelsData = await producerModelResponse.json();
-      const producerOperatorsData = await producerOperatorResponse.json();
-      
-      const producerModelEmails = producerModelsData.map((pm: any) => pm.modelEmail);
-      
-      const filteredAssignments = assignments.filter((a: any) => 
-        producerModelEmails.includes(a.modelEmail)
-      );
-      
-      setProducerModels(producerModelsData);
-      setProducerOperators(producerOperatorsData);
-      setProducerAssignments(filteredAssignments);
-    } catch (err) {
-      console.error('Failed to load producer assignments', err);
-    }
-  };
-
-  const loadSalaries = async () => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSalaries(data);
-      }
-    } catch (err) {
-      console.error('Failed to load salaries', err);
-    }
-  };
-
-  const loadAdjustments = async () => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
-      if (response.ok) {
-        const data = await response.json();
-        setAdjustments(data);
-      }
-    } catch (err) {
-      console.error('Failed to load adjustments', err);
-    }
-  };
-
-  const handleUpdateProducer = async (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      await authenticatedFetch(ADJUSTMENTS_API_URL, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-User-Email': userEmail
-        },
-        body: JSON.stringify({
-          email,
-          role: 'producer',
-          period_start: periodStart,
-          period_end: periodEnd,
-          field,
-          value
-        })
-      });
-      
-      await loadAdjustments();
-    } catch (err) {
-      console.error('Failed to update producer adjustment', err);
-    }
-  };
-
-  const handleUpdateEmployee = async (email: string, field: 'advance' | 'penalty', value: number) => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      const user = users.find(u => u.email === email);
-      const role = user?.role === 'content_maker' ? 'model' : 'operator';
-      
-      await authenticatedFetch(ADJUSTMENTS_API_URL, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-User-Email': userEmail
-        },
-        body: JSON.stringify({
-          email,
-          role,
-          period_start: periodStart,
-          period_end: periodEnd,
-          field,
-          value
-        })
-      });
-      
-      await loadAdjustments();
-    } catch (err) {
-      console.error('Failed to update employee adjustment', err);
-    }
-  };
+  
+  const {
+    exchangeRate,
+    userRole,
+    userEmail,
+    isLoadingRole,
+    isLoadingRate,
+    producerModels,
+    producerOperators,
+    allAssignments,
+    users,
+    salaries,
+    adjustments,
+    loadExchangeRate,
+    handleUpdateProducer,
+    handleUpdateEmployee
+  } = useChecksData(currentPeriod);
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);
@@ -353,7 +126,6 @@ const ChecksTab = () => {
     soloMakers = soloMakerUsers.map(sm => {
       const salary = salaries.models[sm.email] || { total: 0, details: [] };
       const adj = adjustments[sm.email] || { advance: 0, penalty: 0 };
-      // Backend already calculates salary with percentage, so use it directly
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
       return {
@@ -488,121 +260,33 @@ const ChecksTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-2">Чеки</h2>
-          <p className="text-muted-foreground">Расчет зарплат сотрудников</p>
-        </div>
-      </div>
+      <ChecksHeader
+        currentPeriod={currentPeriod}
+        onPeriodChange={setCurrentPeriod}
+        totalModelSum={totalModelSum}
+        totalOperatorSum={totalOperatorSum}
+        totalSoloMakerSum={totalSoloMakerSum}
+        userRole={userRole}
+        soloMakersCount={soloMakers.length}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Текущий период</div>
-          <div className="flex items-center gap-2 mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPeriod(getPreviousPeriod(currentPeriod))}
-            >
-              <Icon name="ChevronLeft" size={16} />
-            </Button>
-            <div className="font-semibold text-lg flex-1 text-center">
-              {currentPeriod.label}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPeriod(getNextPeriod(currentPeriod))}
-            >
-              <Icon name="ChevronRight" size={16} />
-            </Button>
-          </div>
-        </Card>
-        
-        <Card className="p-4 bg-green-500/10 border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Сумма моделей</div>
-          <div className="text-2xl font-bold text-green-600">{totalModelSum.toLocaleString()}₽</div>
-        </Card>
-
-        <Card className="p-4 bg-green-500/10 border-green-500/20">
-          <div className="text-sm text-muted-foreground mb-1">Сумма операторов</div>
-          <div className="text-2xl font-bold text-green-600">{totalOperatorSum.toLocaleString()}₽</div>
-        </Card>
-
-        {userRole === 'director' && soloMakers.length > 0 && (
-          <Card className="p-4 bg-purple-500/10 border-purple-500/20">
-            <div className="text-sm text-muted-foreground mb-1">Сумма соло-мейкеров</div>
-            <div className="text-2xl font-bold text-purple-600">{totalSoloMakerSum.toLocaleString()}₽</div>
-          </Card>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <ExchangeRateCard 
-          exchangeRate={exchangeRate}
-          isLoadingRate={isLoadingRate}
-          onRefresh={loadExchangeRate}
-        />
-      </div>
-
-      {userRole === 'producer' && (() => {
-        const salary = salaries.producers[userEmail] || { total: 0, details: [] };
-        const adj = adjustments[userEmail] || { expenses: 0, advance: 0, penalty: 0 };
-        const sumDollars = salary.total;
-        const sumRubles = sumDollars * exchangeRate;
-        
-        return (
-          <ProducerSalaryCard 
-            producerData={{
-              name: users.find(u => u.email === userEmail)?.fullName || userEmail,
-              email: userEmail,
-              period: currentPeriod.label,
-              sumDollars: Math.round(sumDollars * 100) / 100,
-              rate: exchangeRate,
-              sumRubles: Math.round(sumRubles),
-              expenses: adj.expenses,
-              advance: adj.advance,
-              penalty: adj.penalty,
-              total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty),
-              employees: []
-            }} 
-            period={currentPeriod}
-            canEdit={true}
-            onUpdate={handleUpdateProducer}
-          />
-        );
-      })()}
-
-      <div className="space-y-8">
-        {userRole === 'director' && producers.length > 0 && (
-          <ProducersSection 
-            producers={producers} 
-            period={currentPeriod} 
-            canEdit={true}
-            onUpdate={handleUpdateProducer}
-          />
-        )}
-        <OperatorsSection 
-          operators={operators} 
-          period={currentPeriod} 
-          canEdit={true}
-          onUpdate={handleUpdateEmployee}
-        />
-        <ContentMakersSection 
-          contentMakers={contentMakers} 
-          period={currentPeriod} 
-          canEdit={true}
-          onUpdate={handleUpdateEmployee}
-        />
-        {userRole === 'director' && soloMakers.length > 0 && (
-          <SoloMakersSection 
-            soloMakers={soloMakers} 
-            period={currentPeriod} 
-            canEdit={true}
-            onUpdate={handleUpdateEmployee}
-          />
-        )}
-      </div>
+      <ChecksContent
+        userRole={userRole}
+        userEmail={userEmail}
+        currentPeriod={currentPeriod}
+        exchangeRate={exchangeRate}
+        isLoadingRate={isLoadingRate}
+        producers={producers}
+        operators={operators}
+        contentMakers={contentMakers}
+        soloMakers={soloMakers}
+        users={users}
+        salaries={salaries}
+        adjustments={adjustments}
+        onRefreshRate={loadExchangeRate}
+        onUpdateProducer={handleUpdateProducer}
+        onUpdateEmployee={handleUpdateEmployee}
+      />
     </div>
   );
 };
