@@ -251,13 +251,12 @@ export const useUserManagement = () => {
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch(API_URL, {
+      const response = await authenticatedFetch(`${API_URL}?id=${userId}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
           ...getAuthHeaders()
-        },
-        body: JSON.stringify({ id: userId })
+        }
       });
 
       if (!response.ok) {

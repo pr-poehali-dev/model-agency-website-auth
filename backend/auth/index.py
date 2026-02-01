@@ -362,7 +362,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             query_params = event.get('queryStringParameters', {}) or {}
             user_id = query_params.get('id')
             
-            print(f"DEBUG DELETE: query_params={query_params}, user_id={user_id}, type={type(user_id)}")
+            if not user_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
+                    'body': json.dumps({'error': 'ID пользователя не указан'})
+                }
             
             # Проверяем токен
             headers = event.get('headers', {})
@@ -397,7 +406,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute("SELECT role, email FROM users WHERE id = %s", (int(user_id),))
             user = cur.fetchone()
-            print(f"DEBUG DELETE: Found user={user}")
             if not user:
                 return {
                     'statusCode': 404,
