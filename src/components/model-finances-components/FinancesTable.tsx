@@ -64,12 +64,12 @@ const FinancesTable = ({
   };
 
   const fields = [
-    { key: 'cb', label: 'Chaturbate', type: 'tokens', platform: 'chaturbate' },
-    { key: 'cbIncome', label: 'Доход CB ($)', type: 'income', platform: 'chaturbate' },
-    { key: 'sp', label: 'Stripchat', type: 'tokens', platform: 'stripchat' },
-    { key: 'spIncome', label: 'Доход SP ($)', type: 'income', platform: 'stripchat' },
-    { key: 'soda', label: 'CamSoda', type: 'tokens', platform: 'camsoda' },
-    { key: 'sodaIncome', label: 'Доход Soda ($)', type: 'income', platform: 'camsoda' },
+    { key: 'cb', label: 'Online CB', type: 'tokens', platform: 'chaturbate' },
+    { key: 'cbIncome', label: 'Chaturbate', type: 'income', platform: 'chaturbate' },
+    { key: 'sp', label: 'Online SP', type: 'tokens', platform: 'stripchat' },
+    { key: 'spIncome', label: 'Stripchat', type: 'income', platform: 'stripchat' },
+    { key: 'soda', label: 'Online Soda', type: 'tokens', platform: 'camsoda' },
+    { key: 'sodaIncome', label: 'CamSoda', type: 'income', platform: 'camsoda' },
     { key: 'stripchatTokens', label: 'SP токены', type: 'tokens', platform: 'stripchat' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
   ];
