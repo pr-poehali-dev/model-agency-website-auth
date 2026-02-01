@@ -68,7 +68,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             </svg>
           </div>
           <h3 className="text-lg font-bold text-foreground">
-            Токены по дням
+            Доход по дням ($)
           </h3>
         </div>
         <ResponsiveContainer width="100%" height={320}>
@@ -90,6 +90,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
               }}
+              formatter={(value: any) => `$${Number(value).toFixed(2)}`}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
@@ -97,7 +98,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             />
             <Line
               type="monotone"
-              dataKey="cb"
+              dataKey="cbIncome"
               stroke="#f59e0b"
               strokeWidth={3}
               name="Chaturbate"
@@ -106,7 +107,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             />
             <Line
               type="monotone"
-              dataKey="sp"
+              dataKey="spIncome"
               stroke="#ef4444"
               strokeWidth={3}
               name="Stripchat"
@@ -115,7 +116,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             />
             <Line
               type="monotone"
-              dataKey="soda"
+              dataKey="sodaIncome"
               stroke="#06b6d4"
               strokeWidth={3}
               name="CamSoda"
@@ -134,7 +135,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             </svg>
           </div>
           <h3 className="text-lg font-bold text-foreground">
-            Доход по дням ($)
+            Токены по дням
           </h3>
         </div>
         <ResponsiveContainer width="100%" height={320}>
@@ -160,9 +161,9 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
             />
-            <Bar dataKey="cbIncome" fill="#f59e0b" name="CB доход" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="spIncome" fill="#ef4444" name="SP доход" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="sodaIncome" fill="#06b6d4" name="Soda доход" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="cb" fill="#f59e0b" name="Chaturbate" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="sp" fill="#ef4444" name="Stripchat" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="soda" fill="#06b6d4" name="CamSoda" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -244,6 +245,7 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
               }}
+              formatter={(value: any) => `$${Number(value).toFixed(2)}`}
             />
             <Bar 
               dataKey="totalIncome" 
