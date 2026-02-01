@@ -306,17 +306,27 @@ const ModelFinances = ({
       const mergedData = initialData.map((initDay) => {
         const savedDay = data.find((d: any) => d.date === initDay.date);
         if (savedDay) {
+          // Миграция старых данных: если cbTokens нет, но есть cb (старые токены), используем их
+          const cbTokens = savedDay.cbTokens !== undefined ? savedDay.cbTokens : (savedDay.cb || 0);
+          const spTokens = savedDay.spTokens !== undefined ? savedDay.spTokens : (savedDay.sp || 0);
+          const sodaTokens = savedDay.sodaTokens !== undefined ? savedDay.sodaTokens : (savedDay.soda || 0);
+          
+          // Пересчитываем доходы на основе токенов
+          const cbIncome = cbTokens * 0.05 * 0.6;
+          const spIncome = spTokens * 0.05 * 0.6;
+          const sodaIncome = sodaTokens * 0.05 * 0.6;
+          
           return {
             ...initDay,
             cb: savedDay.cb || 0,
             sp: savedDay.sp || 0,
             soda: savedDay.soda || 0,
-            cbTokens: savedDay.cbTokens || 0,
-            spTokens: savedDay.spTokens || 0,
-            sodaTokens: savedDay.sodaTokens || 0,
-            cbIncome: savedDay.cbIncome || 0,
-            spIncome: savedDay.spIncome || 0,
-            sodaIncome: savedDay.sodaIncome || 0,
+            cbTokens,
+            spTokens,
+            sodaTokens,
+            cbIncome,
+            spIncome,
+            sodaIncome,
             stripchatTokens: savedDay.stripchatTokens || 0,
             transfers: savedDay.transfers || 0,
             operator: savedDay.operator || "",
