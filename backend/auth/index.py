@@ -359,8 +359,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
         
         elif method == 'DELETE':
-            query_params = event.get('queryStringParameters', {})
+            query_params = event.get('queryStringParameters', {}) or {}
             user_id = query_params.get('id')
+            
+            print(f"DEBUG DELETE: query_params={query_params}, user_id={user_id}, type={type(user_id)}")
             
             # Проверяем токен
             headers = event.get('headers', {})
@@ -393,8 +395,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Недостаточно прав для управления пользователями'})
                 }
             
-            cur.execute("SELECT role, email FROM users WHERE id = %s", (user_id,))
+            cur.execute("SELECT role, email FROM users WHERE id = %s", (int(user_id),))
             user = cur.fetchone()
+            print(f"DEBUG DELETE: Found user={user}")
             if not user:
                 return {
                     'statusCode': 404,
