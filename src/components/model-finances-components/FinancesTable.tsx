@@ -64,23 +64,23 @@ const FinancesTable = ({
   };
 
   const fields = [
-    { key: 'cb', label: 'Chaturbate', type: 'tokens' },
-    { key: 'cbIncome', label: 'Доход CB ($)', type: 'income' },
-    { key: 'sp', label: 'Stripchat', type: 'tokens' },
-    { key: 'spIncome', label: 'Доход SP ($)', type: 'income' },
-    { key: 'soda', label: 'CamSoda', type: 'tokens' },
-    { key: 'sodaIncome', label: 'Доход Soda ($)', type: 'income' },
-    { key: 'stripchatTokens', label: 'SP токены', type: 'tokens' },
-    { key: 'transfers', label: 'Переводы ($)', type: 'income' },
+    { key: 'cb', label: 'Chaturbate', type: 'tokens', platform: 'chaturbate' },
+    { key: 'cbIncome', label: 'Доход CB ($)', type: 'income', platform: 'chaturbate' },
+    { key: 'sp', label: 'Stripchat', type: 'tokens', platform: 'stripchat' },
+    { key: 'spIncome', label: 'Доход SP ($)', type: 'income', platform: 'stripchat' },
+    { key: 'soda', label: 'CamSoda', type: 'tokens', platform: 'camsoda' },
+    { key: 'sodaIncome', label: 'Доход Soda ($)', type: 'income', platform: 'camsoda' },
+    { key: 'stripchatTokens', label: 'SP токены', type: 'tokens', platform: 'stripchat' },
+    { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
   ];
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 shadow-lg border-2">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="border-b border-border">
-              <th className="p-2 text-left font-medium text-foreground sticky left-0 bg-background z-10 min-w-[120px]">
+            <tr className="border-b-2 border-border">
+              <th className="p-3 text-left font-semibold text-foreground sticky left-0 bg-gradient-to-r from-background to-muted/30 z-10 min-w-[140px] border-b-2 border-r-2 border-border">
                 Показатель
               </th>
               {onlineData.map((day) => {
@@ -88,11 +88,13 @@ const FinancesTable = ({
                 return (
                   <th
                     key={day.date}
-                    className={`p-2 text-center font-medium text-foreground min-w-[80px] ${weekend ? "bg-muted/20" : ""}`}
+                    className={`p-3 text-center font-semibold text-foreground min-w-[90px] border-b-2 border-r border-border transition-colors ${
+                      weekend ? "bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/30" : "bg-gradient-to-b from-background to-muted/20"
+                    }`}
                   >
-                    <div className="flex flex-col">
-                      <span>{formatDate(day.date)}</span>
-                      <span className="text-xs text-muted-foreground font-normal">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-base font-bold">{formatDate(day.date)}</span>
+                      <span className="text-xs text-muted-foreground font-medium">
                         {getDayName(day.date)}
                       </span>
                     </div>
@@ -102,50 +104,68 @@ const FinancesTable = ({
             </tr>
           </thead>
           <tbody>
-            {fields.map((field) => (
-              <tr key={field.key} className="border-b border-border hover:bg-muted/30">
-                <td className="p-2 font-medium sticky left-0 bg-background z-10">
-                  {field.label}
-                </td>
-                {onlineData.map((day) => {
-                  const dateBlocked = blockedDates[day.date];
-                  const cbBlocked = dateBlocked?.all || dateBlocked?.chaturbate;
-                  const spBlocked = dateBlocked?.all || dateBlocked?.stripchat;
-                  const sodaBlocked = dateBlocked?.all;
-                  const weekend = isWeekend(day.date);
-                  
-                  let isBlocked = false;
-                  if (field.key === 'cb') isBlocked = cbBlocked || false;
-                  if (field.key === 'sp') isBlocked = spBlocked || false;
-                  if (field.key === 'soda') isBlocked = sodaBlocked || false;
+            {fields.map((field) => {
+              const getPlatformBg = (platform: string) => {
+                if (platform === 'chaturbate') return 'bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20';
+                if (platform === 'stripchat') return 'bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20';
+                if (platform === 'camsoda') return 'bg-gradient-to-r from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20';
+                return 'bg-gradient-to-r from-background to-muted/30';
+              };
+              
+              return (
+                <tr key={field.key} className="border-b border-border hover:bg-muted/40 transition-colors">
+                  <td className={`p-3 font-semibold sticky left-0 z-10 border-r-2 border-border ${getPlatformBg((field as any).platform)}`}>
+                    {field.label}
+                  </td>
+                  {onlineData.map((day) => {
+                    const dateBlocked = blockedDates[day.date];
+                    const cbBlocked = dateBlocked?.all || dateBlocked?.chaturbate;
+                    const spBlocked = dateBlocked?.all || dateBlocked?.stripchat;
+                    const sodaBlocked = dateBlocked?.all;
+                    const weekend = isWeekend(day.date);
+                    
+                    let isBlocked = false;
+                    if (field.key === 'cb') isBlocked = cbBlocked || false;
+                    if (field.key === 'sp') isBlocked = spBlocked || false;
+                    if (field.key === 'soda') isBlocked = sodaBlocked || false;
 
-                  return (
-                    <td key={day.date} className={`p-2 ${weekend ? "bg-muted/20" : ""}`}>
-                      <Input
-                        type="number"
-                        value={(day as any)[field.key]}
-                        onChange={(e) => onInputChange(day.date, field.key, e.target.value)}
-                        className={`text-center w-full ${isBlocked ? "bg-red-500/10 border-red-500/50" : ""}`}
-                        disabled={isReadOnly || isBlocked}
-                        min="0"
-                        step={field.type === 'income' ? '0.01' : '1'}
-                      />
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+                    const getCellBg = () => {
+                      if (weekend) return 'bg-amber-50/50 dark:bg-amber-950/10';
+                      return '';
+                    };
+
+                    return (
+                      <td key={day.date} className={`p-2 border-r border-border ${getCellBg()}`}>
+                        <Input
+                          type="number"
+                          value={(day as any)[field.key]}
+                          onChange={(e) => onInputChange(day.date, field.key, e.target.value)}
+                          className={`text-center w-full font-medium transition-all ${
+                            isBlocked 
+                              ? "bg-red-500/10 border-red-500/50" 
+                              : ""
+                          }`}
+                          disabled={isReadOnly || isBlocked}
+                          min="0"
+                          step={field.type === 'income' ? '0.01' : '1'}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
             
             {!isSoloMaker && (
               <>
-                <tr className="border-b border-border hover:bg-muted/30">
-                  <td className="p-2 font-medium sticky left-0 bg-background z-10">
+                <tr className="border-b border-border hover:bg-muted/40 transition-colors bg-gradient-to-r from-purple-50/50 to-background dark:from-purple-950/20 dark:to-background">
+                  <td className="p-3 font-semibold sticky left-0 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20 z-10 border-r-2 border-border">
                     Оператор
                   </td>
                   {onlineData.map((day) => {
                     const weekend = isWeekend(day.date);
                     return (
-                      <td key={day.date} className={`p-2 ${weekend ? "bg-muted/20" : ""}`}>
+                      <td key={day.date} className={`p-2 border-r border-border ${weekend ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}>
                         <Select
                           value={day.operator || "none"}
                           onValueChange={(value) => onOperatorChange(day.date, value === "none" ? "" : value)}
@@ -168,14 +188,14 @@ const FinancesTable = ({
                   })}
                 </tr>
                 
-                <tr className="border-b border-border hover:bg-muted/30">
-                  <td className="p-2 font-medium sticky left-0 bg-background z-10">
+                <tr className="border-b border-border hover:bg-muted/40 transition-colors bg-gradient-to-r from-green-50/50 to-background dark:from-green-950/20 dark:to-background">
+                  <td className="p-3 font-semibold sticky left-0 bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 z-10 border-r-2 border-border">
                     Смена
                   </td>
                   {onlineData.map((day) => {
                     const weekend = isWeekend(day.date);
                     return (
-                      <td key={day.date} className={`p-2 text-center ${weekend ? "bg-muted/20" : ""}`}>
+                      <td key={day.date} className={`p-2 text-center border-r border-border ${weekend ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}>
                         <div className="flex justify-center">
                           <Checkbox
                             checked={day.shift}
