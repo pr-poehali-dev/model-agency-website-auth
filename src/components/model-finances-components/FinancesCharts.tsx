@@ -135,11 +135,11 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             </svg>
           </div>
           <h3 className="text-lg font-bold text-foreground">
-            Токены по дням
+            Онлайн по дням
           </h3>
         </div>
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={chartData}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis 
               dataKey="date" 
@@ -160,11 +160,36 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
+              iconType="line"
             />
-            <Bar dataKey="cb" fill="#f59e0b" name="Chaturbate" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="sp" fill="#ef4444" name="Stripchat" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="soda" fill="#06b6d4" name="CamSoda" radius={[8, 8, 0, 0]} />
-          </BarChart>
+            <Line
+              type="monotone"
+              dataKey="cb"
+              stroke="#f59e0b"
+              strokeWidth={3}
+              name="Online CB"
+              dot={{ fill: '#f59e0b', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="sp"
+              stroke="#ef4444"
+              strokeWidth={3}
+              name="Online SP"
+              dot={{ fill: '#ef4444', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="soda"
+              stroke="#06b6d4"
+              strokeWidth={3}
+              name="Online Soda"
+              dot={{ fill: '#06b6d4', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
         </ResponsiveContainer>
       </Card>
 
@@ -181,18 +206,6 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Всего токенов CB</p>
-            <p className="text-2xl font-bold text-amber-900 dark:text-amber-200">{totalCb.toLocaleString()}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 border border-red-200 dark:border-red-800">
-            <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1">Всего токенов SP</p>
-            <p className="text-2xl font-bold text-red-900 dark:text-red-200">{totalSp.toLocaleString()}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20 border border-cyan-200 dark:border-cyan-800">
-            <p className="text-xs font-medium text-cyan-700 dark:text-cyan-400 mb-1">Всего токенов Soda</p>
-            <p className="text-2xl font-bold text-cyan-900 dark:text-cyan-200">{totalSoda.toLocaleString()}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800">
             <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1">Доход CB</p>
             <p className="text-2xl font-bold text-amber-900 dark:text-amber-200">${totalCbIncome.toFixed(2)}</p>
           </div>
@@ -208,9 +221,11 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             <p className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">Переводы</p>
             <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">${totalTransfers.toFixed(2)}</p>
           </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 border-2 border-green-400 dark:border-green-600 shadow-lg">
-            <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">Итого доход</p>
-            <p className="text-2xl font-bold text-green-900 dark:text-green-200">${totalIncome.toFixed(2)}</p>
+          <div className="col-span-2">
+            <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 border-2 border-green-400 dark:border-green-600 shadow-lg">
+              <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Итого доход</p>
+              <p className="text-3xl font-bold text-green-900 dark:text-green-200">${totalIncome.toFixed(2)}</p>
+            </div>
           </div>
         </div>
       </Card>
