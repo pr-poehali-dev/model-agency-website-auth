@@ -104,6 +104,9 @@ const FinancesTable = ({
                   </th>
                 );
               })}
+              <th className="p-3 text-center font-bold text-foreground min-w-[100px] border-b-2 border-l-2 border-border bg-gradient-to-r from-primary/10 to-primary/5">
+                Итого
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -166,6 +169,32 @@ const FinancesTable = ({
                       </td>
                     );
                   })}
+                  <td className="p-2 border-l-2 border-border bg-gradient-to-r from-primary/5 to-background">
+                    {(() => {
+                      if (field.type === 'totalCalculated') {
+                        const total = onlineData.reduce((sum, day) => 
+                          sum + ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6), 0
+                        );
+                        return (
+                          <div className="text-center py-2 font-bold text-lg text-green-600 dark:text-green-400">
+                            ${total.toFixed(2)}
+                          </div>
+                        );
+                      }
+                      
+                      if (field.type === 'tokens') {
+                        const total = onlineData.reduce((sum, day) => sum + ((day as any)[field.key] || 0), 0);
+                        return <div className="text-center py-2 font-semibold">{total}</div>;
+                      }
+                      
+                      if (field.type === 'income') {
+                        const total = onlineData.reduce((sum, day) => sum + ((day as any)[field.key] || 0), 0);
+                        return <div className="text-center py-2 font-semibold">${total.toFixed(2)}</div>;
+                      }
+                      
+                      return <div className="text-center py-2 text-muted-foreground">—</div>;
+                    })()}
+                  </td>
                 </tr>
               );
             })}
@@ -200,6 +229,9 @@ const FinancesTable = ({
                       </td>
                     );
                   })}
+                  <td className="p-2 border-l-2 border-border bg-gradient-to-r from-primary/5 to-background">
+                    <div className="text-center py-2 text-muted-foreground">—</div>
+                  </td>
                 </tr>
                 
                 <tr className="border-b border-border hover:bg-muted/40 transition-colors bg-gradient-to-r from-green-50/50 to-background dark:from-green-950/20 dark:to-background">
@@ -222,6 +254,9 @@ const FinancesTable = ({
                       </td>
                     );
                   })}
+                  <td className="p-2 border-l-2 border-border bg-gradient-to-r from-primary/5 to-background">
+                    <div className="text-center py-2 text-muted-foreground">—</div>
+                  </td>
                 </tr>
               </>
             )}
