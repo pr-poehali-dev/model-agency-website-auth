@@ -321,10 +321,10 @@ const ModelFinances = ({
             sodaTokens = savedDay.soda || 0;
           }
           
-          // Пересчитываем доходы из токенов (всегда актуально)
-          const cbIncome = cbTokens * 0.05 * 0.6;
-          const spIncome = spTokens * 0.05 * 0.6;
-          const sodaIncome = sodaTokens * 0.05 * 0.6;
+          // Пересчитываем общий чек из токенов (токены × 0.05)
+          const cbIncome = cbTokens * 0.05;
+          const spIncome = spTokens * 0.05;
+          const sodaIncome = sodaTokens * 0.05;
           
           return {
             ...initDay,
@@ -410,13 +410,13 @@ const ModelFinances = ({
         
         const updatedDay = { ...day, [field]: numValue };
         
-        // Пересчитываем доход для каждой площадки (для графиков)
+        // Пересчитываем общий чек для каждой площадки (токены × 0.05)
         if (field === 'cbTokens') {
-          updatedDay.cbIncome = numValue * 0.05 * 0.6;
+          updatedDay.cbIncome = numValue * 0.05;
         } else if (field === 'spTokens') {
-          updatedDay.spIncome = numValue * 0.05 * 0.6;
+          updatedDay.spIncome = numValue * 0.05;
         } else if (field === 'sodaTokens') {
-          updatedDay.sodaIncome = numValue * 0.05 * 0.6;
+          updatedDay.sodaIncome = numValue * 0.05;
         }
         
         return updatedDay;
