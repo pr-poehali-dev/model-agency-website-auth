@@ -24,27 +24,6 @@ const FinancesHeader = ({
   onNextPeriod,
   onSave,
 }: FinancesHeaderProps) => {
-  const getPeriodLabel = (period: Period) => {
-    const months = [
-      "января",
-      "февраля",
-      "марта",
-      "апреля",
-      "мая",
-      "июня",
-      "июля",
-      "августа",
-      "сентября",
-      "октября",
-      "ноября",
-      "декабря",
-    ];
-    const monthName = months[period.month];
-    return period.half === 1
-      ? `1-15 ${monthName} ${period.year}`
-      : `16-${new Date(period.year, period.month + 1, 0).getDate()} ${monthName} ${period.year}`;
-  };
-
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <div className="flex items-center gap-3">
@@ -67,7 +46,7 @@ const FinancesHeader = ({
             <Icon name="ChevronLeft" size={16} />
           </Button>
           <span className="text-sm font-medium px-2 min-w-[150px] text-center">
-            {getPeriodLabel(currentPeriod)}
+            {currentPeriod.label}
           </span>
           <Button variant="ghost" size="sm" onClick={onNextPeriod}>
             <Icon name="ChevronRight" size={16} />
