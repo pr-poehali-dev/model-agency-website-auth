@@ -7,6 +7,7 @@ import json
 import os
 from typing import Dict, Any, List
 from datetime import datetime
+from decimal import Decimal
 import psycopg2
 from psycopg2.extras import execute_values, RealDictCursor
 
@@ -82,18 +83,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         data = []
         for row in rows:
             date_obj = row['date']
+            # Explicitly convert Decimal to float for JSON serialization
+            def to_float(val):
+                if val is None:
+                    return 0
+                return float(val) if isinstance(val, Decimal) else float(val or 0)
+            
             data.append({
                 'date': f"{date_obj.year}-{date_obj.month:02d}-{date_obj.day:02d}",
-                'cbTokens': row['cb_tokens'] or 0,
-                'spTokens': row['sp_tokens'] or 0,
-                'sodaTokens': row['soda_tokens'] or 0,
-                'cam4': float(row['cam4_tokens'] or 0),
-                'cbIncome': float(row['cb_income'] or 0),
-                'spIncome': float(row['sp_income'] or 0),
-                'sodaIncome': float(row['soda_income'] or 0),
-                'cam4Income': float(row['cam4_income'] or 0),
-                'stripchatTokens': row['stripchat_tokens'] or 0,
-                'transfers': float(row['transfers'] or 0),
+                'cbTokens': to_float(row['cb_tokens']),
+                'spTokens': to_float(row['sp_tokens']),
+                'sodaTokens': to_float(row['soda_tokens']),
+                'cam4': to_float(row['cam4_tokens']),
+                'cbIncome': to_float(row['cb_income']),
+                'spIncome': to_float(row['sp_income']),
+                'sodaIncome': to_float(row['soda_income']),
+                'cam4Income': to_float(row['cam4_income']),
+                'stripchatTokens': to_float(row['stripchat_tokens']),
+                'transfers': to_float(row['transfers']),
                 'operator': row['operator_name'] or '',
                 'shift': row['has_shift'] or False
             })
