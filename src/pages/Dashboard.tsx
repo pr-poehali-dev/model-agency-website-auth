@@ -16,7 +16,6 @@ import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
 import CalculationTab from '@/components/CalculationTab';
 import SettingsTab from '@/components/SettingsTab';
-import BackupManager from '@/components/BackupManager';
 
 const models = [
   {
@@ -268,7 +267,6 @@ const Dashboard = () => {
     { id: 'calculation', label: 'Подсчёт', icon: 'Calculator', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'settings', label: 'Настройки', icon: 'Settings', permission: PERMISSIONS.MANAGE_USERS },
-    { id: 'backups', label: 'Точки отката', icon: 'Database', permission: PERMISSIONS.MANAGE_USERS },
 
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
@@ -328,8 +326,6 @@ const Dashboard = () => {
         return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
       case 'settings':
         return <SettingsTab userEmail={userEmail} userRole={userRole || undefined} />;
-      case 'backups':
-        return <BackupManager />;
 
       case 'users':
         return <UserManagement />;
