@@ -46,18 +46,18 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
     cb: day.cb,
     sp: day.sp,
     soda: day.soda,
-    cbIncome: day.cbIncome,
-    spIncome: day.spIncome,
-    sodaIncome: day.sodaIncome,
+    cbIncome: day.cbTokens * 0.05 * 0.6,
+    spIncome: day.spTokens * 0.05 * 0.6,
+    sodaIncome: day.sodaTokens * 0.05 * 0.6,
     totalIncome: (day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6,
   }));
 
   const totalCb = onlineData.reduce((sum, day) => sum + day.cb, 0);
   const totalSp = onlineData.reduce((sum, day) => sum + day.sp, 0);
   const totalSoda = onlineData.reduce((sum, day) => sum + day.soda, 0);
-  const totalCbIncome = onlineData.reduce((sum, day) => sum + day.cbIncome, 0);
-  const totalSpIncome = onlineData.reduce((sum, day) => sum + day.spIncome, 0);
-  const totalSodaIncome = onlineData.reduce((sum, day) => sum + day.sodaIncome, 0);
+  const totalCbIncome = onlineData.reduce((sum, day) => sum + (day.cbTokens * 0.05 * 0.6), 0);
+  const totalSpIncome = onlineData.reduce((sum, day) => sum + (day.spTokens * 0.05 * 0.6), 0);
+  const totalSodaIncome = onlineData.reduce((sum, day) => sum + (day.sodaTokens * 0.05 * 0.6), 0);
   const totalTransfers = onlineData.reduce((sum, day) => sum + day.transfers, 0);
   const totalIncome = onlineData.reduce((sum, day) => sum + ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6), 0);
 
