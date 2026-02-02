@@ -433,7 +433,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Удаляем все связанные данные пользователя (с указанием схемы)
             cur.execute("DELETE FROM t_p35405502_model_agency_website.auth_tokens WHERE user_id = %s", (user_id,))
             cur.execute("DELETE FROM t_p35405502_model_agency_website.model_finances WHERE model_id = %s", (user_id,))
-            cur.execute("DELETE FROM t_p35405502_model_agency_website.salary_adjustments WHERE email = %s", (user_email,))
+            cur.execute("DELETE FROM t_p35405502_model_agency_website.salary_adjustments WHERE user_id = %s", (user_id,))
             cur.execute("DELETE FROM t_p35405502_model_agency_website.schedule WHERE model_id = %s", (user_id,))
             cur.execute("DELETE FROM t_p35405502_model_agency_website.blocked_dates WHERE model_id = %s", (user_id,))
             cur.execute("DELETE FROM t_p35405502_model_agency_website.model_accounts WHERE model_id = %s", (user_id,))
