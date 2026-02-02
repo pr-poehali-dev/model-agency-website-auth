@@ -100,11 +100,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.model_id,
                 mf.date,
                 mf.cb_tokens,
-                mf.sp_tokens,
+                mf.stripchat_tokens,
                 mf.soda_tokens,
                 mf.cb_income,
                 mf.sp_income,
                 mf.soda_income,
+                mf.cam4_income,
                 mf.transfers,
                 mf.operator_name
             FROM {schema}.model_finances mf
@@ -114,11 +115,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         finances = [f for f in all_finances if (
             (float(f['cb_tokens'] or 0) > 0) or
-            (float(f['sp_tokens'] or 0) > 0) or
+            (float(f['stripchat_tokens'] or 0) > 0) or
             (float(f['soda_tokens'] or 0) > 0) or
             (float(f['cb_income'] or 0) > 0) or
             (float(f['sp_income'] or 0) > 0) or
             (float(f['soda_income'] or 0) > 0) or
+            (float(f['cam4_income'] or 0) > 0) or
             (float(f['transfers'] or 0) > 0)
         )]
         
@@ -135,18 +137,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             print(f"DEBUG: Processing finance for model_id={model_id}, operator_name='{operator_name}'")
             
             cb_tokens = float(finance['cb_tokens'] or 0)
-            sp_tokens = float(finance['sp_tokens'] or 0)
+            sp_tokens = float(finance['stripchat_tokens'] or 0)
             soda_tokens = float(finance['soda_tokens'] or 0)
+            cb_income_dollars = float(finance['cb_income'] or 0)
+            sp_income_dollars = float(finance['sp_income'] or 0)
+            soda_income_dollars = float(finance['soda_income'] or 0)
+            cam4_income_dollars = float(finance['cam4_income'] or 0)
             transfers_dollars = float(finance['transfers'] or 0)
             
-            # Always calculate from tokens (tokens are primary data source)
-            cb_dollars = cb_tokens * 0.05
-            sp_dollars = sp_tokens * 0.05
-            soda_dollars = soda_tokens * 0.05
+            print(f"DEBUG RAW: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, cb_income={cb_income_dollars}, sp_income={sp_income_dollars}, transfers={transfers_dollars}")
             
-            total_check = cb_dollars + sp_dollars + soda_dollars + transfers_dollars
+            # cb_income/sp_income/soda_income уже содержат готовые доллары (после миграции)
+            # Если они есть - используем их, иначе рассчитываем из токенов
+            cb_dollars = cb_income_dollars if cb_income_dollars > 0 else cb_tokens * 0.05
+            sp_dollars = sp_income_dollars if sp_income_dollars > 0 else sp_tokens * 0.05
+            soda_dollars = soda_income_dollars if soda_income_dollars > 0 else soda_tokens * 0.05
             
-            print(f"DEBUG CALC: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, soda_tokens={soda_tokens}, cb$={cb_dollars:.2f}, sp$={sp_dollars:.2f}, soda$={soda_dollars:.2f}, total_check=${total_check:.2f}, transfers=${transfers_dollars}")
+            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_income_dollars + transfers_dollars
+            
+            print(f"DEBUG CALC: model_id={model_id}, cb_dollars={cb_dollars}, sp_dollars={sp_dollars}, soda_dollars={soda_dollars}, cam4={cam4_income_dollars}, transfers={transfers_dollars}, total_check={total_check}")
             
             model_assignment = next((a for a in assignments if a['model_id'] == model_id), None)
             operator_percentage = float(model_assignment.get('operator_percentage', 20)) if model_assignment else 20
