@@ -13,6 +13,7 @@ interface ModelStats {
   current_gross_revenue: number;
   current_cb_gross_revenue?: number;
   current_sp_gross_revenue?: number;
+  current_soda_gross_revenue?: number;
   is_solo_maker: boolean;
   solo_percentage: number;
 }
@@ -140,6 +141,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   let totalDirectorsIncomeUSD = 0; // Доля директоров
   let totalChaturbateUSD = 0; // Общая выручка с Chaturbate
   let totalStripchatUSD = 0; // Общая выручка со Stripchat
+  let totalCamSodaUSD = 0; // Общая выручка с CamSoda
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
@@ -147,10 +149,12 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
       const grossRevenue = model.current_gross_revenue || 0;
       const cbRevenue = model.current_cb_gross_revenue || 0;
       const spRevenue = model.current_sp_gross_revenue || 0;
+      const sodaRevenue = model.current_soda_gross_revenue || 0;
       
       totalGrossRevenueUSD += grossRevenue;
       totalChaturbateUSD += cbRevenue;
       totalStripchatUSD += spRevenue;
+      totalCamSodaUSD += sodaRevenue;
       
       // Если соло-мейкер, директора получают остаток (100% - solo_percentage)
       // Если обычная модель, директора получают 40%
@@ -238,6 +242,27 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             <div className="text-right">
               <p className="text-2xl font-bold text-purple-500">
                 ${totalStripchatUSD.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-1 mb-4">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Icon name="DollarSign" size={24} className="text-green-500" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-lg mb-1">CamSoda</h4>
+                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.05)</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-green-500">
+                ${totalCamSodaUSD.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
               </p>
             </div>
           </div>
