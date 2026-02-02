@@ -59,41 +59,43 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(dsn)
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
+    schema = 't_p35405502_model_agency_website'
+    
     try:
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 u.id as user_id,
                 u.email,
                 u.full_name,
                 u.role,
                 u.solo_percentage
-            FROM users u
+            FROM {schema}.users u
             WHERE u.role IN ('operator', 'content_maker', 'producer', 'solo_maker')
         """)
         users = cur.fetchall()
         
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 oma.operator_email,
                 oma.model_email,
                 oma.model_id,
                 oma.operator_percentage,
                 u.id as model_user_id
-            FROM operator_model_assignments oma
-            JOIN users u ON u.email = oma.model_email
+            FROM {schema}.operator_model_assignments oma
+            JOIN {schema}.users u ON u.email = oma.model_email
         """)
         assignments = cur.fetchall()
         
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 pma.producer_email,
                 pma.model_email
-            FROM producer_assignments pma
+            FROM {schema}.producer_assignments pma
             WHERE pma.assignment_type = 'model' AND pma.model_email IS NOT NULL
         """)
         producer_assignments = cur.fetchall()
         
-        cur.execute("""
+        cur.execute(f"""
             SELECT 
                 mf.model_id,
                 mf.date,
@@ -106,7 +108,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 mf.cam4_income,
                 mf.transfers,
                 mf.operator_name
-            FROM model_finances mf
+            FROM {schema}.model_finances mf
             WHERE mf.date BETWEEN %s AND %s
         """, (period_start, period_end))
         all_finances = cur.fetchall()
@@ -179,7 +181,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if operator_name:
                 print(f"DEBUG: operator_name '{operator_name}' found in finance row for model_id={model_id}")
-                operator_user = next((u for u in users if u['full_name'] == operator_name), None)
+                # Try to find by email first (new format), then by full_name (old format)
+                operator_user = next((u for u in users if u['email'] == operator_name or u['full_name'] == operator_name), None)
                 if operator_user:
                     assigned_operator_email = operator_user['email']
                     print(f"DEBUG: Found operator user {assigned_operator_email} with role {operator_user['role']}")
