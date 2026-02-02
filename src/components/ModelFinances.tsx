@@ -328,9 +328,9 @@ const ModelFinances = ({
           
           return {
             ...initDay,
-            cb: 0, // Онлайн - новое поле, пока 0
-            sp: 0,
-            soda: 0,
+            cb: savedDay.cb || 0,
+            sp: savedDay.sp || 0,
+            soda: savedDay.soda || 0,
             cbTokens,
             spTokens,
             sodaTokens,

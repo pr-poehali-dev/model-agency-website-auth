@@ -68,6 +68,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         query = '''
             SELECT date, cb_tokens, sp_tokens, soda_tokens,
                    cb_income, sp_income, soda_income, 
+                   cb_online, sp_online, soda_online,
                    stripchat_tokens, operator_name, has_shift, transfers
             FROM t_p35405502_model_agency_website.model_finances
             WHERE model_id = %s
@@ -97,6 +98,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'cbIncome': to_float(row['cb_income']),
                 'spIncome': to_float(row['sp_income']),
                 'sodaIncome': to_float(row['soda_income']),
+                'cb': to_float(row['cb_online']),
+                'sp': to_float(row['sp_online']),
+                'soda': to_float(row['soda_online']),
                 'stripchatTokens': to_float(row['stripchat_tokens']),
                 'transfers': to_float(row['transfers']),
                 'operator': row['operator_name'] or '',
@@ -165,6 +169,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             record.get('cbIncome', 0),
             record.get('spIncome', 0),
             record.get('sodaIncome', 0),
+            record.get('cb', 0),
+            record.get('sp', 0),
+            record.get('soda', 0),
             record.get('stripchatTokens', 0),
             record.get('transfers', 0),
             record.get('operator', ''),
@@ -175,8 +182,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     query = '''
         INSERT INTO t_p35405502_model_agency_website.model_finances 
         (model_id, date, cb_tokens, sp_tokens, soda_tokens, 
-         cb_income, sp_income, soda_income, stripchat_tokens, 
-         transfers, operator_name, has_shift, updated_at)
+         cb_income, sp_income, soda_income, cb_online, sp_online, soda_online,
+         stripchat_tokens, transfers, operator_name, has_shift, updated_at)
         VALUES %s
         ON CONFLICT (model_id, date) 
         DO UPDATE SET
@@ -186,6 +193,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cb_income = EXCLUDED.cb_income,
             sp_income = EXCLUDED.sp_income,
             soda_income = EXCLUDED.soda_income,
+            cb_online = EXCLUDED.cb_online,
+            sp_online = EXCLUDED.sp_online,
+            soda_online = EXCLUDED.soda_online,
             stripchat_tokens = EXCLUDED.stripchat_tokens,
             transfers = EXCLUDED.transfers,
             operator_name = EXCLUDED.operator_name,
@@ -193,7 +203,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             updated_at = CURRENT_TIMESTAMP
     '''
     
-    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
+    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
     conn.commit()
     
     cursor.close()
