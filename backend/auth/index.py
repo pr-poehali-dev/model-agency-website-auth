@@ -430,6 +430,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             user_email = user['email']
             
+            # Удаляем все связанные данные пользователя
+            cur.execute("DELETE FROM auth_tokens WHERE user_id = %s", (user_id,))
+            cur.execute("DELETE FROM model_finances WHERE model_id = %s", (user_id,))
+            cur.execute("DELETE FROM salary_adjustments WHERE user_id = %s", (user_id,))
+            cur.execute("DELETE FROM schedule WHERE model_id = %s", (user_id,))
+            cur.execute("DELETE FROM blocked_dates WHERE model_id = %s", (user_id,))
+            cur.execute("DELETE FROM model_accounts WHERE model_id = %s", (user_id,))
+            
             cur.execute("DELETE FROM producer_assignments WHERE producer_email = %s", (user_email,))
             cur.execute("DELETE FROM producer_assignments WHERE model_email = %s", (user_email,))
             cur.execute("DELETE FROM producer_assignments WHERE operator_email = %s", (user_email,))
