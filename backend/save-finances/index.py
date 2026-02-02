@@ -1,6 +1,6 @@
 '''
 Business: Save and load model financial data from database
-Args: event with httpMethod, body (JSON array of daily finance records for POST), queryStringParameters (modelId for GET)
+Args: event with httpMethod, body (JSON array of daily finance records for POST), queryStringParameters (modelId, startDate, endDate for GET)
 Returns: HTTP response with success status or financial data
 '''
 import json
@@ -66,8 +66,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         query = '''
-            SELECT date, cb_tokens, sp_tokens, soda_tokens, cam4_tokens,
-                   cb_income, sp_income, soda_income, cam4_income, 
+            SELECT date, cb_tokens, sp_tokens, soda_tokens,
+                   cb_income, sp_income, soda_income, 
                    stripchat_tokens, operator_name, has_shift, transfers
             FROM t_p35405502_model_agency_website.model_finances
             WHERE model_id = %s
@@ -94,11 +94,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'cbTokens': to_float(row['cb_tokens']),
                 'spTokens': to_float(row['sp_tokens']),
                 'sodaTokens': to_float(row['soda_tokens']),
-                'cam4': to_float(row['cam4_tokens']),
                 'cbIncome': to_float(row['cb_income']),
                 'spIncome': to_float(row['sp_income']),
                 'sodaIncome': to_float(row['soda_income']),
-                'cam4Income': to_float(row['cam4_income']),
                 'stripchatTokens': to_float(row['stripchat_tokens']),
                 'transfers': to_float(row['transfers']),
                 'operator': row['operator_name'] or '',
@@ -164,11 +162,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             record.get('cbTokens', 0),
             record.get('spTokens', 0),
             record.get('sodaTokens', 0),
-            record.get('cam4', 0),
             record.get('cbIncome', 0),
             record.get('spIncome', 0),
             record.get('sodaIncome', 0),
-            record.get('cam4Income', 0),
             record.get('stripchatTokens', 0),
             record.get('transfers', 0),
             record.get('operator', ''),
@@ -178,8 +174,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     # Use ON CONFLICT to update existing records
     query = '''
         INSERT INTO t_p35405502_model_agency_website.model_finances 
-        (model_id, date, cb_tokens, sp_tokens, soda_tokens, cam4_tokens, 
-         cb_income, sp_income, soda_income, cam4_income, stripchat_tokens, 
+        (model_id, date, cb_tokens, sp_tokens, soda_tokens, 
+         cb_income, sp_income, soda_income, stripchat_tokens, 
          transfers, operator_name, has_shift, updated_at)
         VALUES %s
         ON CONFLICT (model_id, date) 
@@ -187,11 +183,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cb_tokens = EXCLUDED.cb_tokens,
             sp_tokens = EXCLUDED.sp_tokens,
             soda_tokens = EXCLUDED.soda_tokens,
-            cam4_tokens = EXCLUDED.cam4_tokens,
             cb_income = EXCLUDED.cb_income,
             sp_income = EXCLUDED.sp_income,
             soda_income = EXCLUDED.soda_income,
-            cam4_income = EXCLUDED.cam4_income,
             stripchat_tokens = EXCLUDED.stripchat_tokens,
             transfers = EXCLUDED.transfers,
             operator_name = EXCLUDED.operator_name,
@@ -199,7 +193,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             updated_at = CURRENT_TIMESTAMP
     '''
     
-    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
+    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
     conn.commit()
     
     cursor.close()
