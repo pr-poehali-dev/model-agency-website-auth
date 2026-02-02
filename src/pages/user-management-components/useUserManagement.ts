@@ -6,6 +6,7 @@ import { ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
 
 const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const CLEANUP_API_URL = 'https://functions.poehali.dev/ebdade58-dd83-497b-bd3b-570e724eed8b';
+const CLEAR_FINANCES_API_URL = 'https://functions.poehali.dev/b4aca0ee-fbf4-49fb-b9d9-0f18274c1ee7';
 
 interface User {
   id: number;
@@ -350,6 +351,52 @@ export const useUserManagement = () => {
     }
   };
 
+  const handleClearModelFinances = async () => {
+    const currentUserEmail = localStorage.getItem('userEmail') || '';
+    
+    if (!confirm('Вы уверены? Это удалит ВСЕ финансовые данные моделей из базы. Действие необратимо!')) {
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch(CLEAR_FINANCES_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Ошибка очистки');
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: 'Очистка завершена',
+        description: result.message,
+      });
+      
+      addAuditLog(
+        currentUserEmail,
+        'Очистка финансов моделей',
+        'Удалены все финансовые данные моделей',
+        'finances'
+      );
+    } catch (err: any) {
+      toast({
+        title: 'Ошибка',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSavePermissions = async () => {
     if (!selectedUser) return;
 
@@ -445,6 +492,7 @@ export const useUserManagement = () => {
     openPermissionsDialog,
     handlePermissionToggle,
     handleCleanupOrphanedAssignments,
+    handleClearModelFinances,
     handleSavePermissions,
   };
 };

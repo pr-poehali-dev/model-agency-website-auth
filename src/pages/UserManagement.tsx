@@ -53,6 +53,7 @@ const UserManagement = () => {
     openPermissionsDialog,
     handlePermissionToggle,
     handleCleanupOrphanedAssignments,
+    handleClearModelFinances,
     handleSavePermissions,
   } = useUserManagement();
 
@@ -79,6 +80,7 @@ const UserManagement = () => {
         onSearchChange={setSearchQuery}
         onAddUser={() => setIsAddDialogOpen(true)}
         onCleanup={handleCleanupOrphanedAssignments}
+        onClearFinances={handleClearModelFinances}
         loading={loading}
         currentUserRole={currentUserRole}
       />

@@ -1,5 +1,5 @@
 '''
-Очистка токенов авторизации для сброса всех сессий
+Очистка всех финансовых данных моделей
 Returns: статус операции
 '''
 
@@ -46,13 +46,13 @@ def handler(event: dict, context) -> dict:
     cur = conn.cursor()
     
     try:
-        # Получаем количество токенов перед удалением
-        cur.execute("SELECT COUNT(*) as total FROM t_p35405502_model_agency_website.auth_tokens")
+        # Получаем количество записей перед удалением
+        cur.execute("SELECT COUNT(*) as total FROM t_p35405502_model_agency_website.model_finances")
         result = cur.fetchone()
         total_before = result['total'] if result else 0
         
-        # Удаляем все токены
-        cur.execute("DELETE FROM t_p35405502_model_agency_website.auth_tokens")
+        # Удаляем все финансовые данные моделей
+        cur.execute("DELETE FROM t_p35405502_model_agency_website.model_finances")
         conn.commit()
         
         return {
@@ -64,7 +64,7 @@ def handler(event: dict, context) -> dict:
             },
             'body': json.dumps({
                 'success': True,
-                'message': f'Удалено {total_before} токенов. Все пользователи должны авторизоваться заново.'
+                'message': f'Удалено {total_before} записей из финансов моделей. Теперь данные будут добавляться только из реальных чеков.'
             })
         }
     
