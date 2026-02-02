@@ -442,11 +442,19 @@ const ModelFinances = ({
     scheduleAutoSave();
   };
 
-  const handlePreviousPeriod = () => {
+  const handlePreviousPeriod = async () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      await saveData();
+    }
     setCurrentPeriod(getPreviousPeriod(currentPeriod));
   };
 
-  const handleNextPeriod = () => {
+  const handleNextPeriod = async () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      await saveData();
+    }
     setCurrentPeriod(getNextPeriod(currentPeriod));
   };
 
