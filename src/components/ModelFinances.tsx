@@ -360,6 +360,7 @@ const ModelFinances = ({
 
     setIsSaving(true);
     try {
+      console.log('Saving data:', onlineData.slice(0, 3));
       const response = await authenticatedFetch(API_URL, {
         method: "POST",
         headers: {

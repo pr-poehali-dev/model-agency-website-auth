@@ -133,6 +133,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     model_id: int = body_data.get('modelId')
     finance_data: List[Dict[str, Any]] = body_data.get('data', [])
     
+    # Debug: log first 3 records to see shift field
+    if finance_data:
+        print(f"DEBUG: First 3 records: {finance_data[:3]}")
+    
     if not model_id or not finance_data:
         return {
             'statusCode': 400,
