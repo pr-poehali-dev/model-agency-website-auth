@@ -23,7 +23,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
     setAdvance(employee.advance);
     setPenalty(employee.penalty);
     setPercentage(employee.soloPercentage || '50');
-  }, [employee.advance, employee.penalty, employee.soloPercentage]);
+  }, [employee.email, employee.advance, employee.penalty, employee.soloPercentage]);
 
   const handleBlur = (field: 'advance' | 'penalty', value: number) => {
     if (onUpdate && employee.email) {

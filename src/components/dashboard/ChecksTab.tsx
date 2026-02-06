@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
 import { getCurrentPeriod, Period } from '@/utils/periodUtils';
 import { useChecksData } from './checks-components/useChecksData';
 import ChecksHeader from './checks-components/ChecksHeader';
@@ -9,6 +10,7 @@ import { producerData } from './checks/mockData';
 
 const ChecksTab = () => {
   const [currentPeriod, setCurrentPeriod] = useState<Period>(getCurrentPeriod());
+  const { toast } = useToast();
   
   const {
     exchangeRate,
@@ -23,9 +25,41 @@ const ChecksTab = () => {
     salaries,
     adjustments,
     loadExchangeRate,
-    handleUpdateProducer,
-    handleUpdateEmployee
+    handleUpdateProducer: updateProducer,
+    handleUpdateEmployee: updateEmployee
   } = useChecksData(currentPeriod);
+
+  const handleUpdateProducer = async (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => {
+    try {
+      await updateProducer(email, field, value);
+      toast({
+        title: 'Успешно сохранено',
+        description: 'Изменения успешно применены',
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка сохранения',
+        description: 'Не удалось сохранить изменения',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleUpdateEmployee = async (email: string, field: 'advance' | 'penalty', value: number) => {
+    try {
+      await updateEmployee(email, field, value);
+      toast({
+        title: 'Успешно сохранено',
+        description: 'Изменения успешно применены',
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка сохранения',
+        description: 'Не удалось сохранить изменения',
+        variant: 'destructive'
+      });
+    }
+  };
 
   let operators = producerData.employees.filter(e => e.model);
   let contentMakers = producerData.employees.filter(e => !e.model);

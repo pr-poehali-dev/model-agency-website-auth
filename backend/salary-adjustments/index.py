@@ -10,6 +10,8 @@ from typing import Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+SCHEMA = 't_p35405502_model_agency_website'
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
@@ -70,9 +72,9 @@ def handle_get(event: Dict[str, Any], conn) -> Dict[str, Any]:
         }
     
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT email, role, advance, penalty, expenses
-        FROM salary_adjustments
+        FROM {SCHEMA}.salary_adjustments
         WHERE period_start = %s AND period_end = %s
     """, (period_start, period_end))
     
@@ -125,7 +127,7 @@ def handle_put(event: Dict[str, Any], conn) -> Dict[str, Any]:
     cursor = conn.cursor()
     
     cursor.execute(f"""
-        INSERT INTO salary_adjustments 
+        INSERT INTO {SCHEMA}.salary_adjustments 
         (email, role, period_start, period_end, {field}, updated_by, updated_at)
         VALUES (%s, %s, %s, %s, %s, %s, NOW())
         ON CONFLICT (email, period_start, period_end)

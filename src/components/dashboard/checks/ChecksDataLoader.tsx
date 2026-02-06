@@ -220,9 +220,10 @@ export const handleUpdateEmployee = async (
     const periodEnd = formatDate(currentPeriod.endDate);
     
     const user = users.find(u => u.email === email);
-    const role = user?.role === 'content_maker' ? 'model' : 'operator';
+    const role = user?.role === 'content_maker' ? 'model' : 
+                 user?.role === 'solo_maker' ? 'model' : 'operator';
     
-    await authenticatedFetch(ADJUSTMENTS_API_URL, {
+    const response = await authenticatedFetch(ADJUSTMENTS_API_URL, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -237,6 +238,12 @@ export const handleUpdateEmployee = async (
         value
       })
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Failed to save adjustment:', errorData);
+      throw new Error('Failed to save adjustment');
+    }
     
     await reloadAdjustments();
   } catch (err) {
