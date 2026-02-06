@@ -142,7 +142,7 @@ const FinancesTable = ({
 
                     const isTotalCalculated = field.type === 'totalCalculated';
                     const totalIncome = isTotalCalculated
-                      ? ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6).toFixed(2)
+                      ? ((day.cbIncome + day.spIncome + day.sodaIncome) * 0.6 + day.transfers * 0.6).toFixed(2)
                       : null;
 
                     return (
