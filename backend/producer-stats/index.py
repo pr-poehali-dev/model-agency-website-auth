@@ -180,8 +180,8 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
     
     cursor.execute(f'''
         SELECT 
-            COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers) * 0.6), 0) as total_income,
-            COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers), 0) as gross_revenue,
+            COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + transfers) * 0.6), 0) as total_income,
+            COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + transfers), 0) as gross_revenue,
             COALESCE(SUM(cb_income * 0.05), 0) as cb_gross_revenue,
             COALESCE(SUM(sp_income * 0.05), 0) as sp_gross_revenue,
             COALESCE(SUM(soda_income * 0.05), 0) as soda_gross_revenue,
@@ -194,8 +194,8 @@ def get_model_finance_stats(cursor, schema: str, model_email: str, period_start:
     prev_start, prev_end = get_previous_period_dates(period_start, period_end)
     cursor.execute(f'''
         SELECT 
-            COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers) * 0.6), 0) as total_income,
-            COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + cam4_income + transfers), 0) as gross_revenue,
+            COALESCE(SUM(((cb_income + sp_income + soda_income) * 0.05 + transfers) * 0.6), 0) as total_income,
+            COALESCE(SUM((cb_income + sp_income + soda_income) * 0.05 + transfers), 0) as gross_revenue,
             COALESCE(SUM(cb_income * 0.05), 0) as cb_gross_revenue,
             COALESCE(SUM(sp_income * 0.05), 0) as sp_gross_revenue,
             COALESCE(SUM(soda_income * 0.05), 0) as soda_gross_revenue,
