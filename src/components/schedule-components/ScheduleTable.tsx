@@ -7,7 +7,11 @@ interface ApartmentWeek {
   dates: {
     day: string;
     date: string;
-    times: Record<string, string>;
+    times: {
+      '10:00': string;
+      '17:00': string;
+      '00:00': string;
+    };
   }[];
 }
 
