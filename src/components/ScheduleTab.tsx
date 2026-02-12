@@ -223,19 +223,39 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           console.log(`${apt.name} - Location 1 dates:`, loc1Dates.map((d: any) => d.date));
           console.log(`${apt.name} - Location 2 dates:`, loc2Dates.map((d: any) => d.date));
           
+          const defaultTimeLabels = ['10:00', '17:00', '00:00'];
+          const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
+          const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
+          
           const loc1Filtered = weekDates.map(wd => {
             const savedDate = loc1Dates.find((d: any) => d.date === wd.date);
-            return savedDate ? { ...savedDate, day: wd.day } : { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+            if (savedDate) {
+              const newTimes: Record<string, string> = {};
+              const oldTimes = Object.values(savedDate.times || {});
+              loc1TimeLabels.forEach((label, idx) => {
+                newTimes[label] = oldTimes[idx] || '';
+              });
+              return { ...savedDate, day: wd.day, times: newTimes };
+            }
+            const emptyTimes: Record<string, string> = {};
+            loc1TimeLabels.forEach(label => { emptyTimes[label] = ''; });
+            return { ...wd, times: emptyTimes };
           });
           
           const loc2Filtered = weekDates.map(wd => {
             const savedDate = loc2Dates.find((d: any) => d.date === wd.date);
-            return savedDate ? { ...savedDate, day: wd.day } : { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
+            if (savedDate) {
+              const newTimes: Record<string, string> = {};
+              const oldTimes = Object.values(savedDate.times || {});
+              loc2TimeLabels.forEach((label, idx) => {
+                newTimes[label] = oldTimes[idx] || '';
+              });
+              return { ...savedDate, day: wd.day, times: newTimes };
+            }
+            const emptyTimes: Record<string, string> = {};
+            loc2TimeLabels.forEach(label => { emptyTimes[label] = ''; });
+            return { ...wd, times: emptyTimes };
           });
-          
-          const defaultTimeLabels = ['10:00', '17:00', '00:00'];
-          const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
-          const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
           
           return {
             ...apt,
