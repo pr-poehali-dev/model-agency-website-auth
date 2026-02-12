@@ -130,14 +130,14 @@ const ScheduleTable = ({
                             {week.timeLabels[0]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times['10:00'];
+                            const cellValue = date.times[week.timeLabels[0]];
                             const isFiltered = filterTeam && cellValue !== filterTeam;
                             const isOccupied = cellValue && cellValue.trim() !== '';
                             return (
                               <td 
                                 key={dateIndex} 
                                 className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '10:00', cellValue) : undefined}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[0], cellValue) : undefined}
                               >
                                 {cellValue}
                               </td>
@@ -153,14 +153,14 @@ const ScheduleTable = ({
                             {week.timeLabels[1]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times['17:00'];
+                            const cellValue = date.times[week.timeLabels[1]];
                             const isFiltered = filterTeam && cellValue !== filterTeam;
                             const isOccupied = cellValue && cellValue.trim() !== '';
                             return (
                               <td 
                                 key={dateIndex} 
                                 className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '17:00', cellValue) : undefined}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[1], cellValue) : undefined}
                               >
                                 {cellValue}
                               </td>
@@ -176,14 +176,14 @@ const ScheduleTable = ({
                             {week.timeLabels[2]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times['00:00'];
+                            const cellValue = date.times[week.timeLabels[2]];
                             const isFiltered = filterTeam && cellValue !== filterTeam;
                             const isOccupied = cellValue && cellValue.trim() !== '';
                             return (
                               <td 
                                 key={dateIndex} 
                                 className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '00:00', cellValue) : undefined}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[2], cellValue) : undefined}
                               >
                                 {cellValue}
                               </td>

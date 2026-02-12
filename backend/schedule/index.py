@@ -197,9 +197,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             shift_row = cur.fetchone()
             
-            print(f"PUT request: apartment={apartment_name}, week={week_number}, date={date}, time_slot={time_slot}, value={value}")
-            print(f"Shift row: {shift_row}")
-            
             if shift_row:
                 time_slots = {
                     shift_row['loc1_slot1']: 'time_10',
@@ -216,9 +213,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     '00:00': 'time_00'
                 }
             
-            print(f"Time slots mapping: {time_slots}")
             time_column = time_slots.get(time_slot)
-            print(f"Matched column: {time_column}")
             
             if not time_column:
                 return {
