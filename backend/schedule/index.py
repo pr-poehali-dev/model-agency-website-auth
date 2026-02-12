@@ -121,9 +121,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if week_key not in schedule_dict[apt_key]['weeks']:
                     schedule_dict[apt_key]['weeks'][week_key] = []
                 
-                time_slot_1 = shifts.get('time_slot_1', '10:00')
-                time_slot_2 = shifts.get('time_slot_2', '17:00')
-                time_slot_3 = shifts.get('time_slot_3', '00:00')
+                if week_key == '1 лк':
+                    time_slot_1 = shifts.get('loc1_slot1', '10:00')
+                    time_slot_2 = shifts.get('loc1_slot2', '17:00')
+                    time_slot_3 = shifts.get('loc1_slot3', '00:00')
+                else:
+                    time_slot_1 = shifts.get('loc2_slot1', '10:00')
+                    time_slot_2 = shifts.get('loc2_slot2', '17:00')
+                    time_slot_3 = shifts.get('loc2_slot3', '00:00')
                 
                 schedule_dict[apt_key]['weeks'][week_key].append({
                     'day': row['day_name'],
