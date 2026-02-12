@@ -56,6 +56,7 @@ const defaultSchedule = {
         },
         {
           weekNumber: '2 лк',
+          timeLabels: ['10:00', '17:00', '00:00'],
           dates: [
             { day: 'Понедельник', date: '22.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
             { day: 'Вторник', date: '23.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
@@ -76,10 +77,10 @@ const defaultSchedule = {
         day: '17:00 - 23:00',
         night: '00:00 - 06:00'
       },
-      timeLabels: ['10:00', '17:00', '00:00'],
       weeks: [
         {
           weekNumber: '1 лк',
+          timeLabels: ['10:00', '17:00', '00:00'],
           dates: [
             { day: 'Понедельник', date: '15.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
             { day: 'Вторник', date: '16.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
@@ -92,6 +93,7 @@ const defaultSchedule = {
         },
         {
           weekNumber: '2 лк',
+          timeLabels: ['10:00', '17:00', '00:00'],
           dates: [
             { day: 'Понедельник', date: '22.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
             { day: 'Вторник', date: '23.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
@@ -201,13 +203,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           
           if (!aptData?.weeks) {
             console.log(`No data for ${apt.name}, using empty schedule`);
+            const defaultTimeLabels = ['10:00', '17:00', '00:00'];
+            const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
+            const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
+            
             return {
               ...apt,
               shifts: aptData?.shifts || apt.shifts,
-              timeLabels: aptData?.time_slots ? [aptData.time_slots.slot1, aptData.time_slots.slot2, aptData.time_slots.slot3] : apt.timeLabels,
               weeks: [
-                { weekNumber: '1 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
-                { weekNumber: '2 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
+                { weekNumber: '1 лк', timeLabels: loc1TimeLabels, dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
+                { weekNumber: '2 лк', timeLabels: loc2TimeLabels, dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
               ]
             };
           }
@@ -228,13 +233,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             return savedDate ? { ...savedDate, day: wd.day } : { ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } };
           });
           
+          const defaultTimeLabels = ['10:00', '17:00', '00:00'];
+          const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
+          const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
+          
           return {
             ...apt,
             shifts: aptData?.shifts || apt.shifts,
-            timeLabels: aptData?.time_slots ? [aptData.time_slots.slot1, aptData.time_slots.slot2, aptData.time_slots.slot3] : apt.timeLabels,
             weeks: [
-              { weekNumber: '1 лк', dates: loc1Filtered },
-              { weekNumber: '2 лк', dates: loc2Filtered }
+              { weekNumber: '1 лк', timeLabels: loc1TimeLabels, dates: loc1Filtered },
+              { weekNumber: '2 лк', timeLabels: loc2TimeLabels, dates: loc2Filtered }
             ]
           };
         })
@@ -442,9 +450,9 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
-  const handleEditTimeSlot = (aptIndex: number, oldTime: string) => {
+  const handleEditTimeSlot = (aptIndex: number, weekIndex: number, oldTime: string) => {
     if (!canEdit) return;
-    setEditTimeSlot({ aptIndex, oldTime });
+    setEditTimeSlot({ aptIndex, weekIndex, oldTime });
     setIsEditTimeSlotDialogOpen(true);
   };
 
@@ -452,7 +460,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     if (!editTimeSlot) return;
     
     const apartment = scheduleData.apartments[editTimeSlot.aptIndex];
-    const oldTimeIndex = apartment.timeLabels.indexOf(editTimeSlot.oldTime);
+    const week = apartment.weeks[editTimeSlot.weekIndex];
+    const oldTimeIndex = week.timeLabels.indexOf(editTimeSlot.oldTime);
     
     if (oldTimeIndex === -1) {
       toast({
@@ -464,7 +473,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       return;
     }
     
-    const slotMapping = ['time_slot_1', 'time_slot_2', 'time_slot_3'];
+    const slotMapping = ['slot1', 'slot2', 'slot3'];
+    const locPrefix = editTimeSlot.weekIndex === 0 ? 'loc1' : 'loc2';
     
     try {
       await authenticatedFetch(SCHEDULE_API_URL, {
@@ -474,13 +484,13 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           apartment_name: apartment.name,
           apartment_address: apartment.address,
           update_type: 'time_label',
-          slot_name: slotMapping[oldTimeIndex],
+          slot_name: `${locPrefix}_${slotMapping[oldTimeIndex]}`,
           new_label: newTime
         })
       });
       
       const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-      newSchedule.apartments[editTimeSlot.aptIndex].timeLabels[oldTimeIndex] = newTime;
+      newSchedule.apartments[editTimeSlot.aptIndex].weeks[editTimeSlot.weekIndex].timeLabels[oldTimeIndex] = newTime;
       setScheduleData(newSchedule);
       
       toast({

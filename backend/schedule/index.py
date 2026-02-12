@@ -59,7 +59,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT apartment_name, apartment_address, shift_morning, shift_day, shift_night,
-                       time_slot_1, time_slot_2, time_slot_3
+                       time_slot_1, time_slot_2, time_slot_3,
+                       loc1_slot1, loc1_slot2, loc1_slot3,
+                       loc2_slot1, loc2_slot2, loc2_slot3
                 FROM t_p35405502_model_agency_website.apartment_shifts
             """)
             shifts_rows = cur.fetchall()
@@ -72,7 +74,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'night': shift_row['shift_night'],
                     'time_slot_1': shift_row['time_slot_1'],
                     'time_slot_2': shift_row['time_slot_2'],
-                    'time_slot_3': shift_row['time_slot_3']
+                    'time_slot_3': shift_row['time_slot_3'],
+                    'loc1_slot1': shift_row['loc1_slot1'],
+                    'loc1_slot2': shift_row['loc1_slot2'],
+                    'loc1_slot3': shift_row['loc1_slot3'],
+                    'loc2_slot1': shift_row['loc2_slot1'],
+                    'loc2_slot2': shift_row['loc2_slot2'],
+                    'loc2_slot3': shift_row['loc2_slot3']
                 }
             
             schedule_dict = {}
@@ -98,7 +106,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'time_slots': {
                             'slot1': shifts['time_slot_1'],
                             'slot2': shifts['time_slot_2'],
-                            'slot3': shifts['time_slot_3']
+                            'slot3': shifts['time_slot_3'],
+                            'loc1_slot1': shifts.get('loc1_slot1', '10:00'),
+                            'loc1_slot2': shifts.get('loc1_slot2', '17:00'),
+                            'loc1_slot3': shifts.get('loc1_slot3', '00:00'),
+                            'loc2_slot1': shifts.get('loc2_slot1', '10:00'),
+                            'loc2_slot2': shifts.get('loc2_slot2', '17:00'),
+                            'loc2_slot3': shifts.get('loc2_slot3', '00:00')
                         },
                         'weeks': {}
                     }
@@ -241,7 +255,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 slot_name = body_data.get('slot_name')
                 new_label = body_data.get('new_label')
                 
-                valid_slots = ['time_slot_1', 'time_slot_2', 'time_slot_3']
+                valid_slots = ['loc1_slot1', 'loc1_slot2', 'loc1_slot3', 'loc2_slot1', 'loc2_slot2', 'loc2_slot3']
                 if slot_name not in valid_slots:
                     return {
                         'statusCode': 400,

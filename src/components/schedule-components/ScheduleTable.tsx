@@ -4,6 +4,7 @@ import Icon from '@/components/ui/icon';
 
 interface ApartmentWeek {
   weekNumber: string;
+  timeLabels: string[];
   dates: {
     day: string;
     date: string;
@@ -23,7 +24,6 @@ interface Apartment {
     day: string;
     night: string;
   };
-  timeLabels: string[];
   weeks: ApartmentWeek[];
 }
 
@@ -35,7 +35,7 @@ interface ScheduleTableProps {
   onCellClick: (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => void;
   onCopyWeek: (aptIndex: number, weekIndex: number) => void;
   onEditShiftTime?: (aptIndex: number, shiftType: 'morning' | 'day' | 'night') => void;
-  onEditTimeSlot?: (aptIndex: number, oldTime: string) => void;
+  onEditTimeSlot?: (aptIndex: number, weekIndex: number, oldTime: string) => void;
 }
 
 const ScheduleTable = ({
@@ -124,10 +124,10 @@ const ScheduleTable = ({
                         <tr className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
                           <td 
                             className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, apartment.timeLabels[0]) : undefined}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[0]) : undefined}
                             title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
                           >
-                            {apartment.timeLabels[0]}
+                            {week.timeLabels[0]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
                             const cellValue = date.times['10:00'];
@@ -147,10 +147,10 @@ const ScheduleTable = ({
                         <tr className="border-b border-border bg-orange-900/20 dark:bg-orange-900/20">
                           <td 
                             className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, apartment.timeLabels[1]) : undefined}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[1]) : undefined}
                             title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
                           >
-                            {apartment.timeLabels[1]}
+                            {week.timeLabels[1]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
                             const cellValue = date.times['17:00'];
@@ -170,10 +170,10 @@ const ScheduleTable = ({
                         <tr className="border-b border-border bg-slate-700/50 dark:bg-slate-700/50">
                           <td 
                             className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-slate-600 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, apartment.timeLabels[2]) : undefined}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[2]) : undefined}
                             title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
                           >
-                            {apartment.timeLabels[2]}
+                            {week.timeLabels[2]}
                           </td>
                           {week.dates.map((date, dateIndex) => {
                             const cellValue = date.times['00:00'];
