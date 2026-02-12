@@ -202,6 +202,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             console.log(`No data for ${apt.name}, using empty schedule`);
             return {
               ...apt,
+              shifts: aptData?.shifts || apt.shifts,
               weeks: [
                 { weekNumber: '1 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
                 { weekNumber: '2 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
@@ -227,6 +228,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           
           return {
             ...apt,
+            shifts: aptData?.shifts || apt.shifts,
             weeks: [
               { weekNumber: '1 лк', dates: loc1Filtered },
               { weekNumber: '2 лк', dates: loc2Filtered }
@@ -399,16 +401,42 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     setIsEditShiftTimeDialogOpen(true);
   };
 
-  const handleSaveShiftTime = (newTime: string) => {
+  const handleSaveShiftTime = async (newTime: string) => {
     if (!editShift) return;
-    const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-    newSchedule.apartments[editShift.aptIndex].shifts[editShift.shiftType] = newTime;
-    setScheduleData(newSchedule);
-    toast({
-      title: 'Время смены обновлено',
-      description: `${editShift.shiftName}: ${newTime}`,
-    });
-    setEditShift(null);
+    
+    const apartment = scheduleData.apartments[editShift.aptIndex];
+    
+    try {
+      await authenticatedFetch(SCHEDULE_API_URL, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apartment_name: apartment.name,
+          apartment_address: apartment.address,
+          update_type: 'shift_time',
+          shift_type: editShift.shiftType,
+          new_time: newTime
+        })
+      });
+      
+      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
+      newSchedule.apartments[editShift.aptIndex].shifts[editShift.shiftType] = newTime;
+      setScheduleData(newSchedule);
+      
+      toast({
+        title: 'Время смены обновлено',
+        description: `${editShift.shiftName}: ${newTime}`,
+      });
+    } catch (err) {
+      console.error('Save shift time error:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить изменения',
+        variant: 'destructive'
+      });
+    } finally {
+      setEditShift(null);
+    }
   };
 
   const handleEditTimeSlot = (aptIndex: number, oldTime: string) => {
@@ -417,28 +445,53 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     setIsEditTimeSlotDialogOpen(true);
   };
 
-  const handleSaveTimeSlot = (newTime: string) => {
+  const handleSaveTimeSlot = async (newTime: string) => {
     if (!editTimeSlot) return;
-    const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-    const apartment = newSchedule.apartments[editTimeSlot.aptIndex];
     
-    apartment.weeks.forEach((week: typeof apartment.weeks[0]) => {
-      week.dates.forEach((date: typeof week.dates[0]) => {
-        if (date.times[editTimeSlot.oldTime] !== undefined) {
-          date.times[newTime] = date.times[editTimeSlot.oldTime];
-          if (newTime !== editTimeSlot.oldTime) {
-            delete date.times[editTimeSlot.oldTime];
-          }
-        }
+    const apartment = scheduleData.apartments[editTimeSlot.aptIndex];
+    
+    try {
+      await authenticatedFetch(SCHEDULE_API_URL, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apartment_name: apartment.name,
+          apartment_address: apartment.address,
+          update_type: 'time_slot',
+          old_time: editTimeSlot.oldTime,
+          new_time: newTime
+        })
       });
-    });
-    
-    setScheduleData(newSchedule);
-    toast({
-      title: 'Время смены изменено',
-      description: `${editTimeSlot.oldTime} → ${newTime}`,
-    });
-    setEditTimeSlot(null);
+      
+      const newSchedule = JSON.parse(JSON.stringify(scheduleData));
+      const updatedApartment = newSchedule.apartments[editTimeSlot.aptIndex];
+      
+      updatedApartment.weeks.forEach((week: typeof updatedApartment.weeks[0]) => {
+        week.dates.forEach((date: typeof week.dates[0]) => {
+          if (date.times[editTimeSlot.oldTime] !== undefined) {
+            date.times[newTime] = date.times[editTimeSlot.oldTime];
+            if (newTime !== editTimeSlot.oldTime) {
+              delete date.times[editTimeSlot.oldTime];
+            }
+          }
+        });
+      });
+      
+      setScheduleData(newSchedule);
+      toast({
+        title: 'Время смены изменено',
+        description: `${editTimeSlot.oldTime} → ${newTime}`,
+      });
+    } catch (err) {
+      console.error('Save time slot error:', err);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить изменения',
+        variant: 'destructive'
+      });
+    } finally {
+      setEditTimeSlot(null);
+    }
   };
 
   const handleSaveCell = async () => {

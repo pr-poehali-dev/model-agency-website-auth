@@ -36,7 +36,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Email, X-Auth-Token',
                 'Access-Control-Allow-Credentials': 'true',
                 'Access-Control-Max-Age': '86400'
@@ -57,13 +57,49 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             """)
             rows = cur.fetchall()
             
+            cur.execute("""
+                SELECT apartment_name, apartment_address, shift_morning, shift_day, shift_night,
+                       time_slot_1, time_slot_2, time_slot_3
+                FROM t_p35405502_model_agency_website.apartment_shifts
+            """)
+            shifts_rows = cur.fetchall()
+            shifts_dict = {}
+            for shift_row in shifts_rows:
+                apt_key = f"{shift_row['apartment_name']}_{shift_row['apartment_address']}"
+                shifts_dict[apt_key] = {
+                    'morning': shift_row['shift_morning'],
+                    'day': shift_row['shift_day'],
+                    'night': shift_row['shift_night'],
+                    'time_slot_1': shift_row['time_slot_1'],
+                    'time_slot_2': shift_row['time_slot_2'],
+                    'time_slot_3': shift_row['time_slot_3']
+                }
+            
             schedule_dict = {}
             for row in rows:
                 apt_key = f"{row['apartment_name']}_{row['apartment_address']}"
                 if apt_key not in schedule_dict:
+                    shifts = shifts_dict.get(apt_key, {
+                        'morning': '10:00 - 16:00',
+                        'day': '17:00 - 23:00',
+                        'night': '00:00 - 06:00',
+                        'time_slot_1': '10:00',
+                        'time_slot_2': '17:00',
+                        'time_slot_3': '00:00'
+                    })
                     schedule_dict[apt_key] = {
                         'name': row['apartment_name'],
                         'address': row['apartment_address'],
+                        'shifts': {
+                            'morning': shifts['morning'],
+                            'day': shifts['day'],
+                            'night': shifts['night']
+                        },
+                        'time_slots': {
+                            'slot1': shifts['time_slot_1'],
+                            'slot2': shifts['time_slot_2'],
+                            'slot3': shifts['time_slot_3']
+                        },
                         'weeks': {}
                     }
                 
@@ -153,6 +189,75 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 ON CONFLICT (apartment_name, apartment_address, week_number, date) 
                 DO UPDATE SET {time_column} = EXCLUDED.{time_column}, updated_at = CURRENT_TIMESTAMP
             """, (apartment_name, apartment_address, week_number, date, '', value))
+            
+            conn.commit()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                'isBase64Encoded': False,
+                'body': json.dumps({'success': True})
+            }
+        
+        elif method == 'PATCH':
+            body_data = json.loads(event.get('body', '{}'))
+            apartment_name = body_data.get('apartment_name')
+            apartment_address = body_data.get('apartment_address')
+            update_type = body_data.get('update_type')
+            
+            if update_type == 'shift_time':
+                shift_type = body_data.get('shift_type')
+                new_time = body_data.get('new_time')
+                
+                shift_column_map = {
+                    'morning': 'shift_morning',
+                    'day': 'shift_day',
+                    'night': 'shift_night'
+                }
+                
+                shift_column = shift_column_map.get(shift_type)
+                if not shift_column:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'error': 'Invalid shift type'})
+                    }
+                
+                cur.execute(f"""
+                    INSERT INTO t_p35405502_model_agency_website.apartment_shifts 
+                    (apartment_name, apartment_address, {shift_column})
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (apartment_name, apartment_address)
+                    DO UPDATE SET {shift_column} = EXCLUDED.{shift_column}, updated_at = CURRENT_TIMESTAMP
+                """, (apartment_name, apartment_address, new_time))
+                
+            elif update_type == 'time_slot':
+                old_time = body_data.get('old_time')
+                new_time = body_data.get('new_time')
+                
+                time_slot_map = {
+                    '10:00': 'time_slot_1',
+                    '17:00': 'time_slot_2',
+                    '00:00': 'time_slot_3'
+                }
+                
+                slot_column = time_slot_map.get(old_time)
+                if not slot_column:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'error': 'Invalid time slot'})
+                    }
+                
+                cur.execute(f"""
+                    INSERT INTO t_p35405502_model_agency_website.apartment_shifts 
+                    (apartment_name, apartment_address, {slot_column})
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (apartment_name, apartment_address)
+                    DO UPDATE SET {slot_column} = EXCLUDED.{slot_column}, updated_at = CURRENT_TIMESTAMP
+                """, (apartment_name, apartment_address, new_time))
             
             conn.commit()
             
