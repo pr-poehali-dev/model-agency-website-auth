@@ -33,6 +33,7 @@ interface ScheduleTableProps {
   canEdit: boolean;
   onCellClick: (aptIndex: number, weekIndex: number, dateIndex: number, time: string, currentValue: string) => void;
   onCopyWeek: (aptIndex: number, weekIndex: number) => void;
+  onEditShiftTime?: (aptIndex: number, shiftType: 'morning' | 'day' | 'night') => void;
 }
 
 const ScheduleTable = ({
@@ -41,7 +42,8 @@ const ScheduleTable = ({
   filterTeam,
   canEdit,
   onCellClick,
-  onCopyWeek
+  onCopyWeek,
+  onEditShiftTime
 }: ScheduleTableProps) => {
   return (
     <div className="space-y-4">
@@ -56,9 +58,27 @@ const ScheduleTable = ({
               </tr>
               <tr className="border-b border-border">
                 <td className="p-3 font-semibold text-foreground bg-muted/20">{apartment.address}</td>
-                <td className="p-3 text-center bg-blue-900/30 dark:bg-blue-900/30 font-medium">Утро<br/>{apartment.shifts.morning}</td>
-                <td className="p-3 text-center bg-orange-900/30 dark:bg-orange-900/30 font-medium">День<br/>{apartment.shifts.day}</td>
-                <td className="p-3 text-center bg-slate-700 dark:bg-slate-700 font-medium">Ночь<br/>{apartment.shifts.night}</td>
+                <td 
+                  className={`p-3 text-center bg-blue-900/30 dark:bg-blue-900/30 font-medium ${canEdit && onEditShiftTime ? 'cursor-pointer hover:bg-blue-900/50 transition-colors' : ''}`}
+                  onClick={canEdit && onEditShiftTime ? () => onEditShiftTime(aptIndex, 'morning') : undefined}
+                  title={canEdit && onEditShiftTime ? 'Нажмите для редактирования времени' : ''}
+                >
+                  Утро<br/>{apartment.shifts.morning}
+                </td>
+                <td 
+                  className={`p-3 text-center bg-orange-900/30 dark:bg-orange-900/30 font-medium ${canEdit && onEditShiftTime ? 'cursor-pointer hover:bg-orange-900/50 transition-colors' : ''}`}
+                  onClick={canEdit && onEditShiftTime ? () => onEditShiftTime(aptIndex, 'day') : undefined}
+                  title={canEdit && onEditShiftTime ? 'Нажмите для редактирования времени' : ''}
+                >
+                  День<br/>{apartment.shifts.day}
+                </td>
+                <td 
+                  className={`p-3 text-center bg-slate-700 dark:bg-slate-700 font-medium ${canEdit && onEditShiftTime ? 'cursor-pointer hover:bg-slate-600 transition-colors' : ''}`}
+                  onClick={canEdit && onEditShiftTime ? () => onEditShiftTime(aptIndex, 'night') : undefined}
+                  title={canEdit && onEditShiftTime ? 'Нажмите для редактирования времени' : ''}
+                >
+                  Ночь<br/>{apartment.shifts.night}
+                </td>
                 <td className="p-3"></td>
                 <td className="p-3"></td>
                 <td className="p-3"></td>
