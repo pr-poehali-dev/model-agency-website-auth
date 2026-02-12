@@ -477,7 +477,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         });
       });
       
-      setScheduleData(newSchedule);
+      await loadSchedule();
       toast({
         title: 'Время смены изменено',
         description: `${editTimeSlot.oldTime} → ${newTime}`,
