@@ -192,11 +192,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             shift_row = cur.fetchone()
             
-            time_slots = {
-                shift_row['loc1_slot1'] if shift_row else '10:00': 'time_10',
-                shift_row['loc1_slot2'] if shift_row else '17:00': 'time_17',
-                shift_row['loc1_slot3'] if shift_row else '00:00': 'time_00'
-            }
+            if shift_row:
+                time_slots = {
+                    shift_row['loc1_slot1']: 'time_10',
+                    shift_row['loc1_slot2']: 'time_17',
+                    shift_row['loc1_slot3']: 'time_00',
+                    shift_row['loc2_slot1']: 'time_10',
+                    shift_row['loc2_slot2']: 'time_17',
+                    shift_row['loc2_slot3']: 'time_00'
+                }
+            else:
+                time_slots = {
+                    '10:00': 'time_10',
+                    '17:00': 'time_17',
+                    '00:00': 'time_00'
+                }
             
             time_column = time_slots.get(time_slot)
             
