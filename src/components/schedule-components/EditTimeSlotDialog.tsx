@@ -20,7 +20,7 @@ const EditTimeSlotDialog = ({
   const [time, setTime] = useState(currentTime.substring(0, 5));
 
   const handleSave = () => {
-    const formattedTime = time.length === 5 ? `${time}:00` : time;
+    const formattedTime = time.length === 5 ? time : time.substring(0, 5);
     onSave(formattedTime);
     onClose();
   };
