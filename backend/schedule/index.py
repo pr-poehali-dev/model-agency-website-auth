@@ -184,20 +184,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             time_slot = body_data.get('time_slot')
             value = body_data.get('value', '')
             
-            time_column_map = {
-                '10:00': 'time_10',
-                '17:00': 'time_17',
-                '00:00': 'time_00'
+            cur.execute("""
+                SELECT loc1_slot1, loc1_slot2, loc1_slot3, loc2_slot1, loc2_slot2, loc2_slot3
+                FROM t_p35405502_model_agency_website.apartment_shifts
+                WHERE apartment_name = %s AND apartment_address = %s
+            """, (apartment_name, apartment_address))
+            
+            shift_row = cur.fetchone()
+            
+            time_slots = {
+                shift_row['loc1_slot1'] if shift_row else '10:00': 'time_10',
+                shift_row['loc1_slot2'] if shift_row else '17:00': 'time_17',
+                shift_row['loc1_slot3'] if shift_row else '00:00': 'time_00'
             }
             
-            time_column = time_column_map.get(time_slot)
+            time_column = time_slots.get(time_slot)
             
             if not time_column:
                 return {
                     'statusCode': 400,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
                     'isBase64Encoded': False,
-                    'body': json.dumps({'error': 'Invalid time slot'})
+                    'body': json.dumps({'error': f'Invalid time slot: {time_slot}'})
                 }
             
             cur.execute(f"""
