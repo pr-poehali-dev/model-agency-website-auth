@@ -47,11 +47,6 @@ const ScheduleTable = ({
   onEditShiftTime,
   onEditTimeSlot
 }: ScheduleTableProps) => {
-  const getTimeSlots = (week: ApartmentWeek): string[] => {
-    if (week.dates.length === 0) return ['10:00', '17:00', '00:00'];
-    return Object.keys(week.dates[0].times).sort();
-  };
-
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
@@ -125,31 +120,75 @@ const ScheduleTable = ({
                         </tr>
                       </thead>
                       <tbody>
-                        {getTimeSlots(week).map((timeSlot, timeIndex) => (
-                        <tr key={timeSlot} className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
+                        <tr className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
                           <td 
                             className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, timeSlot) : undefined}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, '10:00') : undefined}
                             title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
                           >
-                            {timeSlot}
+                            10:00
                           </td>
                           {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times[timeSlot as keyof typeof date.times] || '';
+                            const cellValue = date.times['10:00'];
                             const isFiltered = filterTeam && cellValue !== filterTeam;
                             const isOccupied = cellValue && cellValue.trim() !== '';
                             return (
                               <td 
                                 key={dateIndex} 
                                 className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, timeSlot, cellValue) : undefined}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '10:00', cellValue) : undefined}
                               >
                                 {cellValue}
                               </td>
                             );
                           })}
                         </tr>
-                        ))}
+                        <tr className="border-b border-border bg-orange-900/20 dark:bg-orange-900/20">
+                          <td 
+                            className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''}`}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, '17:00') : undefined}
+                            title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
+                          >
+                            17:00
+                          </td>
+                          {week.dates.map((date, dateIndex) => {
+                            const cellValue = date.times['17:00'];
+                            const isFiltered = filterTeam && cellValue !== filterTeam;
+                            const isOccupied = cellValue && cellValue.trim() !== '';
+                            return (
+                              <td 
+                                key={dateIndex} 
+                                className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '17:00', cellValue) : undefined}
+                              >
+                                {cellValue}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                        <tr className="border-b border-border bg-slate-700/50 dark:bg-slate-700/50">
+                          <td 
+                            className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-slate-600 transition-colors' : ''}`}
+                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, '00:00') : undefined}
+                            title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
+                          >
+                            00:00
+                          </td>
+                          {week.dates.map((date, dateIndex) => {
+                            const cellValue = date.times['00:00'];
+                            const isFiltered = filterTeam && cellValue !== filterTeam;
+                            const isOccupied = cellValue && cellValue.trim() !== '';
+                            return (
+                              <td 
+                                key={dateIndex} 
+                                className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, '00:00', cellValue) : undefined}
+                              >
+                                {cellValue}
+                              </td>
+                            );
+                          })}
+                        </tr>
                       </tbody>
                     </table>
                   </td>
