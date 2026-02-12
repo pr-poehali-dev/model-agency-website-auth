@@ -17,10 +17,11 @@ const EditTimeSlotDialog = ({
   currentTime,
   onSave
 }: EditTimeSlotDialogProps) => {
-  const [time, setTime] = useState(currentTime);
+  const [time, setTime] = useState(currentTime.substring(0, 5));
 
   const handleSave = () => {
-    onSave(time);
+    const formattedTime = time.length === 5 ? `${time}:00` : time;
+    onSave(formattedTime);
     onClose();
   };
 

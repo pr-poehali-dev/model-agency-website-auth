@@ -201,6 +201,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         elif method == 'PATCH':
             body_data = json.loads(event.get('body', '{}'))
+            print(f"PATCH request body: {body_data}")
             apartment_name = body_data.get('apartment_name')
             apartment_address = body_data.get('apartment_address')
             update_type = body_data.get('update_type')
