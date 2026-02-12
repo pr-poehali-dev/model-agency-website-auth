@@ -5,6 +5,7 @@ import ScheduleHeader from './schedule-components/ScheduleHeader';
 import ScheduleTable from './schedule-components/ScheduleTable';
 import EditDialog from './schedule-components/EditDialog';
 import EditShiftTimeDialog from './schedule-components/EditShiftTimeDialog';
+import EditTimeSlotDialog from './schedule-components/EditTimeSlotDialog';
 
 interface TeamMember {
   id: number;
@@ -128,6 +129,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     shiftType: 'morning' | 'day' | 'night';
     shiftName: string;
     currentTime: string;
+  } | null>(null);
+  const [isEditTimeSlotDialogOpen, setIsEditTimeSlotDialogOpen] = useState(false);
+  const [editTimeSlot, setEditTimeSlot] = useState<{
+    aptIndex: number;
+    oldTime: string;
   } | null>(null);
   const { toast } = useToast();
   
@@ -405,6 +411,36 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     setEditShift(null);
   };
 
+  const handleEditTimeSlot = (aptIndex: number, oldTime: string) => {
+    if (!canEdit) return;
+    setEditTimeSlot({ aptIndex, oldTime });
+    setIsEditTimeSlotDialogOpen(true);
+  };
+
+  const handleSaveTimeSlot = (newTime: string) => {
+    if (!editTimeSlot) return;
+    const newSchedule = JSON.parse(JSON.stringify(scheduleData));
+    const apartment = newSchedule.apartments[editTimeSlot.aptIndex];
+    
+    apartment.weeks.forEach((week: typeof apartment.weeks[0]) => {
+      week.dates.forEach((date: typeof week.dates[0]) => {
+        if (date.times[editTimeSlot.oldTime] !== undefined) {
+          date.times[newTime] = date.times[editTimeSlot.oldTime];
+          if (newTime !== editTimeSlot.oldTime) {
+            delete date.times[editTimeSlot.oldTime];
+          }
+        }
+      });
+    });
+    
+    setScheduleData(newSchedule);
+    toast({
+      title: 'Время смены изменено',
+      description: `${editTimeSlot.oldTime} → ${newTime}`,
+    });
+    setEditTimeSlot(null);
+  };
+
   const handleSaveCell = async () => {
     if (!editCell) return;
 
@@ -487,6 +523,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           onCellClick={handleCellClick}
           onCopyWeek={handleCopyWeek}
           onEditShiftTime={handleEditShiftTime}
+          onEditTimeSlot={handleEditTimeSlot}
         />
       ))}
 
@@ -509,6 +546,18 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           shiftName={editShift.shiftName}
           currentTime={editShift.currentTime}
           onSave={handleSaveShiftTime}
+        />
+      )}
+
+      {editTimeSlot && (
+        <EditTimeSlotDialog
+          isOpen={isEditTimeSlotDialogOpen}
+          onClose={() => {
+            setIsEditTimeSlotDialogOpen(false);
+            setEditTimeSlot(null);
+          }}
+          currentTime={editTimeSlot.oldTime}
+          onSave={handleSaveTimeSlot}
         />
       )}
     </div>
