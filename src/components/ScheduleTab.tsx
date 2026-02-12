@@ -76,6 +76,7 @@ const defaultSchedule = {
         day: '17:00 - 23:00',
         night: '00:00 - 06:00'
       },
+      timeLabels: ['10:00', '17:00', '00:00'],
       weeks: [
         {
           weekNumber: '1 лк',
@@ -203,6 +204,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
             return {
               ...apt,
               shifts: aptData?.shifts || apt.shifts,
+              timeLabels: aptData?.time_slots ? [aptData.time_slots.slot1, aptData.time_slots.slot2, aptData.time_slots.slot3] : apt.timeLabels,
               weeks: [
                 { weekNumber: '1 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
                 { weekNumber: '2 лк', dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
@@ -229,6 +231,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           return {
             ...apt,
             shifts: aptData?.shifts || apt.shifts,
+            timeLabels: aptData?.time_slots ? [aptData.time_slots.slot1, aptData.time_slots.slot2, aptData.time_slots.slot3] : apt.timeLabels,
             weeks: [
               { weekNumber: '1 лк', dates: loc1Filtered },
               { weekNumber: '2 лк', dates: loc2Filtered }
@@ -449,6 +452,19 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     if (!editTimeSlot) return;
     
     const apartment = scheduleData.apartments[editTimeSlot.aptIndex];
+    const oldTimeIndex = apartment.timeLabels.indexOf(editTimeSlot.oldTime);
+    
+    if (oldTimeIndex === -1) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось найти время для изменения',
+        variant: 'destructive'
+      });
+      setEditTimeSlot(null);
+      return;
+    }
+    
+    const slotMapping = ['time_slot_1', 'time_slot_2', 'time_slot_3'];
     
     try {
       await authenticatedFetch(SCHEDULE_API_URL, {
@@ -457,27 +473,16 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         body: JSON.stringify({
           apartment_name: apartment.name,
           apartment_address: apartment.address,
-          update_type: 'time_slot',
-          old_time: editTimeSlot.oldTime,
-          new_time: newTime
+          update_type: 'time_label',
+          slot_name: slotMapping[oldTimeIndex],
+          new_label: newTime
         })
       });
       
       const newSchedule = JSON.parse(JSON.stringify(scheduleData));
-      const updatedApartment = newSchedule.apartments[editTimeSlot.aptIndex];
+      newSchedule.apartments[editTimeSlot.aptIndex].timeLabels[oldTimeIndex] = newTime;
+      setScheduleData(newSchedule);
       
-      updatedApartment.weeks.forEach((week: typeof updatedApartment.weeks[0]) => {
-        week.dates.forEach((date: typeof week.dates[0]) => {
-          if (date.times[editTimeSlot.oldTime] !== undefined) {
-            date.times[newTime] = date.times[editTimeSlot.oldTime];
-            if (newTime !== editTimeSlot.oldTime) {
-              delete date.times[editTimeSlot.oldTime];
-            }
-          }
-        });
-      });
-      
-      await loadSchedule();
       toast({
         title: 'Время смены изменено',
         description: `${editTimeSlot.oldTime} → ${newTime}`,

@@ -237,32 +237,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     DO UPDATE SET {shift_column} = EXCLUDED.{shift_column}, updated_at = CURRENT_TIMESTAMP
                 """, (apartment_name, apartment_address, new_time))
                 
-            elif update_type == 'time_slot':
-                old_time = body_data.get('old_time')
-                new_time = body_data.get('new_time')
+            elif update_type == 'time_label':
+                slot_name = body_data.get('slot_name')
+                new_label = body_data.get('new_label')
                 
-                time_slot_map = {
-                    '10:00': 'time_slot_1',
-                    '17:00': 'time_slot_2',
-                    '00:00': 'time_slot_3'
-                }
-                
-                slot_column = time_slot_map.get(old_time)
-                if not slot_column:
+                valid_slots = ['time_slot_1', 'time_slot_2', 'time_slot_3']
+                if slot_name not in valid_slots:
                     return {
                         'statusCode': 400,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
                         'isBase64Encoded': False,
-                        'body': json.dumps({'error': 'Invalid time slot'})
+                        'body': json.dumps({'error': 'Invalid slot name'})
                     }
                 
                 cur.execute(f"""
                     INSERT INTO t_p35405502_model_agency_website.apartment_shifts 
-                    (apartment_name, apartment_address, {slot_column})
+                    (apartment_name, apartment_address, {slot_name})
                     VALUES (%s, %s, %s)
                     ON CONFLICT (apartment_name, apartment_address)
-                    DO UPDATE SET {slot_column} = EXCLUDED.{slot_column}, updated_at = CURRENT_TIMESTAMP
-                """, (apartment_name, apartment_address, new_time))
+                    DO UPDATE SET {slot_name} = EXCLUDED.{slot_name}, updated_at = CURRENT_TIMESTAMP
+                """, (apartment_name, apartment_address, new_label))
             
             conn.commit()
             
