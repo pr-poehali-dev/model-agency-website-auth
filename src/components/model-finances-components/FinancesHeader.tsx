@@ -11,7 +11,7 @@ interface FinancesHeaderProps {
   onBack?: () => void;
   onPreviousPeriod: () => void;
   onNextPeriod: () => void;
-  onSave: () => void;
+  onSave?: () => void;
 }
 
 const FinancesHeader = ({
@@ -53,16 +53,14 @@ const FinancesHeader = ({
           </Button>
         </div>
 
-        <Button onClick={onSave} disabled={isSaving}>
-          <Icon
-            name={isSaving ? "Loader2" : "Save"}
-            size={16}
-            className={`mr-2 ${isSaving ? "animate-spin" : ""}`}
-          />
-          {isSaving ? "Сохранение..." : "Сохранить"}
-        </Button>
+        {isSaving && (
+          <Badge variant="outline" className="text-xs">
+            <Icon name="Loader2" size={12} className="mr-1 animate-spin" />
+            Сохранение...
+          </Badge>
+        )}
 
-        {lastSaved && (
+        {!isSaving && lastSaved && (
           <Badge variant="outline" className="text-xs">
             <Icon name="Check" size={12} className="mr-1" />
             Сохранено {lastSaved.toLocaleTimeString("ru-RU")}
