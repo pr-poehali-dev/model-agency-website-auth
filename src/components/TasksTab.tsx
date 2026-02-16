@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import type { UserRole } from '@/lib/permissions';
@@ -27,6 +29,16 @@ interface Task {
   completedAt: string | null;
   assignedToName: string | null;
   assignedByName: string | null;
+  commentCount?: number;
+}
+
+interface Comment {
+  id: number;
+  taskId: number;
+  authorEmail: string;
+  authorName: string | null;
+  text: string;
+  createdAt: string;
 }
 
 interface Assignee {
@@ -67,11 +79,16 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
   const [createLoading, setCreateLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium', assignedToEmail: '', dueDate: '' });
+  const [openTaskId, setOpenTaskId] = useState<number | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
   const { toast } = useToast();
 
   const canCreate = userRole === 'director' || userRole === 'producer';
 
-  const getHeaders = () => {
+  const getHeaders = useCallback(() => {
     const token = localStorage.getItem('authToken');
     const h: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -80,7 +97,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     };
     if (token) h['X-Auth-Token'] = token;
     return h;
-  };
+  }, [userEmail, userRole]);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -94,7 +111,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     } finally {
       setLoading(false);
     }
-  }, [userEmail, userRole]);
+  }, [getHeaders]);
 
   const loadAssignees = useCallback(async () => {
     if (!canCreate) return;
@@ -107,9 +124,28 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     } catch (err) {
       console.error('Failed to load assignees', err);
     }
-  }, [userEmail, userRole, canCreate]);
+  }, [getHeaders, canCreate]);
+
+  const loadComments = useCallback(async (taskId: number) => {
+    setCommentsLoading(true);
+    try {
+      const res = await fetch(`${TASKS_API_URL}?action=comments&taskId=${taskId}`, { headers: getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error('Failed to load comments', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [getHeaders]);
 
   useEffect(() => { loadTasks(); loadAssignees(); }, [loadTasks, loadAssignees]);
+
+  useEffect(() => {
+    if (openTaskId) loadComments(openTaskId);
+  }, [openTaskId, loadComments]);
 
   const handleCreate = async () => {
     if (!newTask.title.trim() || !newTask.assignedToEmail) {
@@ -152,9 +188,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         headers: getHeaders(),
         body: JSON.stringify({ id: taskId, status: newStatus }),
       });
-      if (res.ok) {
-        loadTasks();
-      }
+      if (res.ok) loadTasks();
     } catch {
       toast({ title: 'Ошибка обновления', variant: 'destructive' });
     }
@@ -179,6 +213,27 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     }
   };
 
+  const handleSendComment = async () => {
+    if (!newComment.trim() || !openTaskId) return;
+    setSendingComment(true);
+    try {
+      const res = await fetch(TASKS_API_URL, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ action: 'comment', taskId: openTaskId, text: newComment }),
+      });
+      if (res.ok) {
+        setNewComment('');
+        loadComments(openTaskId);
+        loadTasks();
+      }
+    } catch {
+      toast({ title: 'Ошибка отправки', variant: 'destructive' });
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
   const filtered = filterStatus === 'all' ? tasks : tasks.filter(t => t.status === filterStatus);
 
   const stats = {
@@ -194,10 +249,17 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
+
   const isOverdue = (task: Task) => {
     if (!task.dueDate || task.status === 'completed' || task.status === 'cancelled') return false;
     return new Date(task.dueDate) < new Date();
   };
+
+  const openTask = tasks.find(t => t.id === openTaskId);
 
   if (loading) {
     return (
@@ -316,6 +378,20 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setOpenTaskId(task.id); setNewComment(''); }}
+                      title="Комментарии"
+                      className="relative"
+                    >
+                      <Icon name="MessageSquare" size={16} />
+                      {(task.commentCount ?? 0) > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                          {task.commentCount}
+                        </span>
+                      )}
+                    </Button>
                     {task.status === 'pending' && (
                       <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'in_progress')} title="Начать">
                         <Icon name="Play" size={16} />
@@ -344,6 +420,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         </div>
       )}
 
+      {/* Create task dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -414,6 +491,89 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
               Создать
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comments dialog */}
+      <Dialog open={!!openTaskId} onOpenChange={(open) => { if (!open) setOpenTaskId(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="pr-6">
+              {openTask?.title || 'Задача'}
+            </DialogTitle>
+            {openTask && (
+              <div className="flex items-center gap-2 mt-1">
+                <Badge className={STATUS_CONFIG[openTask.status]?.color || ''} variant="secondary">
+                  {STATUS_CONFIG[openTask.status]?.label}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  → {openTask.assignedToName || openTask.assignedToEmail}
+                </span>
+              </div>
+            )}
+          </DialogHeader>
+
+          {openTask?.description && (
+            <p className="text-sm text-muted-foreground border-b pb-3">{openTask.description}</p>
+          )}
+
+          <ScrollArea className="max-h-[350px] pr-3">
+            {commentsLoading ? (
+              <div className="flex justify-center py-8">
+                <Icon name="Loader2" size={24} className="animate-spin text-muted-foreground" />
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Icon name="MessageSquare" size={32} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Комментариев пока нет</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {comments.map(c => {
+                  const isMe = c.authorEmail === userEmail;
+                  return (
+                    <div key={c.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                      <Avatar className="h-7 w-7 shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {(c.authorName || c.authorEmail).slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'}`}>
+                        <div className={`rounded-xl px-3 py-2 text-sm ${
+                          isMe
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                            : 'bg-muted rounded-tl-sm'
+                        }`}>
+                          {!isMe && (
+                            <p className="text-xs font-medium mb-0.5 opacity-70">{c.authorName || c.authorEmail}</p>
+                          )}
+                          <p className="whitespace-pre-wrap break-words">{c.text}</p>
+                        </div>
+                        <p className={`text-[10px] text-muted-foreground mt-0.5 ${isMe ? 'text-right' : ''}`}>
+                          {formatTime(c.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+
+          <div className="flex gap-2 pt-2 border-t">
+            <Input
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="Написать комментарий..."
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendComment(); } }}
+            />
+            <Button size="icon" onClick={handleSendComment} disabled={sendingComment || !newComment.trim()}>
+              {sendingComment
+                ? <Icon name="Loader2" size={16} className="animate-spin" />
+                : <Icon name="Send" size={16} />
+              }
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
