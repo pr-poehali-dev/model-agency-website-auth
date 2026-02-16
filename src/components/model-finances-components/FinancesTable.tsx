@@ -154,7 +154,7 @@ const FinancesTable = ({
                         ) : (
                           <Input
                             type="number"
-                            value={(day as any)[field.key]}
+                            value={(day as any)[field.key] || ''}
                             onChange={(e) => onInputChange(day.date, field.key, e.target.value)}
                             className={`text-center w-full font-medium transition-all ${
                               isBlocked 
