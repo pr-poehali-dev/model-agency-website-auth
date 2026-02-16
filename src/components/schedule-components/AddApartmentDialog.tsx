@@ -18,7 +18,7 @@ import {
 interface AddApartmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; address: string; locationsCount: number }) => void;
+  onSave: (data: { name: string; address: string; locationsCount: number; visibility: string }) => void;
   loading?: boolean;
 }
 
@@ -26,23 +26,27 @@ const AddApartmentDialog = ({ isOpen, onClose, onSave, loading }: AddApartmentDi
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [locationsCount, setLocationsCount] = useState('2');
+  const [visibility, setVisibility] = useState('all');
 
   const handleSave = () => {
     if (!name.trim() || !address.trim()) return;
     onSave({
       name: name.trim(),
       address: address.trim().toUpperCase(),
-      locationsCount: parseInt(locationsCount)
+      locationsCount: parseInt(locationsCount),
+      visibility
     });
     setName('');
     setAddress('');
     setLocationsCount('2');
+    setVisibility('all');
   };
 
   const handleClose = () => {
     setName('');
     setAddress('');
     setLocationsCount('2');
+    setVisibility('all');
     onClose();
   };
 
@@ -81,6 +85,19 @@ const AddApartmentDialog = ({ isOpen, onClose, onSave, loading }: AddApartmentDi
                 <SelectItem value="3">3 локации</SelectItem>
                 <SelectItem value="4">4 локации</SelectItem>
                 <SelectItem value="5">5 локаций</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Кто видит квартиру</label>
+            <Select value={visibility} onValueChange={setVisibility}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все (продюсеры и операторы)</SelectItem>
+                <SelectItem value="producers">Только продюсеры</SelectItem>
+                <SelectItem value="operators">Только операторы</SelectItem>
               </SelectContent>
             </Select>
           </div>

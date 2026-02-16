@@ -7,30 +7,41 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface EditApartmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { newName: string; newAddress: string }) => void;
+  onSave: (data: { newName: string; newAddress: string; visibility: string }) => void;
   currentName: string;
   currentAddress: string;
+  currentVisibility: string;
   loading?: boolean;
 }
 
-const EditApartmentDialog = ({ isOpen, onClose, onSave, currentName, currentAddress, loading }: EditApartmentDialogProps) => {
+const EditApartmentDialog = ({ isOpen, onClose, onSave, currentName, currentAddress, currentVisibility, loading }: EditApartmentDialogProps) => {
   const [name, setName] = useState(currentName);
   const [address, setAddress] = useState(currentAddress);
+  const [visibility, setVisibility] = useState(currentVisibility);
 
   useEffect(() => {
     setName(currentName);
     setAddress(currentAddress);
-  }, [currentName, currentAddress]);
+    setVisibility(currentVisibility);
+  }, [currentName, currentAddress, currentVisibility]);
 
   const handleSave = () => {
     if (!name.trim() || !address.trim()) return;
     onSave({
       newName: name.trim(),
-      newAddress: address.trim().toUpperCase()
+      newAddress: address.trim().toUpperCase(),
+      visibility
     });
   };
 
@@ -56,6 +67,19 @@ const EditApartmentDialog = ({ isOpen, onClose, onSave, currentName, currentAddr
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Например: 42 КВАРТИРА"
             />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Кто видит квартиру</label>
+            <Select value={visibility} onValueChange={setVisibility}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все (продюсеры и операторы)</SelectItem>
+                <SelectItem value="producers">Только продюсеры</SelectItem>
+                <SelectItem value="operators">Только операторы</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>

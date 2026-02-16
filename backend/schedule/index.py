@@ -62,7 +62,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                        time_slot_1, time_slot_2, time_slot_3,
                        loc1_slot1, loc1_slot2, loc1_slot3,
                        loc2_slot1, loc2_slot2, loc2_slot3,
-                       locations_count
+                       locations_count, visibility
                 FROM t_p35405502_model_agency_website.apartment_shifts
             """)
             shifts_rows = cur.fetchall()
@@ -82,7 +82,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'loc2_slot1': shift_row['loc2_slot1'],
                     'loc2_slot2': shift_row['loc2_slot2'],
                     'loc2_slot3': shift_row['loc2_slot3'],
-                    'locations_count': shift_row['locations_count']
+                    'locations_count': shift_row['locations_count'],
+                    'visibility': shift_row['visibility']
                 }
             
             schedule_dict = {}
@@ -93,6 +94,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'name': name,
                     'address': address,
                     'locations_count': shifts.get('locations_count', 2),
+                    'visibility': shifts.get('visibility', 'all'),
                     'shifts': {
                         'morning': shifts['morning'],
                         'day': shifts['day'],
@@ -128,6 +130,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'name': row['apartment_name'],
                         'address': row['apartment_address'],
                         'locations_count': shifts.get('locations_count', 2),
+                        'visibility': shifts.get('visibility', 'all'),
                         'shifts': {
                             'morning': shifts['morning'],
                             'day': shifts['day'],
@@ -188,6 +191,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 apartment_name = body_data.get('apartment_name')
                 apartment_address = body_data.get('apartment_address')
                 locations_count = body_data.get('locations_count', 2)
+                visibility = body_data.get('visibility', 'all')
                 
                 if not apartment_name or not apartment_address:
                     return {
@@ -212,10 +216,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cur.execute("""
                     INSERT INTO t_p35405502_model_agency_website.apartment_shifts 
-                    (apartment_name, apartment_address, locations_count)
-                    VALUES (%s, %s, %s)
+                    (apartment_name, apartment_address, locations_count, visibility)
+                    VALUES (%s, %s, %s, %s)
                     RETURNING id
-                """, (apartment_name, apartment_address, locations_count))
+                """, (apartment_name, apartment_address, locations_count, visibility))
                 
                 result = cur.fetchone()
                 conn.commit()
@@ -353,6 +357,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif update_type == 'rename':
                 new_name = body_data.get('new_name')
                 new_address = body_data.get('new_address')
+                new_visibility = body_data.get('visibility')
                 
                 if not new_name or not new_address:
                     return {
@@ -362,11 +367,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'new_name and new_address are required'})
                     }
                 
-                cur.execute("""
+                visibility_clause = ", visibility = %s" if new_visibility else ""
+                params = [new_name, new_address]
+                if new_visibility:
+                    params.append(new_visibility)
+                params.extend([apartment_name, apartment_address])
+                
+                cur.execute(f"""
                     UPDATE t_p35405502_model_agency_website.apartment_shifts
-                    SET apartment_name = %s, apartment_address = %s, updated_at = CURRENT_TIMESTAMP
+                    SET apartment_name = %s, apartment_address = %s{visibility_clause}, updated_at = CURRENT_TIMESTAMP
                     WHERE apartment_name = %s AND apartment_address = %s
-                """, (new_name, new_address, apartment_name, apartment_address))
+                """, params)
                 
                 cur.execute("""
                     UPDATE t_p35405502_model_agency_website.schedule

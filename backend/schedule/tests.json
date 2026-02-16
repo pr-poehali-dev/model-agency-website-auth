@@ -9,14 +9,15 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Create apartment",
+      "name": "Create apartment with visibility",
       "method": "POST",
       "path": "/",
       "body": {
         "action": "create_apartment",
         "apartment_name": "Test Street 1",
         "apartment_address": "99 КВАРТИРА",
-        "locations_count": 3
+        "locations_count": 2,
+        "visibility": "producers"
       },
       "expectedStatus": 200,
       "expectedBody": {
@@ -25,7 +26,7 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Rename apartment",
+      "name": "Rename apartment with visibility",
       "method": "PATCH",
       "path": "/",
       "body": {
@@ -33,7 +34,8 @@
         "apartment_address": "99 КВАРТИРА",
         "update_type": "rename",
         "new_name": "Test Street 2",
-        "new_address": "100 КВАРТИРА"
+        "new_address": "100 КВАРТИРА",
+        "visibility": "operators"
       },
       "expectedStatus": 200,
       "expectedBody": {

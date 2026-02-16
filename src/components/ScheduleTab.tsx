@@ -35,7 +35,7 @@ const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 
-const emptySchedule = { apartments: [] as Array<{ name: string; address: string; shifts: { morning: string; day: string; night: string }; weeks: Array<{ weekNumber: string; timeLabels: string[]; dates: Array<{ day: string; date: string; times: Record<string, string> }> }> }> };
+const emptySchedule = { apartments: [] as Array<{ name: string; address: string; visibility?: string; shifts: { morning: string; day: string; night: string }; weeks: Array<{ weekNumber: string; timeLabels: string[]; dates: Array<{ day: string; date: string; times: Record<string, string> }> }> }> };
 
 const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [scheduleData, setScheduleData] = useState(emptySchedule);
@@ -71,7 +71,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [addApartmentLoading, setAddApartmentLoading] = useState(false);
   const [isEditApartmentOpen, setIsEditApartmentOpen] = useState(false);
   const [editApartmentLoading, setEditApartmentLoading] = useState(false);
-  const [editApartmentData, setEditApartmentData] = useState<{ aptIndex: number; name: string; address: string } | null>(null);
+  const [editApartmentData, setEditApartmentData] = useState<{ aptIndex: number; name: string; address: string; visibility: string } | null>(null);
   const { toast } = useToast();
   
   const getWeekDates = (weekOffset: number) => {
@@ -155,10 +155,18 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           locWeeks.push({ weekNumber: weekKey, timeLabels: locTimeLabels, dates: filteredDates });
         }
 
-        return { name, address, shifts, weeks: locWeeks };
+        return { name, address, visibility: (aptData.visibility as string) || 'all', shifts, weeks: locWeeks };
       });
 
-      setScheduleData({ apartments });
+      const filtered = apartments.filter(apt => {
+        if (userRole === 'director') return true;
+        if (apt.visibility === 'all') return true;
+        if (apt.visibility === 'producers' && userRole === 'producer') return true;
+        if (apt.visibility === 'operators' && (userRole === 'operator' || userRole === 'content_maker' || userRole === 'solo_maker')) return true;
+        return false;
+      });
+
+      setScheduleData({ apartments: filtered });
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
@@ -166,7 +174,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
-  const handleAddApartment = async (data: { name: string; address: string; locationsCount: number }) => {
+  const handleAddApartment = async (data: { name: string; address: string; locationsCount: number; visibility: string }) => {
     setAddApartmentLoading(true);
     try {
       const response = await authenticatedFetch(SCHEDULE_API_URL, {
@@ -176,7 +184,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           action: 'create_apartment',
           apartment_name: data.name,
           apartment_address: data.address,
-          locations_count: data.locationsCount
+          locations_count: data.locationsCount,
+          visibility: data.visibility
         })
       });
       const result = await response.json();
@@ -217,11 +226,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
   const handleOpenEditApartment = (aptIndex: number) => {
     const apt = scheduleData.apartments[aptIndex];
-    setEditApartmentData({ aptIndex, name: apt.name, address: apt.address });
+    setEditApartmentData({ aptIndex, name: apt.name, address: apt.address, visibility: apt.visibility || 'all' });
     setIsEditApartmentOpen(true);
   };
 
-  const handleSaveEditApartment = async (data: { newName: string; newAddress: string }) => {
+  const handleSaveEditApartment = async (data: { newName: string; newAddress: string; visibility: string }) => {
     if (!editApartmentData) return;
     setEditApartmentLoading(true);
     const apt = scheduleData.apartments[editApartmentData.aptIndex];
@@ -234,7 +243,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           apartment_address: apt.address,
           update_type: 'rename',
           new_name: data.newName,
-          new_address: data.newAddress
+          new_address: data.newAddress,
+          visibility: data.visibility
         })
       });
       toast({ title: 'Квартира обновлена', description: `${data.newName} — ${data.newAddress}` });
@@ -621,6 +631,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           onSave={handleSaveEditApartment}
           currentName={editApartmentData.name}
           currentAddress={editApartmentData.address}
+          currentVisibility={editApartmentData.visibility}
           loading={editApartmentLoading}
         />
       )}
