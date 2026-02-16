@@ -93,7 +93,7 @@ const DashboardNavigation = ({
         <div className="p-4 border-t border-border space-y-2">
           <div className="flex items-center justify-between px-2 mb-1">
             <span className="text-xs text-muted-foreground">Уведомления</span>
-            <NotificationBell onTaskClick={() => onTabChange('tasks')} />
+            <NotificationBell userRole={userRole || undefined} onTaskClick={() => onTabChange('tasks')} />
           </div>
           <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full justify-start">
             <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
@@ -113,7 +113,7 @@ const DashboardNavigation = ({
         <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
           MBA
         </h1>
-        <NotificationBell onTaskClick={() => onTabChange('tasks')} />
+        <NotificationBell userRole={userRole || undefined} onTaskClick={() => onTabChange('tasks')} />
       </header>
 
       {mobileMenuOpen && (
