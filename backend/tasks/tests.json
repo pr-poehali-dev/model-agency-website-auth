@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "GET tasks list",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Email": "director@test.com",
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET assignees list",
+      "method": "GET",
+      "path": "/?action=assignees",
+      "headers": {
+        "X-User-Email": "director@test.com",
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 200
+    },
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

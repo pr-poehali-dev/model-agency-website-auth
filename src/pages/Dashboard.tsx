@@ -16,6 +16,7 @@ import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
 import CalculationTab from '@/components/CalculationTab';
 import SettingsTab from '@/components/SettingsTab';
+import TasksTab from '@/components/TasksTab';
 
 const models = [
   {
@@ -266,6 +267,7 @@ const Dashboard = () => {
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'calculation', label: 'Подсчёт', icon: 'Calculator', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
+    { id: 'tasks', label: 'Задачи', icon: 'ClipboardList', permission: PERMISSIONS.VIEW_TASKS },
     { id: 'settings', label: 'Настройки', icon: 'Settings', permission: PERMISSIONS.MANAGE_USERS },
 
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
@@ -324,6 +326,8 @@ const Dashboard = () => {
         return <CalculationTab />;
       case 'schedule':
         return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
+      case 'tasks':
+        return <TasksTab userRole={userRole || undefined} userEmail={userEmail} />;
       case 'settings':
         return <SettingsTab userEmail={userEmail} userRole={userRole || undefined} />;
 
