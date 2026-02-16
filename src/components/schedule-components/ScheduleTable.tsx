@@ -33,6 +33,7 @@ interface ScheduleTableProps {
   onEditShiftTime?: (aptIndex: number, shiftType: 'morning' | 'day' | 'night') => void;
   onEditTimeSlot?: (aptIndex: number, weekIndex: number, oldTime: string) => void;
   onDeleteApartment?: (aptIndex: number) => void;
+  onEditApartment?: (aptIndex: number) => void;
 }
 
 const rowStyles = [
@@ -50,7 +51,8 @@ const ScheduleTable = ({
   onCopyWeek,
   onEditShiftTime,
   onEditTimeSlot,
-  onDeleteApartment
+  onDeleteApartment,
+  onEditApartment
 }: ScheduleTableProps) => {
   return (
     <div className="space-y-4">
@@ -62,16 +64,31 @@ const ScheduleTable = ({
                 <td colSpan={8} className="p-3 font-bold text-foreground text-base bg-muted/30">
                   <div className="flex items-center justify-between">
                     <span>{apartment.name}</span>
-                    {onDeleteApartment && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => onDeleteApartment(aptIndex)}
-                        title="Удалить квартиру"
-                      >
-                        <Icon name="Trash2" size={14} />
-                      </Button>
+                    {(onEditApartment || onDeleteApartment) && (
+                      <div className="flex items-center gap-1">
+                        {onEditApartment && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                            onClick={() => onEditApartment(aptIndex)}
+                            title="Редактировать квартиру"
+                          >
+                            <Icon name="Pencil" size={14} />
+                          </Button>
+                        )}
+                        {onDeleteApartment && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => onDeleteApartment(aptIndex)}
+                            title="Удалить квартиру"
+                          >
+                            <Icon name="Trash2" size={14} />
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </td>

@@ -25,18 +25,19 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Create duplicate apartment",
-      "method": "POST",
+      "name": "Rename apartment",
+      "method": "PATCH",
       "path": "/",
       "body": {
-        "action": "create_apartment",
         "apartment_name": "Test Street 1",
         "apartment_address": "99 КВАРТИРА",
-        "locations_count": 3
+        "update_type": "rename",
+        "new_name": "Test Street 2",
+        "new_address": "100 КВАРТИРА"
       },
-      "expectedStatus": 409,
+      "expectedStatus": 200,
       "expectedBody": {
-        "error": "string"
+        "success": true
       },
       "bodyMatcher": "partial"
     },
@@ -45,8 +46,8 @@
       "method": "DELETE",
       "path": "/",
       "body": {
-        "apartment_name": "Test Street 1",
-        "apartment_address": "99 КВАРТИРА"
+        "apartment_name": "Test Street 2",
+        "apartment_address": "100 КВАРТИРА"
       },
       "expectedStatus": 200,
       "expectedBody": {

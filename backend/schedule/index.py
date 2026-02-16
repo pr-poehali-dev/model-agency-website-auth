@@ -350,6 +350,30 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     DO UPDATE SET {shift_column} = EXCLUDED.{shift_column}, updated_at = CURRENT_TIMESTAMP
                 """, (apartment_name, apartment_address, new_time))
                 
+            elif update_type == 'rename':
+                new_name = body_data.get('new_name')
+                new_address = body_data.get('new_address')
+                
+                if not new_name or not new_address:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'error': 'new_name and new_address are required'})
+                    }
+                
+                cur.execute("""
+                    UPDATE t_p35405502_model_agency_website.apartment_shifts
+                    SET apartment_name = %s, apartment_address = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE apartment_name = %s AND apartment_address = %s
+                """, (new_name, new_address, apartment_name, apartment_address))
+                
+                cur.execute("""
+                    UPDATE t_p35405502_model_agency_website.schedule
+                    SET apartment_name = %s, apartment_address = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE apartment_name = %s AND apartment_address = %s
+                """, (new_name, new_address, apartment_name, apartment_address))
+                
             elif update_type == 'time_label':
                 slot_name = body_data.get('slot_name')
                 new_label = body_data.get('new_label')

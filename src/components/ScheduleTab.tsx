@@ -7,6 +7,7 @@ import EditDialog from './schedule-components/EditDialog';
 import EditShiftTimeDialog from './schedule-components/EditShiftTimeDialog';
 import EditTimeSlotDialog from './schedule-components/EditTimeSlotDialog';
 import AddApartmentDialog from './schedule-components/AddApartmentDialog';
+import EditApartmentDialog from './schedule-components/EditApartmentDialog';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
@@ -68,6 +69,9 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   } | null>(null);
   const [isAddApartmentOpen, setIsAddApartmentOpen] = useState(false);
   const [addApartmentLoading, setAddApartmentLoading] = useState(false);
+  const [isEditApartmentOpen, setIsEditApartmentOpen] = useState(false);
+  const [editApartmentLoading, setEditApartmentLoading] = useState(false);
+  const [editApartmentData, setEditApartmentData] = useState<{ aptIndex: number; name: string; address: string } | null>(null);
   const { toast } = useToast();
   
   const getWeekDates = (weekOffset: number) => {
@@ -208,6 +212,40 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     } catch (err) {
       console.error('Failed to delete apartment', err);
       toast({ title: 'Ошибка', description: 'Не удалось удалить квартиру', variant: 'destructive' });
+    }
+  };
+
+  const handleOpenEditApartment = (aptIndex: number) => {
+    const apt = scheduleData.apartments[aptIndex];
+    setEditApartmentData({ aptIndex, name: apt.name, address: apt.address });
+    setIsEditApartmentOpen(true);
+  };
+
+  const handleSaveEditApartment = async (data: { newName: string; newAddress: string }) => {
+    if (!editApartmentData) return;
+    setEditApartmentLoading(true);
+    const apt = scheduleData.apartments[editApartmentData.aptIndex];
+    try {
+      await authenticatedFetch(SCHEDULE_API_URL, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apartment_name: apt.name,
+          apartment_address: apt.address,
+          update_type: 'rename',
+          new_name: data.newName,
+          new_address: data.newAddress
+        })
+      });
+      toast({ title: 'Квартира обновлена', description: `${data.newName} — ${data.newAddress}` });
+      setIsEditApartmentOpen(false);
+      setEditApartmentData(null);
+      loadSchedule();
+    } catch (err) {
+      console.error('Failed to rename apartment', err);
+      toast({ title: 'Ошибка', description: 'Не удалось обновить квартиру', variant: 'destructive' });
+    } finally {
+      setEditApartmentLoading(false);
     }
   };
 
@@ -520,6 +558,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           onEditShiftTime={handleEditShiftTime}
           onEditTimeSlot={handleEditTimeSlot}
           onDeleteApartment={userRole === 'director' ? handleDeleteApartment : undefined}
+          onEditApartment={userRole === 'director' ? handleOpenEditApartment : undefined}
         />
       ))}
 
@@ -574,6 +613,17 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         onSave={handleAddApartment}
         loading={addApartmentLoading}
       />
+
+      {editApartmentData && (
+        <EditApartmentDialog
+          isOpen={isEditApartmentOpen}
+          onClose={() => { setIsEditApartmentOpen(false); setEditApartmentData(null); }}
+          onSave={handleSaveEditApartment}
+          currentName={editApartmentData.name}
+          currentAddress={editApartmentData.address}
+          loading={editApartmentLoading}
+        />
+      )}
     </div>
   );
 };
