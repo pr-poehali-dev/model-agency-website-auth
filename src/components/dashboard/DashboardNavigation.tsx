@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions';
+import NotificationBell from '@/components/NotificationBell';
 
 
 interface NavigationItem {
@@ -90,6 +91,10 @@ const DashboardNavigation = ({
         </nav>
         
         <div className="p-4 border-t border-border space-y-2">
+          <div className="flex items-center justify-between px-2 mb-1">
+            <span className="text-xs text-muted-foreground">Уведомления</span>
+            <NotificationBell onTaskClick={() => onTabChange('tasks')} />
+          </div>
           <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full justify-start">
             <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
             {theme === 'dark' ? 'Светлая' : 'Темная'}
@@ -108,7 +113,7 @@ const DashboardNavigation = ({
         <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
           MBA
         </h1>
-        <div className="w-10" />
+        <NotificationBell onTaskClick={() => onTabChange('tasks')} />
       </header>
 
       {mobileMenuOpen && (
