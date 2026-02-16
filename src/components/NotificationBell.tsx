@@ -11,6 +11,13 @@ import {
 
 const TASKS_API_URL = 'https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edcb005ce100';
 
+declare global {
+  interface Window {
+    __lastCommentTaskId?: number;
+    __lastStatusChangeTaskId?: number;
+  }
+}
+
 interface Notification {
   id: string;
   type: 'task' | 'task_done' | 'task_progress' | 'task_comment';
@@ -70,30 +77,34 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
           });
         }
 
-        if (old && iAmAssigner && old.status !== 'completed' && t.status === 'completed') {
-          newNotifications.push({
-            id: `done-${t.id}-${Date.now()}`,
-            type: 'task_done',
-            message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
-            timestamp: new Date(),
-            read: false,
-          });
+        if (old && old.status !== t.status && window.__lastStatusChangeTaskId !== t.id) {
+          if (iAmAssigner && old.status !== 'completed' && t.status === 'completed') {
+            newNotifications.push({
+              id: `done-${t.id}-${Date.now()}`,
+              type: 'task_done',
+              message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+              timestamp: new Date(),
+              read: false,
+            });
+          }
+
+          if (iAmAssigner && old.status === 'pending' && t.status === 'in_progress') {
+            newNotifications.push({
+              id: `progress-${t.id}-${Date.now()}`,
+              type: 'task_progress',
+              message: `Взята в работу: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+              timestamp: new Date(),
+              read: false,
+            });
+          }
+        } else if (window.__lastStatusChangeTaskId === t.id) {
+          window.__lastStatusChangeTaskId = undefined;
         }
 
-        if (old && iAmAssigner && old.status === 'pending' && t.status === 'in_progress') {
-          newNotifications.push({
-            id: `progress-${t.id}-${Date.now()}`,
-            type: 'task_progress',
-            message: `Взята в работу: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
-            timestamp: new Date(),
-            read: false,
-          });
-        }
-
-        if (old && cc > old.commentCount) {
-          const newCount = cc - old.commentCount;
-          const shouldNotify = iAmAssigner || iAmAssignee;
-          if (shouldNotify) {
+        if (old && cc > old.commentCount && (iAmAssigner || iAmAssignee)) {
+          const isMyAction = window.__lastCommentTaskId === t.id;
+          if (!isMyAction) {
+            const newCount = cc - old.commentCount;
             newNotifications.push({
               id: `comment-${t.id}-${Date.now()}`,
               type: 'task_comment',
@@ -101,6 +112,8 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
               timestamp: new Date(),
               read: false,
             });
+          } else {
+            window.__lastCommentTaskId = undefined;
           }
         }
       }

@@ -190,6 +190,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         body: JSON.stringify({ id: taskId, status: newStatus }),
       });
       if (res.ok) {
+        window.__lastStatusChangeTaskId = taskId;
         loadTasks();
         window.dispatchEvent(new Event('task-changed'));
       }
@@ -230,6 +231,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         setNewComment('');
         loadComments(openTaskId);
         loadTasks();
+        window.__lastCommentTaskId = openTaskId;
         window.dispatchEvent(new Event('task-changed'));
       }
     } catch {
