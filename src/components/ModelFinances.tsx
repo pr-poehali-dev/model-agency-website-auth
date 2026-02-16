@@ -405,7 +405,7 @@ const ModelFinances = ({
 
     autoSaveTimeoutRef.current = setTimeout(() => {
       saveData();
-    }, 3000);
+    }, 500);
   }, [saveData]);
 
   const handleInputChange = (date: string, field: string, value: string) => {
