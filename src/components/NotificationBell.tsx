@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
@@ -12,7 +12,7 @@ import { authenticatedFetch } from '@/lib/api';
 
 interface Notification {
   id: string;
-  type: 'assignment' | 'producer' | 'task';
+  type: 'assignment' | 'producer' | 'task' | 'task_done';
   message: string;
   timestamp: Date;
   read: boolean;
@@ -30,85 +30,105 @@ interface NotificationBellProps {
 const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [lastCheck, setLastCheck] = useState<Date>(new Date());
+  const lastCheckRef = useRef<Date>(new Date());
   const userEmail = localStorage.getItem('userEmail') || '';
 
-  const getTaskHeaders = useCallback(() => {
-    const token = localStorage.getItem('authToken');
-    const h: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'X-User-Email': userEmail,
-    };
-    if (token) h['X-Auth-Token'] = token;
-    return h;
-  }, [userEmail]);
-
-  const checkNewTasks = useCallback(async () => {
+  const checkTaskNotifications = useCallback(async (currentUserRole: string) => {
+    const result: Notification[] = [];
     try {
-      const res = await fetch(TASKS_API_URL, { headers: getTaskHeaders() });
-      if (!res.ok) return [];
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-User-Email': userEmail,
+        'X-User-Role': currentUserRole,
+      };
+      if (token) headers['X-Auth-Token'] = token;
+
+      const res = await fetch(TASKS_API_URL, { headers });
+      if (!res.ok) return result;
 
       const tasks = await res.json();
-      const newTasks = tasks.filter((t: { assignedToEmail: string; createdAt: string }) =>
-        t.assignedToEmail === userEmail && new Date(t.createdAt) > lastCheck
-      );
+      const lastCheck = lastCheckRef.current;
 
-      return newTasks.map((t: { id: number; title: string; assignedByName: string; assignedByEmail: string; createdAt: string }) => ({
-        id: `task-${t.id}`,
-        type: 'task' as const,
-        message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
-        timestamp: new Date(t.createdAt),
-        read: false,
-      }));
+      for (const t of tasks) {
+        if (
+          t.assignedToEmail === userEmail &&
+          t.status !== 'completed' &&
+          new Date(t.createdAt) > lastCheck
+        ) {
+          result.push({
+            id: `task-new-${t.id}`,
+            type: 'task',
+            message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
+            timestamp: new Date(t.createdAt),
+            read: false,
+          });
+        }
+
+        if (
+          t.assignedByEmail === userEmail &&
+          t.assignedToEmail !== userEmail &&
+          t.status === 'completed' &&
+          t.completedAt &&
+          new Date(t.completedAt) > lastCheck
+        ) {
+          result.push({
+            id: `task-done-${t.id}`,
+            type: 'task_done',
+            message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+            timestamp: new Date(t.completedAt),
+            read: false,
+          });
+        }
+      }
     } catch {
-      return [];
+      // ignore
     }
-  }, [userEmail, lastCheck, getTaskHeaders]);
+    return result;
+  }, [userEmail]);
 
-  const checkNewAssignments = useCallback(async () => {
+  const checkAll = useCallback(async () => {
     try {
       const usersResponse = await authenticatedFetch(USERS_API_URL);
       const users = await usersResponse.json();
       const currentUser = users.find((u: { email: string }) => u.email === userEmail);
-
       if (!currentUser) return;
 
       const newNotifications: Notification[] = [];
+      const lastCheck = lastCheckRef.current;
 
       if (currentUser.role === 'operator') {
         const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
         const assignments = await assignmentsResponse.json();
-        const userAssignments = assignments.filter((a: { operatorEmail: string; assignedAt: string }) =>
-          a.operatorEmail === userEmail && new Date(a.assignedAt) > lastCheck
-        );
-
-        for (const assignment of userAssignments) {
-          const model = users.find((u: { id: number }) => u.id === assignment.modelId);
-          if (model) {
-            newNotifications.push({
-              id: `assignment-${assignment.id}`,
-              type: 'assignment',
-              message: `Вас назначили на модель ${model.fullName || model.email}`,
-              timestamp: new Date(assignment.assignedAt),
-              read: false,
-            });
+        for (const a of assignments) {
+          if (a.operatorEmail === userEmail && new Date(a.assignedAt) > lastCheck) {
+            const model = users.find((u: { id: number }) => u.id === a.modelId);
+            if (model) {
+              newNotifications.push({
+                id: `assignment-${a.id}`,
+                type: 'assignment',
+                message: `Вас назначили на модель ${model.fullName || model.email}`,
+                timestamp: new Date(a.assignedAt),
+                read: false,
+              });
+            }
           }
         }
 
         const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=operator`);
         const producerAssignments = await producerResponse.json();
-        const userProducerAssignment = producerAssignments.find(
-          (pa: { operatorEmail: string; assignedAt: string }) => pa.operatorEmail === userEmail && new Date(pa.assignedAt) > lastCheck
+        const pa = producerAssignments.find(
+          (p: { operatorEmail: string; assignedAt: string }) =>
+            p.operatorEmail === userEmail && new Date(p.assignedAt) > lastCheck
         );
-
-        if (userProducerAssignment) {
-          const producer = users.find((u: { email: string }) => u.email === userProducerAssignment.producerEmail);
+        if (pa) {
+          const producer = users.find((u: { email: string }) => u.email === pa.producerEmail);
           if (producer) {
             newNotifications.push({
-              id: `producer-${userProducerAssignment.id}`,
+              id: `producer-${pa.id}`,
               type: 'producer',
               message: `Ваш продюсер: ${producer.fullName || producer.email}`,
-              timestamp: new Date(userProducerAssignment.assignedAt),
+              timestamp: new Date(pa.assignedAt),
               read: false,
             });
           }
@@ -118,18 +138,18 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
       if (currentUser.role === 'content_maker') {
         const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
         const producerAssignments = await producerResponse.json();
-        const modelProducerAssignment = producerAssignments.find(
-          (pa: { modelEmail: string; assignedAt: string }) => pa.modelEmail === userEmail && new Date(pa.assignedAt) > lastCheck
+        const mpa = producerAssignments.find(
+          (p: { modelEmail: string; assignedAt: string }) =>
+            p.modelEmail === userEmail && new Date(p.assignedAt) > lastCheck
         );
-
-        if (modelProducerAssignment) {
-          const producer = users.find((u: { email: string }) => u.email === modelProducerAssignment.producerEmail);
+        if (mpa) {
+          const producer = users.find((u: { email: string }) => u.email === mpa.producerEmail);
           if (producer) {
             newNotifications.push({
-              id: `producer-model-${modelProducerAssignment.id}`,
+              id: `producer-model-${mpa.id}`,
               type: 'producer',
               message: `Вас закрепили за продюсером ${producer.fullName || producer.email}`,
-              timestamp: new Date(modelProducerAssignment.assignedAt),
+              timestamp: new Date(mpa.assignedAt),
               read: false,
             });
           }
@@ -137,27 +157,25 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
 
         const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
         const assignments = await assignmentsResponse.json();
-        const modelAssignments = assignments.filter((a: { modelId: number; assignedAt: string }) => {
+        for (const a of assignments) {
           const model = users.find((u: { id: number; email: string }) => u.id === a.modelId);
-          return model?.email === userEmail && new Date(a.assignedAt) > lastCheck;
-        });
-
-        for (const assignment of modelAssignments) {
-          const operator = users.find((u: { email: string }) => u.email === assignment.operatorEmail);
-          if (operator) {
-            newNotifications.push({
-              id: `operator-${assignment.id}`,
-              type: 'assignment',
-              message: `С вами работает оператор ${operator.fullName || operator.email}`,
-              timestamp: new Date(assignment.assignedAt),
-              read: false,
-            });
+          if (model?.email === userEmail && new Date(a.assignedAt) > lastCheck) {
+            const operator = users.find((u: { email: string }) => u.email === a.operatorEmail);
+            if (operator) {
+              newNotifications.push({
+                id: `operator-${a.id}`,
+                type: 'assignment',
+                message: `С вами работает оператор ${operator.fullName || operator.email}`,
+                timestamp: new Date(a.assignedAt),
+                read: false,
+              });
+            }
           }
         }
       }
 
-      const taskNotifications = await checkNewTasks();
-      newNotifications.push(...taskNotifications);
+      const taskNotifs = await checkTaskNotifications(currentUser.role);
+      newNotifications.push(...taskNotifs);
 
       if (newNotifications.length > 0) {
         setNotifications(prev => {
@@ -167,19 +185,19 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
         });
       }
 
-      setLastCheck(new Date());
+      lastCheckRef.current = new Date();
     } catch (error) {
       console.error('Failed to check notifications:', error);
     }
-  }, [userEmail, lastCheck, checkNewTasks]);
+  }, [userEmail, checkTaskNotifications]);
 
   useEffect(() => {
     if (userEmail) {
-      checkNewAssignments();
-      const interval = setInterval(checkNewAssignments, 30000);
+      checkAll();
+      const interval = setInterval(checkAll, 30000);
       return () => clearInterval(interval);
     }
-  }, [userEmail]);
+  }, [userEmail, checkAll]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
@@ -191,7 +209,7 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    if (notification.type === 'task' && onTaskClick) {
+    if ((notification.type === 'task' || notification.type === 'task_done') && onTaskClick) {
       onTaskClick();
       setIsOpen(false);
     }
@@ -204,6 +222,7 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
       case 'assignment': return 'UserCheck';
       case 'producer': return 'Star';
       case 'task': return 'ClipboardList';
+      case 'task_done': return 'CheckCircle';
       default: return 'Info';
     }
   };
@@ -213,6 +232,7 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
       case 'assignment': return { bg: 'bg-emerald-500/10', text: 'text-emerald-600' };
       case 'producer': return { bg: 'bg-amber-500/10', text: 'text-amber-600' };
       case 'task': return { bg: 'bg-blue-500/10', text: 'text-blue-600' };
+      case 'task_done': return { bg: 'bg-green-500/10', text: 'text-green-600' };
       default: return { bg: 'bg-gray-500/10', text: 'text-gray-600' };
     }
   };
