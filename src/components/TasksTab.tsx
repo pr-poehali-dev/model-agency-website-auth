@@ -170,6 +170,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         setIsCreateOpen(false);
         setNewTask({ title: '', description: '', priority: 'medium', assignedToEmail: '', dueDate: '' });
         loadTasks();
+        window.dispatchEvent(new Event('task-changed'));
       } else {
         const err = await res.json();
         toast({ title: err.error || 'Ошибка', variant: 'destructive' });
@@ -188,7 +189,10 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         headers: getHeaders(),
         body: JSON.stringify({ id: taskId, status: newStatus }),
       });
-      if (res.ok) loadTasks();
+      if (res.ok) {
+        loadTasks();
+        window.dispatchEvent(new Event('task-changed'));
+      }
     } catch {
       toast({ title: 'Ошибка обновления', variant: 'destructive' });
     }

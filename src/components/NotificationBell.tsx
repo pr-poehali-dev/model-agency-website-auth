@@ -195,7 +195,9 @@ const NotificationBell = ({ onTaskClick }: NotificationBellProps) => {
     if (userEmail) {
       checkAll();
       const interval = setInterval(checkAll, 30000);
-      return () => clearInterval(interval);
+      const onTaskEvent = () => { setTimeout(checkAll, 500); };
+      window.addEventListener('task-changed', onTaskEvent);
+      return () => { clearInterval(interval); window.removeEventListener('task-changed', onTaskEvent); };
     }
   }, [userEmail, checkAll]);
 
