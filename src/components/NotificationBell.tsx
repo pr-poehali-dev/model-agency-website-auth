@@ -13,7 +13,7 @@ const TASKS_API_URL = 'https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edc
 
 interface Notification {
   id: string;
-  type: 'task' | 'task_done';
+  type: 'task' | 'task_done' | 'task_progress' | 'task_comment';
   message: string;
   timestamp: Date;
   read: boolean;
@@ -27,8 +27,7 @@ interface NotificationBellProps {
 const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const knownTaskIdsRef = useRef<Set<string>>(new Set());
-  const knownDoneIdsRef = useRef<Set<string>>(new Set());
+  const snapshotRef = useRef<Map<number, { status: string; commentCount: number }>>(new Map());
   const isFirstRunRef = useRef(true);
   const userEmail = localStorage.getItem('userEmail') || '';
 
@@ -48,57 +47,69 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
 
       const tasks = await res.json();
       const newNotifications: Notification[] = [];
-
-      const currentTaskIds = new Set<string>();
-      const currentDoneIds = new Set<string>();
+      const prev = snapshotRef.current;
+      const next = new Map<number, { status: string; commentCount: number }>();
 
       for (const t of tasks) {
-        if (t.assignedToEmail === userEmail && t.status !== 'completed') {
-          const key = `task-${t.id}`;
-          currentTaskIds.add(key);
+        const cc = t.commentCount ?? 0;
+        next.set(t.id, { status: t.status, commentCount: cc });
 
-          if (!isFirstRunRef.current && !knownTaskIdsRef.current.has(key)) {
-            newNotifications.push({
-              id: key,
-              type: 'task',
-              message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
-              timestamp: new Date(t.createdAt),
-              read: false,
-            });
-          }
+        if (isFirstRunRef.current) continue;
+
+        const old = prev.get(t.id);
+        const iAmAssigner = t.assignedByEmail === userEmail && t.assignedToEmail !== userEmail;
+        const iAmAssignee = t.assignedToEmail === userEmail;
+
+        if (!old && iAmAssignee && t.status !== 'completed') {
+          newNotifications.push({
+            id: `task-new-${t.id}-${Date.now()}`,
+            type: 'task',
+            message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
+            timestamp: new Date(t.createdAt),
+            read: false,
+          });
         }
 
-        if (
-          t.assignedByEmail === userEmail &&
-          t.assignedToEmail !== userEmail &&
-          t.status === 'completed' &&
-          t.completedAt
-        ) {
-          const key = `done-${t.id}`;
-          currentDoneIds.add(key);
+        if (old && iAmAssigner && old.status !== 'completed' && t.status === 'completed') {
+          newNotifications.push({
+            id: `done-${t.id}-${Date.now()}`,
+            type: 'task_done',
+            message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+            timestamp: new Date(),
+            read: false,
+          });
+        }
 
-          if (!isFirstRunRef.current && !knownDoneIdsRef.current.has(key)) {
+        if (old && iAmAssigner && old.status === 'pending' && t.status === 'in_progress') {
+          newNotifications.push({
+            id: `progress-${t.id}-${Date.now()}`,
+            type: 'task_progress',
+            message: `Взята в работу: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+            timestamp: new Date(),
+            read: false,
+          });
+        }
+
+        if (old && cc > old.commentCount) {
+          const newCount = cc - old.commentCount;
+          const shouldNotify = iAmAssigner || iAmAssignee;
+          if (shouldNotify) {
             newNotifications.push({
-              id: key,
-              type: 'task_done',
-              message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
-              timestamp: new Date(t.completedAt),
+              id: `comment-${t.id}-${Date.now()}`,
+              type: 'task_comment',
+              message: `${newCount > 1 ? `${newCount} новых комментариев` : 'Новый комментарий'}: ${t.title}`,
+              timestamp: new Date(),
               read: false,
             });
           }
         }
       }
 
-      knownTaskIdsRef.current = currentTaskIds;
-      knownDoneIdsRef.current = currentDoneIds;
+      snapshotRef.current = next;
       isFirstRunRef.current = false;
 
       if (newNotifications.length > 0) {
-        setNotifications(prev => {
-          const existingIds = new Set(prev.map(n => n.id));
-          const unique = newNotifications.filter(n => !existingIds.has(n.id));
-          return [...unique, ...prev];
-        });
+        setNotifications(p => [...newNotifications, ...p]);
       }
     } catch (err) {
       console.error('NotificationBell: check failed', err);
@@ -137,6 +148,8 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
     switch (type) {
       case 'task': return 'ClipboardList';
       case 'task_done': return 'CheckCircle';
+      case 'task_progress': return 'Play';
+      case 'task_comment': return 'MessageSquare';
       default: return 'Info';
     }
   };
@@ -145,6 +158,8 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
     switch (type) {
       case 'task': return { bg: 'bg-blue-500/10', text: 'text-blue-600' };
       case 'task_done': return { bg: 'bg-green-500/10', text: 'text-green-600' };
+      case 'task_progress': return { bg: 'bg-orange-500/10', text: 'text-orange-600' };
+      case 'task_comment': return { bg: 'bg-purple-500/10', text: 'text-purple-600' };
       default: return { bg: 'bg-gray-500/10', text: 'text-gray-600' };
     }
   };

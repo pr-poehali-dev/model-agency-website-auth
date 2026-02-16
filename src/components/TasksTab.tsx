@@ -230,6 +230,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         setNewComment('');
         loadComments(openTaskId);
         loadTasks();
+        window.dispatchEvent(new Event('task-changed'));
       }
     } catch {
       toast({ title: 'Ошибка отправки', variant: 'destructive' });
