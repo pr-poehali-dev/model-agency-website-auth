@@ -88,6 +88,7 @@ const ModelFinances = ({
   >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const onlineDataRef = useRef<DayData[]>(onlineData);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }>>({});
   const { toast } = useToast();
@@ -355,12 +356,16 @@ const ModelFinances = ({
     }
   };
 
+  useEffect(() => {
+    onlineDataRef.current = onlineData;
+  }, [onlineData]);
+
   const saveData = useCallback(async () => {
     if (isReadOnly) return;
 
+    const dataToSave = onlineDataRef.current;
     setIsSaving(true);
     try {
-      console.log('Saving data:', onlineData.slice(0, 3));
       const response = await authenticatedFetch(API_URL, {
         method: "POST",
         headers: {
@@ -368,7 +373,7 @@ const ModelFinances = ({
         },
         body: JSON.stringify({
           modelId,
-          data: onlineData,
+          data: dataToSave,
         }),
       });
 
@@ -391,7 +396,7 @@ const ModelFinances = ({
     } finally {
       setIsSaving(false);
     }
-  }, [modelId, onlineData, toast, isReadOnly]);
+  }, [modelId, toast, isReadOnly]);
 
   const scheduleAutoSave = useCallback(() => {
     if (autoSaveTimeoutRef.current) {
