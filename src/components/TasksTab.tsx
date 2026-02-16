@@ -393,18 +393,15 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
                       )}
                     </Button>
                     {task.status === 'pending' && (
-                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'in_progress')} title="Начать">
-                        <Icon name="Play" size={16} />
+                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'in_progress')} title="Взять в работу">
+                        <Icon name="Play" size={16} className="text-blue-600" />
+                        <span className="ml-1 text-xs hidden sm:inline">В работу</span>
                       </Button>
                     )}
-                    {task.status === 'in_progress' && (
-                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'completed')} title="Завершить">
-                        <Icon name="Check" size={16} className="text-green-600" />
-                      </Button>
-                    )}
-                    {task.status === 'completed' && (
-                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'pending')} title="Вернуть">
-                        <Icon name="RotateCcw" size={16} />
+                    {(task.status === 'pending' || task.status === 'in_progress') && (
+                      <Button variant="ghost" size="sm" onClick={() => handleStatusChange(task.id, 'completed')} title="Выполнить задачу">
+                        <Icon name="CheckCircle" size={16} className="text-green-600" />
+                        <span className="ml-1 text-xs hidden sm:inline">Выполнить</span>
                       </Button>
                     )}
                     {canCreate && task.assignedByEmail === userEmail && (
@@ -512,6 +509,21 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
               </div>
             )}
           </DialogHeader>
+
+          {openTask && (openTask.status === 'pending' || openTask.status === 'in_progress') && (
+            <div className="flex gap-2 border-b pb-3">
+              {openTask.status === 'pending' && (
+                <Button size="sm" variant="outline" onClick={() => { handleStatusChange(openTask.id, 'in_progress'); }}>
+                  <Icon name="Play" size={14} className="mr-1 text-blue-600" />
+                  Взять в работу
+                </Button>
+              )}
+              <Button size="sm" variant="default" onClick={() => { handleStatusChange(openTask.id, 'completed'); setOpenTaskId(null); }}>
+                <Icon name="CheckCircle" size={14} className="mr-1" />
+                Выполнить задачу
+              </Button>
+            </div>
+          )}
 
           {openTask?.description && (
             <p className="text-sm text-muted-foreground border-b pb-3">{openTask.description}</p>
