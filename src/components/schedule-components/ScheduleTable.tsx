@@ -8,11 +8,7 @@ interface ApartmentWeek {
   dates: {
     day: string;
     date: string;
-    times: {
-      '10:00': string;
-      '17:00': string;
-      '00:00': string;
-    };
+    times: Record<string, string>;
   }[];
 }
 
@@ -36,7 +32,14 @@ interface ScheduleTableProps {
   onCopyWeek: (aptIndex: number, weekIndex: number) => void;
   onEditShiftTime?: (aptIndex: number, shiftType: 'morning' | 'day' | 'night') => void;
   onEditTimeSlot?: (aptIndex: number, weekIndex: number, oldTime: string) => void;
+  onDeleteApartment?: (aptIndex: number) => void;
 }
+
+const rowStyles = [
+  { bg: 'bg-blue-900/20 dark:bg-blue-900/20', hoverBg: 'hover:bg-blue-900/40', labelHover: 'hover:bg-blue-900/40' },
+  { bg: 'bg-orange-900/20 dark:bg-orange-900/20', hoverBg: 'hover:bg-orange-900/40', labelHover: 'hover:bg-orange-900/40' },
+  { bg: 'bg-slate-700/50 dark:bg-slate-700/50', hoverBg: 'hover:bg-slate-700/70', labelHover: 'hover:bg-slate-600' },
+];
 
 const ScheduleTable = ({
   apartment,
@@ -46,7 +49,8 @@ const ScheduleTable = ({
   onCellClick,
   onCopyWeek,
   onEditShiftTime,
-  onEditTimeSlot
+  onEditTimeSlot,
+  onDeleteApartment
 }: ScheduleTableProps) => {
   return (
     <div className="space-y-4">
@@ -56,7 +60,20 @@ const ScheduleTable = ({
             <thead>
               <tr className="border-b border-border">
                 <td colSpan={8} className="p-3 font-bold text-foreground text-base bg-muted/30">
-                  {apartment.name}
+                  <div className="flex items-center justify-between">
+                    <span>{apartment.name}</span>
+                    {onDeleteApartment && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => onDeleteApartment(aptIndex)}
+                        title="Удалить квартиру"
+                      >
+                        <Icon name="Trash2" size={14} />
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
               <tr className="border-b border-border">
@@ -89,8 +106,7 @@ const ScheduleTable = ({
               </tr>
             </thead>
             <tbody>
-              {apartment.weeks.map((week, weekIndex) => {
-                return (
+              {apartment.weeks.map((week, weekIndex) => (
                 <tr key={weekIndex}>
                   <td colSpan={8} className="p-0">
                     <table className="w-full text-sm">
@@ -121,81 +137,39 @@ const ScheduleTable = ({
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-b border-border bg-blue-900/20 dark:bg-blue-900/20">
-                          <td 
-                            className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[0]) : undefined}
-                            title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
-                          >
-                            {week.timeLabels[0]}
-                          </td>
-                          {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times[week.timeLabels[0]];
-                            const isFiltered = filterTeam && cellValue !== filterTeam;
-                            const isOccupied = cellValue && cellValue.trim() !== '';
-                            return (
+                        {week.timeLabels.map((timeLabel, timeIndex) => {
+                          const style = rowStyles[timeIndex % rowStyles.length];
+                          return (
+                            <tr key={timeLabel} className={`border-b border-border ${style.bg}`}>
                               <td 
-                                key={dateIndex} 
-                                className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[0], cellValue) : undefined}
+                                className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? `cursor-pointer ${style.labelHover} transition-colors` : ''}`}
+                                onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, timeLabel) : undefined}
+                                title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
                               >
-                                {cellValue}
+                                {timeLabel}
                               </td>
-                            );
-                          })}
-                        </tr>
-                        <tr className="border-b border-border bg-orange-900/20 dark:bg-orange-900/20">
-                          <td 
-                            className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[1]) : undefined}
-                            title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
-                          >
-                            {week.timeLabels[1]}
-                          </td>
-                          {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times[week.timeLabels[1]];
-                            const isFiltered = filterTeam && cellValue !== filterTeam;
-                            const isOccupied = cellValue && cellValue.trim() !== '';
-                            return (
-                              <td 
-                                key={dateIndex} 
-                                className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-orange-900/40 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[1], cellValue) : undefined}
-                              >
-                                {cellValue}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                        <tr className="border-b border-border bg-slate-700/50 dark:bg-slate-700/50">
-                          <td 
-                            className={`p-2 text-center font-medium ${canEdit && onEditTimeSlot ? 'cursor-pointer hover:bg-slate-600 transition-colors' : ''}`}
-                            onClick={canEdit && onEditTimeSlot ? () => onEditTimeSlot(aptIndex, weekIndex, week.timeLabels[2]) : undefined}
-                            title={canEdit && onEditTimeSlot ? 'Нажмите для изменения времени' : ''}
-                          >
-                            {week.timeLabels[2]}
-                          </td>
-                          {week.dates.map((date, dateIndex) => {
-                            const cellValue = date.times[week.timeLabels[2]];
-                            const isFiltered = filterTeam && cellValue !== filterTeam;
-                            const isOccupied = cellValue && cellValue.trim() !== '';
-                            return (
-                              <td 
-                                key={dateIndex} 
-                                className={`p-2 text-center border-l border-border ${canEdit ? 'cursor-pointer hover:bg-slate-700/70 transition-colors' : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
-                                onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, week.timeLabels[2], cellValue) : undefined}
-                              >
-                                {cellValue}
-                              </td>
-                            );
-                          })}
-                        </tr>
+                              {week.dates.map((date, dateIndex) => {
+                                const cellValue = date.times[timeLabel];
+                                const isFiltered = filterTeam && cellValue !== filterTeam;
+                                const isOccupied = cellValue && cellValue.trim() !== '';
+                                return (
+                                  <td 
+                                    key={dateIndex} 
+                                    className={`p-2 text-center border-l border-border ${canEdit ? `cursor-pointer ${style.hoverBg} transition-colors` : ''} ${isFiltered ? 'opacity-20' : ''} ${isOccupied ? 'bg-green-500/10 font-semibold' : ''}`}
+                                    onClick={canEdit ? () => onCellClick(aptIndex, weekIndex, dateIndex, timeLabel, cellValue) : undefined}
+                                  >
+                                    {cellValue}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </td>
                 </tr>
-              );
-              })}
+              ))}
             </tbody>
           </table>
         </div>

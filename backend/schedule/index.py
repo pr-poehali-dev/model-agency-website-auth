@@ -36,7 +36,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Email, X-Auth-Token',
                 'Access-Control-Allow-Credentials': 'true',
                 'Access-Control-Max-Age': '86400'
@@ -61,7 +61,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 SELECT apartment_name, apartment_address, shift_morning, shift_day, shift_night,
                        time_slot_1, time_slot_2, time_slot_3,
                        loc1_slot1, loc1_slot2, loc1_slot3,
-                       loc2_slot1, loc2_slot2, loc2_slot3
+                       loc2_slot1, loc2_slot2, loc2_slot3,
+                       locations_count
                 FROM t_p35405502_model_agency_website.apartment_shifts
             """)
             shifts_rows = cur.fetchall()
@@ -80,10 +81,37 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'loc1_slot3': shift_row['loc1_slot3'],
                     'loc2_slot1': shift_row['loc2_slot1'],
                     'loc2_slot2': shift_row['loc2_slot2'],
-                    'loc2_slot3': shift_row['loc2_slot3']
+                    'loc2_slot3': shift_row['loc2_slot3'],
+                    'locations_count': shift_row['locations_count']
                 }
             
             schedule_dict = {}
+            
+            for apt_key, shifts in shifts_dict.items():
+                name, address = apt_key.split('_', 1)
+                schedule_dict[apt_key] = {
+                    'name': name,
+                    'address': address,
+                    'locations_count': shifts.get('locations_count', 2),
+                    'shifts': {
+                        'morning': shifts['morning'],
+                        'day': shifts['day'],
+                        'night': shifts['night']
+                    },
+                    'time_slots': {
+                        'slot1': shifts['time_slot_1'],
+                        'slot2': shifts['time_slot_2'],
+                        'slot3': shifts['time_slot_3'],
+                        'loc1_slot1': shifts.get('loc1_slot1', '10:00'),
+                        'loc1_slot2': shifts.get('loc1_slot2', '17:00'),
+                        'loc1_slot3': shifts.get('loc1_slot3', '00:00'),
+                        'loc2_slot1': shifts.get('loc2_slot1', '10:00'),
+                        'loc2_slot2': shifts.get('loc2_slot2', '17:00'),
+                        'loc2_slot3': shifts.get('loc2_slot3', '00:00')
+                    },
+                    'weeks': {}
+                }
+            
             for row in rows:
                 apt_key = f"{row['apartment_name']}_{row['apartment_address']}"
                 if apt_key not in schedule_dict:
@@ -93,11 +121,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'night': '00:00 - 06:00',
                         'time_slot_1': '10:00',
                         'time_slot_2': '17:00',
-                        'time_slot_3': '00:00'
+                        'time_slot_3': '00:00',
+                        'locations_count': 2
                     })
                     schedule_dict[apt_key] = {
                         'name': row['apartment_name'],
                         'address': row['apartment_address'],
+                        'locations_count': shifts.get('locations_count', 2),
                         'shifts': {
                             'morning': shifts['morning'],
                             'day': shifts['day'],
@@ -117,6 +147,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'weeks': {}
                     }
                 
+                shifts = shifts_dict.get(apt_key, {})
                 week_key = row['week_number']
                 if week_key not in schedule_dict[apt_key]['weeks']:
                     schedule_dict[apt_key]['weeks'][week_key] = []
@@ -151,6 +182,51 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cleanup_old_schedules(cur)
             
             body_data = json.loads(event.get('body', '{}'))
+            action = body_data.get('action')
+            
+            if action == 'create_apartment':
+                apartment_name = body_data.get('apartment_name')
+                apartment_address = body_data.get('apartment_address')
+                locations_count = body_data.get('locations_count', 2)
+                
+                if not apartment_name or not apartment_address:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'error': 'apartment_name and apartment_address are required'})
+                    }
+                
+                cur.execute("""
+                    SELECT id FROM t_p35405502_model_agency_website.apartment_shifts
+                    WHERE apartment_name = %s AND apartment_address = %s
+                """, (apartment_name, apartment_address))
+                
+                if cur.fetchone():
+                    return {
+                        'statusCode': 409,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                        'isBase64Encoded': False,
+                        'body': json.dumps({'error': 'Квартира с таким адресом уже существует'})
+                    }
+                
+                cur.execute("""
+                    INSERT INTO t_p35405502_model_agency_website.apartment_shifts 
+                    (apartment_name, apartment_address, locations_count)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                """, (apartment_name, apartment_address, locations_count))
+                
+                result = cur.fetchone()
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                    'isBase64Encoded': False,
+                    'body': json.dumps({'success': True, 'id': result['id']})
+                }
+            
             apartment_name = body_data.get('apartment_name')
             apartment_address = body_data.get('apartment_address')
             week_number = body_data.get('week_number')
@@ -294,6 +370,38 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     ON CONFLICT (apartment_name, apartment_address)
                     DO UPDATE SET {slot_name} = EXCLUDED.{slot_name}, updated_at = CURRENT_TIMESTAMP
                 """, (apartment_name, apartment_address, new_label))
+            
+            conn.commit()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                'isBase64Encoded': False,
+                'body': json.dumps({'success': True})
+            }
+        
+        elif method == 'DELETE':
+            body_data = json.loads(event.get('body', '{}'))
+            apartment_name = body_data.get('apartment_name')
+            apartment_address = body_data.get('apartment_address')
+            
+            if not apartment_name or not apartment_address:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Credentials': 'true'},
+                    'isBase64Encoded': False,
+                    'body': json.dumps({'error': 'apartment_name and apartment_address are required'})
+                }
+            
+            cur.execute("""
+                DELETE FROM t_p35405502_model_agency_website.schedule
+                WHERE apartment_name = %s AND apartment_address = %s
+            """, (apartment_name, apartment_address))
+            
+            cur.execute("""
+                DELETE FROM t_p35405502_model_agency_website.apartment_shifts
+                WHERE apartment_name = %s AND apartment_address = %s
+            """, (apartment_name, apartment_address))
             
             conn.commit()
             

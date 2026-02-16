@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Get schedule - empty database",
+      "name": "Get schedule",
       "method": "GET",
       "path": "/",
       "expectedStatus": 200,
@@ -9,18 +9,14 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Create schedule entry",
+      "name": "Create apartment",
       "method": "POST",
       "path": "/",
       "body": {
-        "apartment_name": "Test Apartment",
-        "apartment_address": "1",
-        "week_number": "1",
-        "date": "01.01.2025",
-        "day_name": "Понедельник",
-        "time_10": "Team A",
-        "time_17": "Team B",
-        "time_00": "Team C"
+        "action": "create_apartment",
+        "apartment_name": "Test Street 1",
+        "apartment_address": "99 КВАРТИРА",
+        "locations_count": 3
       },
       "expectedStatus": 200,
       "expectedBody": {
@@ -29,16 +25,28 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Update schedule entry",
-      "method": "PUT",
+      "name": "Create duplicate apartment",
+      "method": "POST",
       "path": "/",
       "body": {
-        "apartment_name": "Test Apartment",
-        "apartment_address": "1",
-        "week_number": "1",
-        "date": "01.01.2025",
-        "time_slot": "10:00",
-        "value": "Updated Team"
+        "action": "create_apartment",
+        "apartment_name": "Test Street 1",
+        "apartment_address": "99 КВАРТИРА",
+        "locations_count": 3
+      },
+      "expectedStatus": 409,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Delete apartment",
+      "method": "DELETE",
+      "path": "/",
+      "body": {
+        "apartment_name": "Test Street 1",
+        "apartment_address": "99 КВАРТИРА"
       },
       "expectedStatus": 200,
       "expectedBody": {

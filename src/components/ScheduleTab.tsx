@@ -6,6 +6,9 @@ import ScheduleTable from './schedule-components/ScheduleTable';
 import EditDialog from './schedule-components/EditDialog';
 import EditShiftTimeDialog from './schedule-components/EditShiftTimeDialog';
 import EditTimeSlotDialog from './schedule-components/EditTimeSlotDialog';
+import AddApartmentDialog from './schedule-components/AddApartmentDialog';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/icon';
 
 interface TeamMember {
   id: number;
@@ -31,86 +34,10 @@ const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 
-const defaultSchedule = {
-  apartments: [
-    {
-      name: 'Командорская 5/3',
-      address: '42 КВАРТИРА',
-      shifts: {
-        morning: '10:00 - 16:00',
-        day: '17:00 - 23:00',
-        night: '00:00 - 06:00'
-      },
-      weeks: [
-        {
-          weekNumber: '1 лк',
-          dates: [
-            { day: 'Понедельник', date: '15.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Вторник', date: '16.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Среда', date: '17.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Четверг', date: '18.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Пятница', date: '19.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Суббота', date: '20.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Воскрес.', date: '21.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }}
-          ]
-        },
-        {
-          weekNumber: '2 лк',
-          timeLabels: ['10:00', '17:00', '00:00'],
-          dates: [
-            { day: 'Понедельник', date: '22.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Вторник', date: '23.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Среда', date: '24.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Четверг', date: '25.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Пятница', date: '26.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Суббота', date: '27.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Воскрес.', date: '28.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }}
-          ]
-        }
-      ]
-    },
-    {
-      name: 'Бочарникова 4 к2',
-      address: '188 КВАРТИРА',
-      shifts: {
-        morning: '10:00 - 16:00',
-        day: '17:00 - 23:00',
-        night: '00:00 - 06:00'
-      },
-      weeks: [
-        {
-          weekNumber: '1 лк',
-          timeLabels: ['10:00', '17:00', '00:00'],
-          dates: [
-            { day: 'Понедельник', date: '15.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Вторник', date: '16.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Среда', date: '17.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Четверг', date: '18.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Пятница', date: '19.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Суббота', date: '20.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Воскрес.', date: '21.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }}
-          ]
-        },
-        {
-          weekNumber: '2 лк',
-          timeLabels: ['10:00', '17:00', '00:00'],
-          dates: [
-            { day: 'Понедельник', date: '22.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Вторник', date: '23.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Среда', date: '24.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Четверг', date: '25.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Пятница', date: '26.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Суббота', date: '27.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }},
-            { day: 'Воскрес.', date: '28.09.2025', times: { '10:00': '', '17:00': '', '00:00': '' }}
-          ]
-        }
-      ]
-    }
-  ]
-};
+const emptySchedule = { apartments: [] as Array<{ name: string; address: string; shifts: { morning: string; day: string; night: string }; weeks: Array<{ weekNumber: string; timeLabels: string[]; dates: Array<{ day: string; date: string; times: Record<string, string> }> }> }> };
 
 const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
-  const [scheduleData, setScheduleData] = useState(defaultSchedule);
+  const [scheduleData, setScheduleData] = useState(emptySchedule);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -136,8 +63,11 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
   const [isEditTimeSlotDialogOpen, setIsEditTimeSlotDialogOpen] = useState(false);
   const [editTimeSlot, setEditTimeSlot] = useState<{
     aptIndex: number;
+    weekIndex: number;
     oldTime: string;
   } | null>(null);
+  const [isAddApartmentOpen, setIsAddApartmentOpen] = useState(false);
+  const [addApartmentLoading, setAddApartmentLoading] = useState(false);
   const { toast } = useToast();
   
   const getWeekDates = (weekOffset: number) => {
@@ -184,92 +114,47 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     try {
       const response = await authenticatedFetch(SCHEDULE_API_URL);
       const data = await response.json();
-      
-      console.log('Schedule API response:', data);
-      
       const weekDates = getWeekDates(currentWeekOffset);
-      const weekDateStrings = weekDates.map(wd => wd.date);
-      
-      console.log('Current week offset:', currentWeekOffset);
-      console.log('Week dates:', weekDateStrings);
-      
-      const newSchedule = {
-        apartments: defaultSchedule.apartments.map(apt => {
-          const aptData: any = Object.values(data).find((a: any) => 
-            a.name === apt.name && a.address === apt.address
-          );
-          
-          console.log(`Processing ${apt.name}:`, aptData);
-          
-          if (!aptData?.weeks) {
-            console.log(`No data for ${apt.name}, using empty schedule`);
-            const defaultTimeLabels = ['10:00', '17:00', '00:00'];
-            const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
-            const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
-            
-            return {
-              ...apt,
-              shifts: aptData?.shifts || apt.shifts,
-              weeks: [
-                { weekNumber: '1 лк', timeLabels: loc1TimeLabels, dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) },
-                { weekNumber: '2 лк', timeLabels: loc2TimeLabels, dates: weekDates.map(wd => ({ ...wd, times: { '10:00': '', '17:00': '', '00:00': '' } })) }
-              ]
-            };
-          }
-          
-          const loc1Dates = aptData.weeks['1 лк'] || [];
-          const loc2Dates = aptData.weeks['2 лк'] || [];
-          
-          console.log(`${apt.name} - Location 1 dates:`, loc1Dates.map((d: any) => d.date));
-          console.log(`${apt.name} - Location 2 dates:`, loc2Dates.map((d: any) => d.date));
-          
-          const defaultTimeLabels = ['10:00', '17:00', '00:00'];
-          const loc1TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc1_slot1 || '10:00', aptData.time_slots.loc1_slot2 || '17:00', aptData.time_slots.loc1_slot3 || '00:00'] : defaultTimeLabels;
-          const loc2TimeLabels = aptData?.time_slots ? [aptData.time_slots.loc2_slot1 || '10:00', aptData.time_slots.loc2_slot2 || '17:00', aptData.time_slots.loc2_slot3 || '00:00'] : defaultTimeLabels;
-          
-          const loc1Filtered = weekDates.map(wd => {
-            const savedDate = loc1Dates.find((d: any) => d.date === wd.date);
-            if (savedDate) {
+      const defLabels = ['10:00', '17:00', '00:00'];
+
+      const apartments = Object.values(data).map((aptData: Record<string, unknown>) => {
+        const name = aptData.name as string;
+        const address = aptData.address as string;
+        const locationsCount = (aptData.locations_count as number) || 2;
+        const shifts = (aptData.shifts as Record<string, string>) || {
+          morning: '10:00 - 16:00', day: '17:00 - 23:00', night: '00:00 - 06:00'
+        };
+        const ts = aptData.time_slots as Record<string, string> | undefined;
+        const weeks = (aptData.weeks as Record<string, Array<Record<string, unknown>>>) || {};
+
+        const locWeeks = [];
+        for (let loc = 1; loc <= locationsCount; loc++) {
+          const weekKey = `${loc} лк`;
+          const locDates = weeks[weekKey] || [];
+          const locTimeLabels = ts
+            ? [ts[`loc${loc}_slot1`] || '10:00', ts[`loc${loc}_slot2`] || '17:00', ts[`loc${loc}_slot3`] || '00:00']
+            : defLabels;
+
+          const filteredDates = weekDates.map(wd => {
+            const saved = locDates.find((d) => d.date === wd.date);
+            if (saved) {
               const newTimes: Record<string, string> = {};
-              const oldTimes = Object.values(savedDate.times || {});
-              loc1TimeLabels.forEach((label, idx) => {
-                newTimes[label] = oldTimes[idx] || '';
-              });
-              return { ...savedDate, day: wd.day, times: newTimes };
+              const oldTimes = Object.values((saved.times as Record<string, string>) || {});
+              locTimeLabels.forEach((label, idx) => { newTimes[label] = (oldTimes[idx] as string) || ''; });
+              return { ...saved, day: wd.day, times: newTimes };
             }
             const emptyTimes: Record<string, string> = {};
-            loc1TimeLabels.forEach(label => { emptyTimes[label] = ''; });
+            locTimeLabels.forEach(label => { emptyTimes[label] = ''; });
             return { ...wd, times: emptyTimes };
           });
-          
-          const loc2Filtered = weekDates.map(wd => {
-            const savedDate = loc2Dates.find((d: any) => d.date === wd.date);
-            if (savedDate) {
-              const newTimes: Record<string, string> = {};
-              const oldTimes = Object.values(savedDate.times || {});
-              loc2TimeLabels.forEach((label, idx) => {
-                newTimes[label] = oldTimes[idx] || '';
-              });
-              return { ...savedDate, day: wd.day, times: newTimes };
-            }
-            const emptyTimes: Record<string, string> = {};
-            loc2TimeLabels.forEach(label => { emptyTimes[label] = ''; });
-            return { ...wd, times: emptyTimes };
-          });
-          
-          return {
-            ...apt,
-            shifts: aptData?.shifts || apt.shifts,
-            weeks: [
-              { weekNumber: '1 лк', timeLabels: loc1TimeLabels, dates: loc1Filtered },
-              { weekNumber: '2 лк', timeLabels: loc2TimeLabels, dates: loc2Filtered }
-            ]
-          };
-        })
-      };
-      
-      console.log('Final schedule:', newSchedule);
-      setScheduleData(newSchedule);
+
+          locWeeks.push({ weekNumber: weekKey, timeLabels: locTimeLabels, dates: filteredDates });
+        }
+
+        return { name, address, shifts, weeks: locWeeks };
+      });
+
+      setScheduleData({ apartments });
       setLoading(false);
     } catch (err) {
       console.error('Failed to load schedule', err);
@@ -277,30 +162,52 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
   };
 
-  const initializeSchedule = async () => {
+  const handleAddApartment = async (data: { name: string; address: string; locationsCount: number }) => {
+    setAddApartmentLoading(true);
     try {
-      for (const apt of defaultSchedule.apartments) {
-        for (const week of apt.weeks) {
-          for (const date of week.dates) {
-            await fetch(SCHEDULE_API_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                apartment_name: apt.name,
-                apartment_address: apt.address,
-                week_number: week.weekNumber,
-                date: date.date,
-                day_name: date.day,
-                time_10: date.times['10:00'],
-                time_17: date.times['17:00'],
-                time_00: date.times['00:00']
-              })
-            });
-          }
-        }
+      const response = await authenticatedFetch(SCHEDULE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_apartment',
+          apartment_name: data.name,
+          apartment_address: data.address,
+          locations_count: data.locationsCount
+        })
+      });
+      const result = await response.json();
+      if (response.status === 409) {
+        toast({ title: 'Ошибка', description: result.error, variant: 'destructive' });
+        return;
       }
+      toast({ title: 'Квартира создана', description: `${data.name} — ${data.address}` });
+      setIsAddApartmentOpen(false);
+      loadSchedule();
     } catch (err) {
-      console.error('Failed to initialize schedule', err);
+      console.error('Failed to create apartment', err);
+      toast({ title: 'Ошибка', description: 'Не удалось создать квартиру', variant: 'destructive' });
+    } finally {
+      setAddApartmentLoading(false);
+    }
+  };
+
+  const handleDeleteApartment = async (aptIndex: number) => {
+    const apartment = scheduleData.apartments[aptIndex];
+    if (!confirm(`Удалить квартиру "${apartment.name} — ${apartment.address}" и всё её расписание?`)) return;
+    try {
+      await authenticatedFetch(SCHEDULE_API_URL, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apartment_name: apartment.name,
+          apartment_address: apartment.address
+        })
+      });
+      toast({ title: 'Квартира удалена', description: `${apartment.name} — ${apartment.address}` });
+      loadSchedule();
+    } catch (err) {
+      console.error('Failed to delete apartment', err);
+      toast({ title: 'Ошибка', description: 'Не удалось удалить квартиру', variant: 'destructive' });
     }
   };
 
@@ -381,7 +288,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         const sourceDate = sourceWeek.dates[dateIndex];
         const targetDate = nextWeekDates[dateIndex];
         
-        for (const time of ['10:00', '17:00', '00:00']) {
+        for (const time of sourceWeek.timeLabels) {
           await fetch(SCHEDULE_API_URL, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -494,7 +401,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     }
     
     const slotMapping = ['slot1', 'slot2', 'slot3'];
-    const locPrefix = editTimeSlot.weekIndex === 0 ? 'loc1' : 'loc2';
+    const locPrefix = `loc${editTimeSlot.weekIndex + 1}`;
     
     try {
       await authenticatedFetch(SCHEDULE_API_URL, {
@@ -603,7 +510,7 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
 
       {scheduleData.apartments.map((apartment, aptIndex) => (
         <ScheduleTable
-          key={aptIndex}
+          key={`${apartment.name}_${apartment.address}`}
           apartment={apartment}
           aptIndex={aptIndex}
           filterTeam={filterTeam}
@@ -612,8 +519,20 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           onCopyWeek={handleCopyWeek}
           onEditShiftTime={handleEditShiftTime}
           onEditTimeSlot={handleEditTimeSlot}
+          onDeleteApartment={userRole === 'director' ? handleDeleteApartment : undefined}
         />
       ))}
+
+      {userRole === 'director' && (
+        <Button
+          onClick={() => setIsAddApartmentOpen(true)}
+          className="w-full border-dashed border-2 bg-transparent hover:bg-accent/50 text-muted-foreground"
+          variant="outline"
+        >
+          <Icon name="Plus" size={18} />
+          <span className="ml-2">Добавить квартиру</span>
+        </Button>
+      )}
 
       <EditDialog
         isOpen={isEditDialogOpen}
@@ -648,6 +567,13 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
           onSave={handleSaveTimeSlot}
         />
       )}
+
+      <AddApartmentDialog
+        isOpen={isAddApartmentOpen}
+        onClose={() => setIsAddApartmentOpen(false)}
+        onSave={handleAddApartment}
+        loading={addApartmentLoading}
+      />
     </div>
   );
 };
