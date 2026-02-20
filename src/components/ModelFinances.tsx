@@ -87,6 +87,7 @@ const ModelFinances = ({
     Array<{ email: string; name: string }>
   >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const onlineDataRef = useRef<DayData[]>(onlineData);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }>>({});
@@ -381,6 +382,7 @@ const ModelFinances = ({
       }
 
       setLastSaved(new Date());
+      setHasUnsavedChanges(false);
       toast({
         title: "Сохранено",
         description: "Финансовые данные успешно сохранены",
@@ -402,41 +404,45 @@ const ModelFinances = ({
     setOnlineData((prev) =>
       prev.map((day) => {
         if (day.date !== date) return day;
-        
         const updatedDay = { ...day, [field]: numValue };
-        
-        if (field === 'cbTokens') {
-          updatedDay.cbIncome = numValue * 0.05;
-        } else if (field === 'spTokens') {
-          updatedDay.spIncome = numValue * 0.05;
-        } else if (field === 'sodaTokens') {
-          updatedDay.sodaIncome = numValue * 0.05;
-        }
-        
+        if (field === 'cbTokens') updatedDay.cbIncome = numValue * 0.05;
+        else if (field === 'spTokens') updatedDay.spIncome = numValue * 0.05;
+        else if (field === 'sodaTokens') updatedDay.sodaIncome = numValue * 0.05;
         return updatedDay;
       }),
     );
+    setHasUnsavedChanges(true);
   };
 
   const handleShiftChange = (date: string, checked: boolean) => {
     setOnlineData((prev) =>
       prev.map((day) => (day.date === date ? { ...day, shift: checked } : day)),
     );
+    setHasUnsavedChanges(true);
   };
 
   const handleOperatorChange = (date: string, value: string) => {
     setOnlineData((prev) =>
-      prev.map((day) =>
-        day.date === date ? { ...day, operator: value } : day,
-      ),
+      prev.map((day) => (day.date === date ? { ...day, operator: value } : day)),
     );
+    setHasUnsavedChanges(true);
   };
 
   const handlePreviousPeriod = () => {
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm("Есть несохранённые изменения. Перейти без сохранения?");
+      if (!confirmed) return;
+    }
+    setHasUnsavedChanges(false);
     setCurrentPeriod(getPreviousPeriod(currentPeriod));
   };
 
   const handleNextPeriod = () => {
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm("Есть несохранённые изменения. Перейти без сохранения?");
+      if (!confirmed) return;
+    }
+    setHasUnsavedChanges(false);
     setCurrentPeriod(getNextPeriod(currentPeriod));
   };
 
