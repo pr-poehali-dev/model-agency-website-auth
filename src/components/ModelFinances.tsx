@@ -87,8 +87,8 @@ const ModelFinances = ({
     Array<{ email: string; name: string }>
   >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onlineDataRef = useRef<DayData[]>(onlineData);
+  const hasUnsavedChanges = useRef(false);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }>>({});
   const { toast } = useToast();
@@ -398,14 +398,12 @@ const ModelFinances = ({
     }
   }, [modelId, toast, isReadOnly]);
 
-  const scheduleAutoSave = useCallback(() => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      saveData();
-    }, 500);
+  useEffect(() => {
+    return () => {
+      if (hasUnsavedChanges.current) {
+        saveData();
+      }
+    };
   }, [saveData]);
 
   const handleInputChange = (date: string, field: string, value: string) => {
@@ -416,7 +414,6 @@ const ModelFinances = ({
         
         const updatedDay = { ...day, [field]: numValue };
         
-        // Пересчитываем общий чек для каждой площадки (токены × 0.05)
         if (field === 'cbTokens') {
           updatedDay.cbIncome = numValue * 0.05;
         } else if (field === 'spTokens') {
@@ -428,14 +425,14 @@ const ModelFinances = ({
         return updatedDay;
       }),
     );
-    scheduleAutoSave();
+    hasUnsavedChanges.current = true;
   };
 
   const handleShiftChange = (date: string, checked: boolean) => {
     setOnlineData((prev) =>
       prev.map((day) => (day.date === date ? { ...day, shift: checked } : day)),
     );
-    scheduleAutoSave();
+    hasUnsavedChanges.current = true;
   };
 
   const handleOperatorChange = (date: string, value: string) => {
@@ -444,21 +441,21 @@ const ModelFinances = ({
         day.date === date ? { ...day, operator: value } : day,
       ),
     );
-    scheduleAutoSave();
+    hasUnsavedChanges.current = true;
   };
 
   const handlePreviousPeriod = async () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
+    if (hasUnsavedChanges.current) {
       await saveData();
+      hasUnsavedChanges.current = false;
     }
     setCurrentPeriod(getPreviousPeriod(currentPeriod));
   };
 
   const handleNextPeriod = async () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
+    if (hasUnsavedChanges.current) {
       await saveData();
+      hasUnsavedChanges.current = false;
     }
     setCurrentPeriod(getNextPeriod(currentPeriod));
   };
