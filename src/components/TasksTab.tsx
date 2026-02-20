@@ -411,7 +411,8 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
                         <span className="ml-1 text-xs hidden sm:inline">Выполнить</span>
                       </Button>
                     )}
-                    {canCreate && task.assignedByEmail === userEmail && (
+                    {((userRole === 'director' && task.status === 'completed') ||
+                      (userRole === 'producer' && task.status === 'completed' && task.assignedByEmail === userEmail)) && (
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(task.id)} title="Удалить">
                         <Icon name="Trash2" size={16} className="text-destructive" />
                       </Button>

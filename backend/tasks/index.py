@@ -329,15 +329,23 @@ def handle_delete(event, cur, conn, user_email, user_role):
     if not task_id:
         return resp(event, 400, {'error': 'Task id required'})
 
-    cur.execute(f"SELECT assigned_by_email FROM {SCHEMA}.tasks WHERE id = %s", (task_id,))
+    cur.execute(f"SELECT assigned_by_email, status FROM {SCHEMA}.tasks WHERE id = %s", (task_id,))
     task = cur.fetchone()
     if not task:
         return resp(event, 404, {'error': 'Task not found'})
 
+    assigned_by, status = task
+
     if user_role == 'operator':
         return resp(event, 403, {'error': 'Operators cannot delete tasks'})
-    if user_role == 'producer' and task[0] != user_email:
-        return resp(event, 403, {'error': 'Can only delete your own tasks'})
+    if user_role == 'director':
+        if status != 'completed':
+            return resp(event, 403, {'error': 'Director can only delete completed tasks'})
+    if user_role == 'producer':
+        if assigned_by != user_email:
+            return resp(event, 403, {'error': 'Can only delete your own tasks'})
+        if status != 'completed':
+            return resp(event, 403, {'error': 'Producer can only delete completed tasks'})
 
     cur.execute(f"DELETE FROM {SCHEMA}.task_comments WHERE task_id = %s", (task_id,))
     cur.execute(f"DELETE FROM {SCHEMA}.tasks WHERE id = %s", (task_id,))
