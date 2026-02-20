@@ -160,22 +160,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Date comes as YYYY-MM-DD format from frontend
         full_date = date_str
         
+        def r2(val):
+            return round(float(val or 0), 2)
+
         values.append((
             model_id,
             full_date,
-            record.get('cbTokens', 0),
-            record.get('spTokens', 0),
-            record.get('sodaTokens', 0),
-            record.get('cbIncome', 0),
-            record.get('spIncome', 0),
-            record.get('sodaIncome', 0),
-            record.get('cb', 0),
-            record.get('sp', 0),
-            record.get('soda', 0),
-            record.get('stripchatTokens', 0),
-            record.get('transfers', 0),
+            r2(record.get('cbTokens', 0)),
+            r2(record.get('spTokens', 0)),
+            r2(record.get('sodaTokens', 0)),
+            r2(record.get('cbIncome', 0)),
+            r2(record.get('spIncome', 0)),
+            r2(record.get('sodaIncome', 0)),
+            min(r2(record.get('cb', 0)), 999.99),
+            min(r2(record.get('sp', 0)), 999.99),
+            min(r2(record.get('soda', 0)), 999.99),
+            r2(record.get('stripchatTokens', 0)),
+            r2(record.get('transfers', 0)),
             record.get('operator', ''),
-            record.get('shift', False)
+            bool(record.get('shift', False))
         ))
     
     # Use ON CONFLICT to update existing records
