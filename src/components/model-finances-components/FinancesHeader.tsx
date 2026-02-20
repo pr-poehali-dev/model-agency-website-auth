@@ -53,11 +53,20 @@ const FinancesHeader = ({
           </Button>
         </div>
 
-        {isSaving && (
-          <Badge variant="outline" className="text-xs">
-            <Icon name="Loader2" size={12} className="mr-1 animate-spin" />
-            Сохранение...
-          </Badge>
+        {onSave && (
+          <Button onClick={onSave} disabled={isSaving} size="sm">
+            {isSaving ? (
+              <>
+                <Icon name="Loader2" size={14} className="mr-1 animate-spin" />
+                Сохранение...
+              </>
+            ) : (
+              <>
+                <Icon name="Save" size={14} className="mr-1" />
+                Сохранить
+              </>
+            )}
+          </Button>
         )}
 
         {!isSaving && lastSaved && (

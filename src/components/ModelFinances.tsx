@@ -88,7 +88,6 @@ const ModelFinances = ({
   >([]);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const onlineDataRef = useRef<DayData[]>(onlineData);
-  const hasUnsavedChanges = useRef(false);
   const [isSoloMaker, setIsSoloMaker] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Record<string, { all?: boolean; chaturbate?: boolean; stripchat?: boolean }>>({});
   const { toast } = useToast();
@@ -398,14 +397,6 @@ const ModelFinances = ({
     }
   }, [modelId, toast, isReadOnly]);
 
-  useEffect(() => {
-    return () => {
-      if (hasUnsavedChanges.current) {
-        saveData();
-      }
-    };
-  }, [saveData]);
-
   const handleInputChange = (date: string, field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setOnlineData((prev) =>
@@ -425,14 +416,12 @@ const ModelFinances = ({
         return updatedDay;
       }),
     );
-    hasUnsavedChanges.current = true;
   };
 
   const handleShiftChange = (date: string, checked: boolean) => {
     setOnlineData((prev) =>
       prev.map((day) => (day.date === date ? { ...day, shift: checked } : day)),
     );
-    hasUnsavedChanges.current = true;
   };
 
   const handleOperatorChange = (date: string, value: string) => {
@@ -441,22 +430,13 @@ const ModelFinances = ({
         day.date === date ? { ...day, operator: value } : day,
       ),
     );
-    hasUnsavedChanges.current = true;
   };
 
-  const handlePreviousPeriod = async () => {
-    if (hasUnsavedChanges.current) {
-      await saveData();
-      hasUnsavedChanges.current = false;
-    }
+  const handlePreviousPeriod = () => {
     setCurrentPeriod(getPreviousPeriod(currentPeriod));
   };
 
-  const handleNextPeriod = async () => {
-    if (hasUnsavedChanges.current) {
-      await saveData();
-      hasUnsavedChanges.current = false;
-    }
+  const handleNextPeriod = () => {
     setCurrentPeriod(getNextPeriod(currentPeriod));
   };
 
