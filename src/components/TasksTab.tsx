@@ -218,6 +218,26 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     }
   };
 
+  const handleDeleteAllCompleted = async () => {
+    try {
+      const res = await fetch(TASKS_API_URL, {
+        method: 'DELETE',
+        headers: getHeaders(),
+        body: JSON.stringify({ deleteAllCompleted: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast({ title: `Удалено задач: ${data.deleted ?? 0}` });
+        loadTasks();
+      } else {
+        const err = await res.json();
+        toast({ title: err.error || 'Ошибка', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Ошибка сети', variant: 'destructive' });
+    }
+  };
+
   const handleSendComment = async () => {
     if (!newComment.trim() || !openTaskId) return;
     setSendingComment(true);
@@ -285,12 +305,20 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
             {userRole === 'director' ? 'Все задачи команды' : userRole === 'producer' ? 'Задачи ваших операторов' : 'Ваши задачи'}
           </p>
         </div>
-        {canCreate && (
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <Icon name="Plus" size={18} className="mr-2" />
-            Новая задача
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {userRole === 'director' && stats.completed > 0 && (
+            <Button variant="outline" onClick={handleDeleteAllCompleted}>
+              <Icon name="Trash2" size={18} className="mr-2 text-destructive" />
+              Удалить выполненные ({stats.completed})
+            </Button>
+          )}
+          {canCreate && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Icon name="Plus" size={18} className="mr-2" />
+              Новая задача
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

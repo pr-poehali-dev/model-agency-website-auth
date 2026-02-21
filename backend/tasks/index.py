@@ -324,6 +324,19 @@ def handle_put(event, cur, conn, user_email, user_role):
 
 def handle_delete(event, cur, conn, user_email, user_role):
     body = json.loads(event.get('body', '{}'))
+
+    if body.get('deleteAllCompleted'):
+        if user_role != 'director':
+            return resp(event, 403, {'error': 'Only director can bulk delete completed tasks'})
+        cur.execute(f"SELECT id FROM {SCHEMA}.tasks WHERE status = 'completed'")
+        ids = [r[0] for r in cur.fetchall()]
+        if ids:
+            placeholders = ','.join(['%s'] * len(ids))
+            cur.execute(f"DELETE FROM {SCHEMA}.task_comments WHERE task_id IN ({placeholders})", ids)
+            cur.execute(f"DELETE FROM {SCHEMA}.tasks WHERE id IN ({placeholders})", ids)
+            conn.commit()
+        return resp(event, 200, {'deleted': len(ids)})
+
     task_id = body.get('id')
 
     if not task_id:
