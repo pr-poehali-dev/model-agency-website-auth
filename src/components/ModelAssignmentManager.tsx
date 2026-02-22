@@ -62,7 +62,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         await loadOperators(assignments);
         await loadModels(assignments);
       }
-    }, 5000);
+    }, 60000);
     
     return () => clearInterval(intervalId);
   }, [currentUserRole]);
