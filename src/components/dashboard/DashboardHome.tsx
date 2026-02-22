@@ -52,7 +52,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       
       const interval = setInterval(() => {
         loadMySalary();
-      }, 30000);
+      }, 60000);
       
       return () => clearInterval(interval);
     }

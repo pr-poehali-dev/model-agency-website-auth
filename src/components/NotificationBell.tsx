@@ -133,7 +133,7 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
     if (!userEmail || !userRole) return;
 
     checkTasks();
-    const interval = setInterval(checkTasks, 15000);
+    const interval = setInterval(checkTasks, 60000);
     const onTaskEvent = () => { setTimeout(checkTasks, 800); };
     window.addEventListener('task-changed', onTaskEvent);
     return () => { clearInterval(interval); window.removeEventListener('task-changed', onTaskEvent); };
