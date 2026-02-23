@@ -36,16 +36,20 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const snapshotRef = useRef<Map<number, { status: string; commentCount: number }>>(new Map());
   const isFirstRunRef = useRef(true);
-  const userEmail = localStorage.getItem('userEmail') || '';
+  const userEmailRef = useRef(localStorage.getItem('userEmail') || '');
+  const userRoleRef = useRef(userRole);
+  userRoleRef.current = userRole;
 
   const checkTasks = useCallback(async () => {
-    if (!userEmail || !userRole) return;
+    const userEmail = userEmailRef.current;
+    const currentRole = userRoleRef.current;
+    if (!userEmail || !currentRole) return;
     try {
       const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-User-Email': userEmail,
-        'X-User-Role': userRole,
+        'X-User-Role': currentRole,
       };
       if (token) headers['X-Auth-Token'] = token;
 
@@ -127,17 +131,15 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
     } catch (err) {
       console.error('NotificationBell: check failed', err);
     }
-  }, [userEmail, userRole]);
+  }, []);
 
   useEffect(() => {
-    if (!userEmail || !userRole) return;
-
     checkTasks();
     const interval = setInterval(checkTasks, 60000);
     const onTaskEvent = () => { setTimeout(checkTasks, 800); };
     window.addEventListener('task-changed', onTaskEvent);
     return () => { clearInterval(interval); window.removeEventListener('task-changed', onTaskEvent); };
-  }, [userEmail, userRole, checkTasks]);
+  }, [checkTasks]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));

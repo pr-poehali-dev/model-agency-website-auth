@@ -96,35 +96,31 @@ const Dashboard = () => {
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
     setUserEmail(email);
-    if (email) {
-      loadUserPermissions(email);
-    }
-    loadModels();
+    loadUsersAndPermissions(email);
     loadStatistics();
   }, []);
 
-  const loadModels = async () => {
+  const loadUsersAndPermissions = async (email: string) => {
     try {
       const response = await fetch(API_URL, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
-        console.error('Failed to load models: HTTP', response.status);
+        console.error('Failed to load users: HTTP', response.status);
         return;
       }
-      
+
       const users = await response.json();
-      
+
       if (!Array.isArray(users)) {
         console.error('Invalid response format:', users);
         return;
       }
-      
+
       const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
-      
       const modelsFromUsers = contentMakers.map((user: any) => ({
         id: user.id,
         email: user.email,
@@ -138,12 +134,38 @@ const Dashboard = () => {
         specialty: user.role === 'solo_maker' ? 'Соло-модель' : 'Content Maker',
         status: 'Available'
       }));
-      
       if (modelsFromUsers.length > 0) {
         setModelsData(modelsFromUsers);
       }
+
+      if (email) {
+        const currentUser = users.find((u: any) => u.email === email);
+        if (currentUser) {
+          setUserRole(currentUser.role);
+          setUserName(currentUser.fullName || '');
+
+          const dbPermissions = currentUser.permissions || [];
+          const rolePermissions = ROLE_PERMISSIONS[currentUser.role as UserRole] || [];
+          const effectivePermissions = dbPermissions.length > 0 ? dbPermissions : rolePermissions;
+
+          setUserPermissions(effectivePermissions);
+          setUserPhotoUrl(currentUser.photoUrl || '');
+
+          if (currentUser.role === 'operator') {
+            loadOperatorAssignments(email);
+            loadAssignedProducer(email);
+          }
+          if (currentUser.role === 'producer') {
+            loadProducerAssignments(email);
+            setActiveTab('checks');
+          }
+          if (currentUser.role === 'content_maker') {
+            setActiveTab('schedule');
+          }
+        }
+      }
     } catch (err) {
-      console.error('Failed to load models', err);
+      console.error('Failed to load users', err);
     }
   };
 
@@ -156,55 +178,6 @@ const Dashboard = () => {
       setModelPerformance(data.modelPerformance || []);
     } catch (err) {
       console.error('Failed to load statistics', err);
-    }
-  };
-
-  const loadUserPermissions = async (email: string) => {
-    try {
-      const response = await fetch(API_URL, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to load user permissions: HTTP', response.status);
-        return;
-      }
-      
-      const users = await response.json();
-      
-      if (!Array.isArray(users)) {
-        console.error('Invalid response format:', users);
-        return;
-      }
-      
-      const currentUser = users.find((u: any) => u.email === email);
-      if (currentUser) {
-        setUserRole(currentUser.role);
-        setUserName(currentUser.fullName || '');
-        
-        const dbPermissions = currentUser.permissions || [];
-        const rolePermissions = ROLE_PERMISSIONS[currentUser.role as UserRole] || [];
-        const effectivePermissions = dbPermissions.length > 0 ? dbPermissions : rolePermissions;
-        
-        setUserPermissions(effectivePermissions);
-        setUserPhotoUrl(currentUser.photoUrl || '');
-        
-        if (currentUser.role === 'operator') {
-          loadOperatorAssignments(email);
-          loadAssignedProducer(email);
-        }
-        if (currentUser.role === 'producer') {
-          loadProducerAssignments(email);
-          setActiveTab('checks');
-        }
-        if (currentUser.role === 'content_maker') {
-          setActiveTab('schedule');
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load user permissions', err);
     }
   };
 
