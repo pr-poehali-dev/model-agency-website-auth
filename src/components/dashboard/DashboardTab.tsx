@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
 import DashboardWelcomeCard from './DashboardWelcomeCard';
@@ -19,6 +19,13 @@ interface DashboardTabProps {
   onViewFinances?: (modelId: number, modelName: string) => void;
 }
 
+const formatDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   const [userEmail, setUserEmail] = useState('');
   const [userId, setUserId] = useState<number | null>(null);
@@ -31,25 +38,24 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
   const [producerName, setProducerName] = useState('');
   const [adjustments, setAdjustments] = useState<{advance: number, penalty: number, expenses?: number}>({advance: 0, penalty: 0, expenses: 0});
 
+  const emailRef = useRef('');
+  const roleRef = useRef('');
+
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
+    emailRef.current = email;
     setUserEmail(email);
     if (email) {
-      loadUserData(email);
-      loadProducerInfo(email);
+      loadInitialData(email);
     }
-  }, []);
-
-  useEffect(() => {
-    if (userEmail && userRole) {
-      loadSalaryData();
-      loadAdjustments();
-    }
-  }, [currentPeriod, userEmail, userRole]);
-
-  useEffect(() => {
     loadExchangeRate();
   }, []);
+
+  useEffect(() => {
+    if (emailRef.current && roleRef.current) {
+      loadPeriodData(emailRef.current, currentPeriod);
+    }
+  }, [currentPeriod]);
 
   const loadExchangeRate = async () => {
     try {
@@ -63,123 +69,92 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
     }
   };
 
-  const loadUserData = async (email: string) => {
+  const loadInitialData = async (email: string) => {
     try {
       const response = await authenticatedFetch(USERS_API_URL);
       const users = await response.json();
       const currentUser = users.find((u: any) => u.email === email);
-      
-      if (currentUser) {
-        setUserRole(currentUser.role);
-        setUserFullName(currentUser.fullName || email);
-        setUserId(currentUser.id);
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    }
-  };
 
-  const loadProducerInfo = async (email: string) => {
-    try {
-      const usersResponse = await authenticatedFetch(USERS_API_URL);
-      const users = await usersResponse.json();
-      const currentUser = users.find((u: any) => u.email === email);
-      
       if (!currentUser) return;
-      
-      if (currentUser.role === 'operator') {
-        const assignmentsResponse = await authenticatedFetch(ASSIGNMENTS_API_URL);
-        const assignments = await assignmentsResponse.json();
-        const operatorAssignment = assignments.find((a: any) => a.operatorEmail === email);
-        
-        if (operatorAssignment) {
-          const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
-          const producerAssignments = await producerResponse.json();
-          const producerAssignment = producerAssignments.find(
-            (pa: any) => pa.modelEmail === operatorAssignment.modelEmail
-          );
-          
-          if (producerAssignment) {
-            const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
-            if (producer) {
-              setProducerName(producer.fullName || producer.email);
-            }
-          }
-        }
-      } else if (currentUser.role === 'content_maker' || currentUser.role === 'solo_maker') {
-        const producerResponse = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
-        const producerAssignments = await producerResponse.json();
-        const producerAssignment = producerAssignments.find(
-          (pa: any) => pa.modelEmail === email
-        );
-        
-        if (producerAssignment) {
-          const producer = users.find((u: any) => u.email === producerAssignment.producerEmail);
-          if (producer) {
-            setProducerName(producer.fullName || producer.email);
-          }
-        }
-      }
+
+      const role = currentUser.role;
+      roleRef.current = role;
+      setUserRole(role);
+      setUserFullName(currentUser.fullName || email);
+      setUserId(currentUser.id);
+
+      resolveProducerName(email, role, users);
+
+      await loadPeriodData(email, currentPeriod);
     } catch (error) {
-      console.error('Failed to load producer info:', error);
+      console.error('Failed to load initial data:', error);
     }
   };
 
-  const loadSalaryData = async () => {
-    setIsLoading(true);
+  const resolveProducerName = async (email: string, role: string, users: any[]) => {
     try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
-      if (response.ok) {
-        const data = await response.json();
-        
-        let salary = null;
-        if (data.operators[userEmail]) {
-          salary = { ...data.operators[userEmail], type: 'operator' };
-        } else if (data.models[userEmail]) {
-          salary = { ...data.models[userEmail], type: 'model' };
-        } else if (data.producers[userEmail]) {
-          salary = { ...data.producers[userEmail], type: 'producer' };
+      if (role === 'operator') {
+        const [assignmentsRes, producerRes] = await Promise.all([
+          authenticatedFetch(ASSIGNMENTS_API_URL),
+          authenticatedFetch(`${PRODUCER_API_URL}?type=model`),
+        ]);
+        const assignments = await assignmentsRes.json();
+        const producerAssignments = await producerRes.json();
+
+        const operatorAssignment = assignments.find((a: any) => a.operatorEmail === email);
+        if (operatorAssignment) {
+          const pa = producerAssignments.find((p: any) => p.modelEmail === operatorAssignment.modelEmail);
+          if (pa) {
+            const producer = users.find((u: any) => u.email === pa.producerEmail);
+            if (producer) setProducerName(producer.fullName || producer.email);
+          }
         }
-        
+      } else if (role === 'content_maker' || role === 'solo_maker') {
+        const producerRes = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
+        const producerAssignments = await producerRes.json();
+        const pa = producerAssignments.find((p: any) => p.modelEmail === email);
+        if (pa) {
+          const producer = users.find((u: any) => u.email === pa.producerEmail);
+          if (producer) setProducerName(producer.fullName || producer.email);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to resolve producer name:', error);
+    }
+  };
+
+  const loadPeriodData = async (email: string, period: Period) => {
+    setIsLoading(true);
+    const periodStart = formatDate(period.startDate);
+    const periodEnd = formatDate(period.endDate);
+
+    try {
+      const [salariesRes, adjustmentsRes] = await Promise.all([
+        authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`),
+        authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`),
+      ]);
+
+      if (salariesRes.ok) {
+        const data = await salariesRes.json();
+        let salary = null;
+        if (data.operators[email]) {
+          salary = { ...data.operators[email], type: 'operator' };
+        } else if (data.models[email]) {
+          salary = { ...data.models[email], type: 'model' };
+        } else if (data.producers[email]) {
+          salary = { ...data.producers[email], type: 'producer' };
+        }
         setSalaryData(salary);
       }
-    } catch (error) {
-      console.error('Failed to load salary data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const loadAdjustments = async () => {
-    try {
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-      
-      const periodStart = formatDate(currentPeriod.startDate);
-      const periodEnd = formatDate(currentPeriod.endDate);
-      
-      const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
-      if (response.ok) {
-        const data = await response.json();
-        const userAdj = data[userEmail] || {advance: 0, penalty: 0, expenses: 0};
-        setAdjustments(userAdj);
+      if (adjustmentsRes.ok) {
+        const data = await adjustmentsRes.json();
+        setAdjustments(data[email] || { advance: 0, penalty: 0, expenses: 0 });
       }
     } catch (error) {
-      console.error('Failed to load adjustments:', error);
+      console.error('Failed to load period data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
