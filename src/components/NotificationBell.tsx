@@ -135,10 +135,28 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
 
   useEffect(() => {
     checkTasks();
-    const interval = setInterval(checkTasks, 60000);
+
+    const ACTIVE_INTERVAL = 30_000;
+    const HIDDEN_INTERVAL = 5 * 60_000;
+
+    let intervalId = setInterval(checkTasks, document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL);
+
+    const onVisibilityChange = () => {
+      clearInterval(intervalId);
+      if (!document.hidden) checkTasks();
+      intervalId = setInterval(checkTasks, document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL);
+    };
+
     const onTaskEvent = () => { setTimeout(checkTasks, 800); };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('task-changed', onTaskEvent);
-    return () => { clearInterval(interval); window.removeEventListener('task-changed', onTaskEvent); };
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('task-changed', onTaskEvent);
+    };
   }, [checkTasks]);
 
   const markAsRead = (id: string) => {
