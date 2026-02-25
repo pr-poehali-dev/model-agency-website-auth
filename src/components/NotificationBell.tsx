@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
@@ -8,8 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-const TASKS_API_URL = 'https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edcb005ce100';
+import { useTasksContext, type Task } from '@/context/TasksContext';
 
 declare global {
   interface Window {
@@ -28,136 +27,91 @@ interface Notification {
 
 interface NotificationBellProps {
   userRole?: string;
+  userEmail?: string;
   onTaskClick?: () => void;
 }
 
-const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
+const NotificationBell = ({ userRole, userEmail, onTaskClick }: NotificationBellProps) => {
+  const { tasks } = useTasksContext();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const snapshotRef = useRef<Map<number, { status: string; commentCount: number }>>(new Map());
   const isFirstRunRef = useRef(true);
-  const userEmailRef = useRef(localStorage.getItem('userEmail') || '');
-  const userRoleRef = useRef(userRole);
-  userRoleRef.current = userRole;
 
-  const checkTasks = useCallback(async () => {
-    const userEmail = userEmailRef.current;
-    const currentRole = userRoleRef.current;
-    if (!userEmail || !currentRole) return;
-    try {
-      const token = localStorage.getItem('authToken');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-User-Email': userEmail,
-        'X-User-Role': currentRole,
-      };
-      if (token) headers['X-Auth-Token'] = token;
+  useEffect(() => {
+    if (!userEmail || !tasks.length) return;
 
-      const res = await fetch(TASKS_API_URL, { headers });
-      if (!res.ok) return;
+    const prev = snapshotRef.current;
+    const next = new Map<number, { status: string; commentCount: number }>();
+    const newNotifications: Notification[] = [];
 
-      const tasks = await res.json();
-      const newNotifications: Notification[] = [];
-      const prev = snapshotRef.current;
-      const next = new Map<number, { status: string; commentCount: number }>();
+    for (const t of tasks as Task[]) {
+      const cc = t.commentCount ?? 0;
+      next.set(t.id, { status: t.status, commentCount: cc });
 
-      for (const t of tasks) {
-        const cc = t.commentCount ?? 0;
-        next.set(t.id, { status: t.status, commentCount: cc });
+      if (isFirstRunRef.current) continue;
 
-        if (isFirstRunRef.current) continue;
+      const old = prev.get(t.id);
+      const iAmAssigner = t.assignedByEmail === userEmail && t.assignedToEmail !== userEmail;
+      const iAmAssignee = t.assignedToEmail === userEmail;
 
-        const old = prev.get(t.id);
-        const iAmAssigner = t.assignedByEmail === userEmail && t.assignedToEmail !== userEmail;
-        const iAmAssignee = t.assignedToEmail === userEmail;
+      if (!old && iAmAssignee && t.status !== 'completed') {
+        newNotifications.push({
+          id: `task-new-${t.id}-${Date.now()}`,
+          type: 'task',
+          message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
+          timestamp: new Date(t.createdAt),
+          read: false,
+        });
+      }
 
-        if (!old && iAmAssignee && t.status !== 'completed') {
+      if (old && old.status !== t.status && window.__lastStatusChangeTaskId !== t.id) {
+        if (iAmAssigner && old.status !== 'completed' && t.status === 'completed') {
           newNotifications.push({
-            id: `task-new-${t.id}-${Date.now()}`,
-            type: 'task',
-            message: `Новая задача: ${t.title} (от ${t.assignedByName || t.assignedByEmail})`,
-            timestamp: new Date(t.createdAt),
+            id: `done-${t.id}-${Date.now()}`,
+            type: 'task_done',
+            message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+            timestamp: new Date(),
             read: false,
           });
         }
-
-        if (old && old.status !== t.status && window.__lastStatusChangeTaskId !== t.id) {
-          if (iAmAssigner && old.status !== 'completed' && t.status === 'completed') {
-            newNotifications.push({
-              id: `done-${t.id}-${Date.now()}`,
-              type: 'task_done',
-              message: `Задача выполнена: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
-              timestamp: new Date(),
-              read: false,
-            });
-          }
-
-          if (iAmAssigner && old.status === 'pending' && t.status === 'in_progress') {
-            newNotifications.push({
-              id: `progress-${t.id}-${Date.now()}`,
-              type: 'task_progress',
-              message: `Взята в работу: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
-              timestamp: new Date(),
-              read: false,
-            });
-          }
-        } else if (window.__lastStatusChangeTaskId === t.id) {
-          window.__lastStatusChangeTaskId = undefined;
+        if (iAmAssigner && old.status === 'pending' && t.status === 'in_progress') {
+          newNotifications.push({
+            id: `progress-${t.id}-${Date.now()}`,
+            type: 'task_progress',
+            message: `Взята в работу: ${t.title} (${t.assignedToName || t.assignedToEmail})`,
+            timestamp: new Date(),
+            read: false,
+          });
         }
-
-        if (old && cc > old.commentCount && (iAmAssigner || iAmAssignee)) {
-          const isMyAction = window.__lastCommentTaskId === t.id;
-          if (!isMyAction) {
-            const newCount = cc - old.commentCount;
-            newNotifications.push({
-              id: `comment-${t.id}-${Date.now()}`,
-              type: 'task_comment',
-              message: `${newCount > 1 ? `${newCount} новых комментариев` : 'Новый комментарий'}: ${t.title}`,
-              timestamp: new Date(),
-              read: false,
-            });
-          } else {
-            window.__lastCommentTaskId = undefined;
-          }
-        }
+      } else if (window.__lastStatusChangeTaskId === t.id) {
+        window.__lastStatusChangeTaskId = undefined;
       }
 
-      snapshotRef.current = next;
-      isFirstRunRef.current = false;
-
-      if (newNotifications.length > 0) {
-        setNotifications(p => [...newNotifications, ...p]);
+      if (old && cc > old.commentCount && (iAmAssigner || iAmAssignee)) {
+        const isMyAction = window.__lastCommentTaskId === t.id;
+        if (!isMyAction) {
+          const newCount = cc - old.commentCount;
+          newNotifications.push({
+            id: `comment-${t.id}-${Date.now()}`,
+            type: 'task_comment',
+            message: `${newCount > 1 ? `${newCount} новых комментариев` : 'Новый комментарий'}: ${t.title}`,
+            timestamp: new Date(),
+            read: false,
+          });
+        } else {
+          window.__lastCommentTaskId = undefined;
+        }
       }
-    } catch (err) {
-      console.error('NotificationBell: check failed', err);
     }
-  }, []);
 
-  useEffect(() => {
-    checkTasks();
+    snapshotRef.current = next;
+    isFirstRunRef.current = false;
 
-    const ACTIVE_INTERVAL = 30_000;
-    const HIDDEN_INTERVAL = 5 * 60_000;
-
-    let intervalId = setInterval(checkTasks, document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL);
-
-    const onVisibilityChange = () => {
-      clearInterval(intervalId);
-      if (!document.hidden) checkTasks();
-      intervalId = setInterval(checkTasks, document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL);
-    };
-
-    const onTaskEvent = () => { setTimeout(checkTasks, 800); };
-
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('task-changed', onTaskEvent);
-
-    return () => {
-      clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('task-changed', onTaskEvent);
-    };
-  }, [checkTasks]);
+    if (newNotifications.length > 0) {
+      setNotifications(p => [...newNotifications, ...p]);
+    }
+  }, [tasks, userEmail]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
@@ -243,16 +197,13 @@ const NotificationBell = ({ userRole, onTaskClick }: NotificationBellProps) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {notification.timestamp.toLocaleString('ru-RU', {
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {notification.timestamp.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
-                    {!notification.read && <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                    )}
                   </div>
                 </DropdownMenuItem>
               );

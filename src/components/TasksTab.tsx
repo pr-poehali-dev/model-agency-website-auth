@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTasksContext } from '@/context/TasksContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,9 +73,8 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { tasks, loading } = useTasksContext();
   const [assignees, setAssignees] = useState<Assignee[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -98,20 +98,6 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     if (token) h['X-Auth-Token'] = token;
     return h;
   }, [userEmail, userRole]);
-
-  const loadTasks = useCallback(async () => {
-    try {
-      const res = await fetch(TASKS_API_URL, { headers: getHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-      }
-    } catch (err) {
-      console.error('Failed to load tasks', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [getHeaders]);
 
   const loadAssignees = useCallback(async () => {
     if (!canCreate) return;
@@ -141,7 +127,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
     }
   }, [getHeaders]);
 
-  useEffect(() => { loadTasks(); loadAssignees(); }, [loadTasks, loadAssignees]);
+  useEffect(() => { loadAssignees(); }, [loadAssignees]);
 
   useEffect(() => {
     if (openTaskId) loadComments(openTaskId);
@@ -169,7 +155,6 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         toast({ title: 'Задача создана' });
         setIsCreateOpen(false);
         setNewTask({ title: '', description: '', priority: 'medium', assignedToEmail: '', dueDate: '' });
-        loadTasks();
         window.dispatchEvent(new Event('task-changed'));
       } else {
         const err = await res.json();
@@ -191,7 +176,6 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       });
       if (res.ok) {
         window.__lastStatusChangeTaskId = taskId;
-        loadTasks();
         window.dispatchEvent(new Event('task-changed'));
       }
     } catch {
@@ -208,7 +192,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       });
       if (res.ok) {
         toast({ title: 'Задача удалена' });
-        loadTasks();
+        window.dispatchEvent(new Event('task-changed'));
       } else {
         const err = await res.json();
         toast({ title: err.error || 'Ошибка', variant: 'destructive' });
@@ -228,7 +212,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       if (res.ok) {
         const data = await res.json();
         toast({ title: `Удалено задач: ${data.deleted ?? 0}` });
-        loadTasks();
+        window.dispatchEvent(new Event('task-changed'));
       } else {
         const err = await res.json();
         toast({ title: err.error || 'Ошибка', variant: 'destructive' });
@@ -250,7 +234,6 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       if (res.ok) {
         setNewComment('');
         loadComments(openTaskId);
-        loadTasks();
         window.__lastCommentTaskId = openTaskId;
         window.dispatchEvent(new Event('task-changed'));
       }

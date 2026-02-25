@@ -17,6 +17,7 @@ import ModelFinances from '@/components/ModelFinances';
 import CalculationTab from '@/components/CalculationTab';
 import SettingsTab from '@/components/SettingsTab';
 import TasksTab from '@/components/TasksTab';
+import { TasksProvider } from '@/context/TasksContext';
 
 const models = [
   {
@@ -330,6 +331,7 @@ const Dashboard = () => {
   };
 
   return (
+    <TasksProvider userEmail={userEmail} userRole={userRole || ''}>
     <div className="min-h-screen bg-background">
       <DashboardNavigation
         activeTab={activeTab}
@@ -353,6 +355,7 @@ const Dashboard = () => {
         </div>
       </main>
     </div>
+    </TasksProvider>
   );
 };
 
