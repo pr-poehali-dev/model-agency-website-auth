@@ -250,9 +250,17 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      const operatorPercent = parseInt(calc.operatorPercent || '20');
-      const producerPercent = Math.max(0, 30 - operatorPercent);
-      salaryDollars = totalCheck * (producerPercent / 100);
+      const isProducerAsOperator = calc.producerAsOperator === 'true';
+      const hasOperator = calc.hasOperator === 'true';
+      if (isProducerAsOperator) {
+        salaryDollars = totalCheck * 0.3;
+      } else if (!hasOperator) {
+        salaryDollars = totalCheck * 0.1;
+      } else {
+        const operatorPercent = parseInt(calc.operatorPercent || '20');
+        const producerPercent = Math.max(0, 30 - operatorPercent);
+        salaryDollars = totalCheck * (producerPercent / 100);
+      }
     }
 
     let salaryRubles = 0;

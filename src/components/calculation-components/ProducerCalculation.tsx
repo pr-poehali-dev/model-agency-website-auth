@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface User {
   id: number;
@@ -18,6 +19,8 @@ interface ProducerCalculationProps {
     penalty: string;
     expenses?: string;
     operatorPercent?: string;
+    hasOperator?: string;
+    producerAsOperator?: string;
   }>;
   exchangeRate: number;
   onInputChange: (email: string, field: string, value: string) => void;
@@ -52,6 +55,7 @@ const ProducerCalculation = ({
               <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
               <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
               <th className="p-2 text-center font-medium text-foreground">Переводы ($)</th>
+              <th className="p-2 text-center font-medium text-foreground">Оператор</th>
               <th className="p-2 text-center font-medium text-foreground">% оператора</th>
               <th className="p-2 text-center font-medium text-foreground">% продюсера</th>
               <th className="p-2 text-center font-medium text-foreground">Расходы (₽)</th>
@@ -65,83 +69,93 @@ const ProducerCalculation = ({
             {producers.map((user) => {
               const calc = calculations[user.email];
               const { dollars, rubles } = calculateSalary(user.email, user.role);
+              const hasOperator = calc?.hasOperator === 'true';
+              const producerAsOperator = calc?.producerAsOperator === 'true';
               const operatorPercent = parseInt(calc?.operatorPercent || '20');
-              const producerPercent = Math.max(0, 30 - operatorPercent);
+
+              let producerPercent = 10;
+              if (producerAsOperator) {
+                producerPercent = 30;
+              } else if (hasOperator) {
+                producerPercent = Math.max(0, 30 - operatorPercent);
+              }
 
               return (
                 <tr key={user.id} className="border-b border-border hover:bg-muted/30">
                   <td className="p-2 font-medium text-foreground">{user.fullName}</td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.stripchat || '0'}
+                    <Input type="text" value={calc?.stripchat || '0'}
                       onChange={(e) => onInputChange(user.email, 'stripchat', e.target.value)}
-                      className="text-center"
-                    />
+                      className="text-center" />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.chaturbate || '0'}
+                    <Input type="text" value={calc?.chaturbate || '0'}
                       onChange={(e) => onInputChange(user.email, 'chaturbate', e.target.value)}
-                      className="text-center"
-                    />
+                      className="text-center" />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.camsoda || '0'}
+                    <Input type="text" value={calc?.camsoda || '0'}
                       onChange={(e) => onInputChange(user.email, 'camsoda', e.target.value)}
-                      className="text-center"
-                    />
+                      className="text-center" />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.transfers || '0'}
+                    <Input type="text" value={calc?.transfers || '0'}
                       onChange={(e) => onInputChange(user.email, 'transfers', e.target.value)}
-                      className="text-center"
-                    />
+                      className="text-center" />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="30"
-                      value={calc?.operatorPercent || '20'}
-                      onChange={(e) => onInputChange(user.email, 'operatorPercent', e.target.value)}
-                      className="text-center w-16"
-                    />
+                    <div className="flex flex-col items-center gap-2">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <Checkbox
+                          checked={hasOperator}
+                          onCheckedChange={(v) => {
+                            onInputChange(user.email, 'hasOperator', v ? 'true' : 'false');
+                            if (v) onInputChange(user.email, 'producerAsOperator', 'false');
+                          }}
+                        />
+                        <span className="text-xs">Есть</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <Checkbox
+                          checked={producerAsOperator}
+                          onCheckedChange={(v) => {
+                            onInputChange(user.email, 'producerAsOperator', v ? 'true' : 'false');
+                            if (v) onInputChange(user.email, 'hasOperator', 'false');
+                          }}
+                        />
+                        <span className="text-xs">Сам</span>
+                      </label>
+                    </div>
+                  </td>
+                  <td className="p-2 text-center">
+                    {hasOperator && !producerAsOperator ? (
+                      <Input
+                        type="number" min="0" max="30"
+                        value={calc?.operatorPercent || '20'}
+                        onChange={(e) => onInputChange(user.email, 'operatorPercent', e.target.value)}
+                        className="text-center w-16"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="p-2 text-center font-semibold text-muted-foreground">
                     {producerPercent}%
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.expenses || '0'}
+                    <Input type="text" value={calc?.expenses || '0'}
                       onChange={(e) => onInputChange(user.email, 'expenses', e.target.value)}
-                      className="text-center bg-muted/30"
-                      readOnly
-                    />
+                      className="text-center bg-muted/30" readOnly />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.advance || '0'}
+                    <Input type="text" value={calc?.advance || '0'}
                       onChange={(e) => onInputChange(user.email, 'advance', e.target.value)}
-                      className="text-center bg-muted/30"
-                      readOnly
-                    />
+                      className="text-center bg-muted/30" readOnly />
                   </td>
                   <td className="p-2">
-                    <Input
-                      type="text"
-                      value={calc?.penalty || '0'}
+                    <Input type="text" value={calc?.penalty || '0'}
                       onChange={(e) => onInputChange(user.email, 'penalty', e.target.value)}
-                      className="text-center bg-muted/30"
-                      readOnly
-                    />
+                      className="text-center bg-muted/30" readOnly />
                   </td>
                   <td className="p-2 text-right font-semibold">${dollars.toFixed(2)}</td>
                   <td className="p-2 text-right font-semibold">{rubles.toFixed(2)} ₽</td>
