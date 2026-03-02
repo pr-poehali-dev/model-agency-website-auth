@@ -17,6 +17,7 @@ interface ProducerCalculationProps {
     advance: string;
     penalty: string;
     expenses?: string;
+    operatorPercent?: string;
   }>;
   exchangeRate: number;
   onInputChange: (email: string, field: string, value: string) => void;
@@ -51,6 +52,8 @@ const ProducerCalculation = ({
               <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
               <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
               <th className="p-2 text-center font-medium text-foreground">Переводы ($)</th>
+              <th className="p-2 text-center font-medium text-foreground">% оператора</th>
+              <th className="p-2 text-center font-medium text-foreground">% продюсера</th>
               <th className="p-2 text-center font-medium text-foreground">Расходы (₽)</th>
               <th className="p-2 text-center font-medium text-foreground">Аванс (₽)</th>
               <th className="p-2 text-center font-medium text-foreground">Штраф (₽)</th>
@@ -62,7 +65,9 @@ const ProducerCalculation = ({
             {producers.map((user) => {
               const calc = calculations[user.email];
               const { dollars, rubles } = calculateSalary(user.email, user.role);
-              
+              const operatorPercent = parseInt(calc?.operatorPercent || '20');
+              const producerPercent = Math.max(0, 30 - operatorPercent);
+
               return (
                 <tr key={user.id} className="border-b border-border hover:bg-muted/30">
                   <td className="p-2 font-medium text-foreground">{user.fullName}</td>
@@ -97,6 +102,19 @@ const ProducerCalculation = ({
                       onChange={(e) => onInputChange(user.email, 'transfers', e.target.value)}
                       className="text-center"
                     />
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={calc?.operatorPercent || '20'}
+                      onChange={(e) => onInputChange(user.email, 'operatorPercent', e.target.value)}
+                      className="text-center w-16"
+                    />
+                  </td>
+                  <td className="p-2 text-center font-semibold text-muted-foreground">
+                    {producerPercent}%
                   </td>
                   <td className="p-2">
                     <Input

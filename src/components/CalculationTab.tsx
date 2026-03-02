@@ -250,7 +250,9 @@ const CalculationTab = () => {
     } else if (role === 'operator') {
       salaryDollars = totalCheck * 0.2;
     } else if (role === 'producer') {
-      salaryDollars = totalCheck * 0.1;
+      const operatorPercent = parseInt(calc.operatorPercent || '20');
+      const producerPercent = Math.max(0, 30 - operatorPercent);
+      salaryDollars = totalCheck * (producerPercent / 100);
     }
 
     let salaryRubles = 0;
