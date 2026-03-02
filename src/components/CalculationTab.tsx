@@ -240,8 +240,8 @@ const CalculationTab = () => {
     const expenses = parseInt(calc.expenses || '0');
 
     const stripchatDollars = stripchat * 0.05;
-    const chaturbateDollars = chaturbate * 0.05;
-    const camsodaDollars = camsoda * 0.05;
+    const chaturbateDollars = chaturbate * 0.045;
+    const camsodaDollars = camsoda * 0.04;
     const totalCheck = stripchatDollars + chaturbateDollars + camsodaDollars + transfers;
 
     let salaryDollars = 0;

@@ -137,7 +137,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
   const USD_TO_RUB = parseFloat(usdRateStr);
 
   // Рассчитываем зарплату директоров и статистику по площадкам
-  let totalGrossRevenueUSD = 0; // Сумма всех токенов × 0.05
+  let totalGrossRevenueUSD = 0; // Сумма всех токенов × коэффициент площадки
   let totalDirectorsIncomeUSD = 0; // Доля директоров
   let totalChaturbateUSD = 0; // Общая выручка с Chaturbate
   let totalStripchatUSD = 0; // Общая выручка со Stripchat
@@ -145,7 +145,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
   producersData.forEach(producer => {
     producer.models.forEach(model => {
-      // current_gross_revenue уже содержит (токены × 0.05)
+      // current_gross_revenue уже содержит (токены × коэффициент площадки)
       const grossRevenue = model.current_gross_revenue || 0;
       const cbRevenue = model.current_cb_gross_revenue || 0;
       const spRevenue = model.current_sp_gross_revenue || 0;
@@ -217,7 +217,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
               </div>
               <div>
                 <h4 className="font-semibold text-lg mb-1">Chaturbate</h4>
-                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.05)</p>
+                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.045)</p>
               </div>
             </div>
             <div className="text-right">
@@ -257,7 +257,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
               </div>
               <div>
                 <h4 className="font-semibold text-lg mb-1">CamSoda</h4>
-                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.05)</p>
+                <p className="text-sm text-muted-foreground">Общая выручка (токены × 0.04)</p>
               </div>
             </div>
             <div className="text-right">
@@ -344,7 +344,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
 
             <div className="pt-4 border-t space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Общий чек (токены × 0.05):</span>
+                <span className="text-muted-foreground">Общий чек (токены × коэффициент):</span>
                 <span className="font-medium">{totalGrossRevenue.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -397,7 +397,7 @@ const DirectorsSalary = ({ userEmail, period, onPreviousPeriod, onNextPeriod }: 
             return (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Общий чек (токены × 0.05 × курс):</span>
+                  <span className="text-muted-foreground">Общий чек (токены × коэффициент × курс):</span>
                   <span className="font-medium">{totalCheckRUB.toLocaleString('ru-RU')} ₽</span>
                 </div>
                 

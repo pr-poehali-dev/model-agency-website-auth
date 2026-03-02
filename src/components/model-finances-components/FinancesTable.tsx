@@ -173,7 +173,7 @@ const FinancesTable = ({
                     {(() => {
                       if (field.type === 'totalCalculated') {
                         const total = onlineData.reduce((sum, day) => 
-                          sum + ((day.cbTokens + day.spTokens + day.sodaTokens) * 0.05 * 0.6 + day.transfers * 0.6), 0
+                          sum + ((day.cbTokens * 0.045 + day.spTokens * 0.05 + day.sodaTokens * 0.04) * 0.6 + day.transfers * 0.6), 0
                         );
                         return (
                           <div className="text-center py-2 font-bold text-lg text-green-600 dark:text-green-400">

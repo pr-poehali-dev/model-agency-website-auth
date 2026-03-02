@@ -405,9 +405,9 @@ const ModelFinances = ({
       prev.map((day) => {
         if (day.date !== date) return day;
         const updatedDay = { ...day, [field]: numValue };
-        if (field === 'cbTokens') updatedDay.cbIncome = numValue * 0.05;
+        if (field === 'cbTokens') updatedDay.cbIncome = numValue * 0.045;
         else if (field === 'spTokens') updatedDay.spIncome = numValue * 0.05;
-        else if (field === 'sodaTokens') updatedDay.sodaIncome = numValue * 0.05;
+        else if (field === 'sodaTokens') updatedDay.sodaIncome = numValue * 0.04;
         return updatedDay;
       }),
     );
