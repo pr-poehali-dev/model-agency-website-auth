@@ -322,10 +322,10 @@ const ModelFinances = ({
             sodaTokens = savedDay.soda || 0;
           }
           
-          // Пересчитываем общий чек из токенов (токены × 0.05)
-          const cbIncome = cbTokens * 0.05;
+          // Пересчитываем общий чек из токенов
+          const cbIncome = cbTokens * 0.045;
           const spIncome = spTokens * 0.05;
-          const sodaIncome = sodaTokens * 0.05;
+          const sodaIncome = sodaTokens * 0.04;
           
           return {
             ...initDay,
