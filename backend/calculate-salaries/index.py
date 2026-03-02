@@ -140,9 +140,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             transfers_dollars = float(finance['transfers'] or 0)
             
             # Always calculate from tokens (tokens are primary data source)
-            cb_dollars = cb_tokens * 0.05
+            cb_dollars = cb_tokens * 0.045
             sp_dollars = sp_tokens * 0.05
-            soda_dollars = soda_tokens * 0.05
+            soda_dollars = soda_tokens * 0.04
             
             total_check = cb_dollars + sp_dollars + soda_dollars + transfers_dollars
             
