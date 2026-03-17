@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
+import { RATE_OFFSET } from '@/lib/constants';
 import DashboardWelcomeCard from './DashboardWelcomeCard';
 import DashboardPeriodSelector from './DashboardPeriodSelector';
 import DashboardSalaryCard from './DashboardSalaryCard';
@@ -62,7 +63,7 @@ const DashboardTab = ({ onNavigate, onViewFinances }: DashboardTabProps) => {
       const response = await authenticatedFetch(EXCHANGE_RATE_API_URL);
       const data = await response.json();
       if (data.rate) {
-        setExchangeRate(data.rate - 5);
+        setExchangeRate(data.rate - RATE_OFFSET);
       }
     } catch (error) {
       console.error('Failed to load exchange rate:', error);

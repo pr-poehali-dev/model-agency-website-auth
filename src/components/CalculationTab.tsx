@@ -2,6 +2,7 @@ import { useState, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetch } from '@/lib/api';
+import { RATE_OFFSET } from '@/lib/constants';
 import OperatorCalculation from './calculation-components/OperatorCalculation';
 import ProducerCalculation from './calculation-components/ProducerCalculation';
 import SoloMakerCalculation from './calculation-components/SoloMakerCalculation';
@@ -117,7 +118,7 @@ const CalculationTab = () => {
       
       const data = await response.json();
       if (data.rate) {
-        setExchangeRate(data.rate - 5);
+        setExchangeRate(data.rate - RATE_OFFSET);
       }
     } catch (err) {
       console.error('Failed to load exchange rate', err);

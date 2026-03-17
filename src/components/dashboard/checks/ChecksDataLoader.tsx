@@ -1,4 +1,5 @@
 import { authenticatedFetch } from '@/lib/api';
+import { RATE_OFFSET } from '@/lib/constants';
 
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
@@ -17,7 +18,7 @@ export const loadExchangeRate = async (
     const data = await response.json();
     if (data.rate) {
       const cbrRate = data.rate;
-      const workingRate = cbrRate - 7;
+      const workingRate = cbrRate - RATE_OFFSET;
       setCbrRate(cbrRate);
       setExchangeRate(workingRate);
     }

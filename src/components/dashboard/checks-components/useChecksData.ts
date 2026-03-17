@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
+import { RATE_OFFSET } from '@/lib/constants';
 
 const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
@@ -47,7 +48,7 @@ export const useChecksData = (currentPeriod: Period) => {
       const data = await response.json();
       if (data.rate) {
         const cbrRate = data.rate;
-        const workingRate = cbrRate - 7;
+        const workingRate = cbrRate - RATE_OFFSET;
         setCbrRate(cbrRate);
         setExchangeRate(workingRate);
       }

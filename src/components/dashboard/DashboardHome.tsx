@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
+import { RATE_OFFSET } from '@/lib/constants';
 
 interface Model {
   id: number;
@@ -120,7 +121,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const data = await response.json();
       if (data.rate) {
         const cbr = data.rate;
-        const working = cbr - 5;
+        const working = cbr - RATE_OFFSET;
         setCbrRate(cbr);
         setWorkingRate(working);
       }
@@ -158,7 +159,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       const adjustmentsData = await adjustmentsRes.json();
       const rateData = await rateRes.json();
 
-      const exchangeRate = rateData.rate ? rateData.rate - 5 : 95;
+      const exchangeRate = rateData.rate ? rateData.rate - RATE_OFFSET : 95;
 
       let baseSalaryUSD = 0;
       if (userRole === 'operator' && salaryData.operators?.[userEmail]) {
