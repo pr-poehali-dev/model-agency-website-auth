@@ -17,7 +17,7 @@ export const loadExchangeRate = async (
     const data = await response.json();
     if (data.rate) {
       const cbrRate = data.rate;
-      const workingRate = cbrRate - 5;
+      const workingRate = cbrRate - 7;
       setCbrRate(cbrRate);
       setExchangeRate(workingRate);
     }
