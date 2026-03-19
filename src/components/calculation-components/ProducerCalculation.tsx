@@ -15,6 +15,7 @@ interface ProducerCalculationProps {
     stripchat: string;
     chaturbate: string;
     camsoda: string;
+    cam4: string;
     advance: string;
     penalty: string;
     expenses?: string;
@@ -54,6 +55,7 @@ const ProducerCalculation = ({
               <th className="p-2 text-center font-medium text-foreground">Stripchat</th>
               <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
               <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
+              <th className="p-2 text-center font-medium text-foreground">Cam4</th>
               <th className="p-2 text-center font-medium text-foreground">Переводы ($)</th>
               <th className="p-2 text-center font-medium text-foreground">Оператор</th>
               <th className="p-2 text-center font-medium text-foreground">% оператора</th>
@@ -96,6 +98,11 @@ const ProducerCalculation = ({
                   <td className="p-2">
                     <Input type="text" value={calc?.camsoda || '0'}
                       onChange={(e) => onInputChange(user.email, 'camsoda', e.target.value)}
+                      className="text-center" />
+                  </td>
+                  <td className="p-2">
+                    <Input type="text" value={calc?.cam4 || '0'}
+                      onChange={(e) => onInputChange(user.email, 'cam4', e.target.value)}
                       className="text-center" />
                   </td>
                   <td className="p-2">

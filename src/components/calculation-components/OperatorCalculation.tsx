@@ -14,6 +14,7 @@ interface OperatorCalculationProps {
     stripchat: string;
     chaturbate: string;
     camsoda: string;
+    cam4: string;
     advance: string;
     penalty: string;
   }>;
@@ -50,6 +51,7 @@ const OperatorCalculation = ({
                   <th className="p-2 text-center font-medium text-foreground">Stripchat</th>
                   <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
                   <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
+                  <th className="p-2 text-center font-medium text-foreground">Cam4</th>
                   <th className="p-2 text-center font-medium text-foreground">Аванс (₽)</th>
                   <th className="p-2 text-center font-medium text-foreground">Штраф (₽)</th>
                   <th className="p-2 text-right font-medium text-foreground">ЗП ($)</th>
@@ -85,6 +87,14 @@ const OperatorCalculation = ({
                           type="text"
                           value={calc?.camsoda || '0'}
                           onChange={(e) => onInputChange(user.email, 'camsoda', e.target.value)}
+                          className="text-center"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="text"
+                          value={calc?.cam4 || '0'}
+                          onChange={(e) => onInputChange(user.email, 'cam4', e.target.value)}
                           className="text-center"
                         />
                       </td>
@@ -133,6 +143,7 @@ const OperatorCalculation = ({
                   <th className="p-2 text-center font-medium text-foreground">Stripchat</th>
                   <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
                   <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
+                  <th className="p-2 text-center font-medium text-foreground">Cam4</th>
                   <th className="p-2 text-center font-medium text-foreground">Аванс (₽)</th>
                   <th className="p-2 text-center font-medium text-foreground">Штраф (₽)</th>
                   <th className="p-2 text-right font-medium text-foreground">ЗП ($)</th>
@@ -168,6 +179,14 @@ const OperatorCalculation = ({
                           type="text"
                           value={calc?.camsoda || '0'}
                           onChange={(e) => onInputChange(user.email, 'camsoda', e.target.value)}
+                          className="text-center"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="text"
+                          value={calc?.cam4 || '0'}
+                          onChange={(e) => onInputChange(user.email, 'cam4', e.target.value)}
                           className="text-center"
                         />
                       </td>

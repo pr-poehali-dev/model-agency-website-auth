@@ -10,6 +10,7 @@ interface SoloModel {
   stripchat: string;
   chaturbate: string;
   camsoda: string;
+  cam4: string;
   advance: string;
   penalty: string;
   percentage: string;
@@ -61,6 +62,7 @@ const SoloMakerCalculation = ({
                 <th className="p-2 text-center font-medium text-foreground">Stripchat</th>
                 <th className="p-2 text-center font-medium text-foreground">Chaturbate</th>
                 <th className="p-2 text-center font-medium text-foreground">CamSoda</th>
+                <th className="p-2 text-center font-medium text-foreground">Cam4</th>
                 <th className="p-2 text-center font-medium text-foreground">Процент %</th>
                 <th className="p-2 text-center font-medium text-foreground">Аванс (₽)</th>
                 <th className="p-2 text-center font-medium text-foreground">Штраф (₽)</th>
@@ -113,6 +115,14 @@ const SoloMakerCalculation = ({
                         type="text"
                         value={model.camsoda}
                         onChange={(e) => onSoloInputChange(model.id, 'camsoda', e.target.value)}
+                        className="text-center"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <Input
+                        type="text"
+                        value={model.cam4}
+                        onChange={(e) => onSoloInputChange(model.id, 'cam4', e.target.value)}
                         className="text-center"
                       />
                     </td>
