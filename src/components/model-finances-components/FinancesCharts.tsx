@@ -24,6 +24,8 @@ interface DayData {
   spIncome: number;
   sodaIncome: number;
   stripchatTokens: number;
+  cam4Tokens: number;
+  cam4Income: number;
   transfers: number;
   operator: string;
   shift: boolean;
@@ -49,7 +51,8 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
     cbIncome: day.cbIncome * 0.6,
     spIncome: day.spIncome * 0.6,
     sodaIncome: day.sodaIncome * 0.6,
-    totalIncome: (day.cbIncome + day.spIncome + day.sodaIncome) * 0.6 + day.transfers * 0.6,
+    cam4Income: day.cam4Income * 0.6,
+    totalIncome: (day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income) * 0.6 + day.transfers * 0.6,
   }));
 
   const totalCb = onlineData.reduce((sum, day) => sum + day.cb, 0);
@@ -58,8 +61,9 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
   const totalCbIncome = onlineData.reduce((sum, day) => sum + (day.cbIncome * 0.6), 0);
   const totalSpIncome = onlineData.reduce((sum, day) => sum + (day.spIncome * 0.6), 0);
   const totalSodaIncome = onlineData.reduce((sum, day) => sum + (day.sodaIncome * 0.6), 0);
+  const totalCam4Income = onlineData.reduce((sum, day) => sum + (day.cam4Income * 0.6), 0);
   const totalTransfers = onlineData.reduce((sum, day) => sum + day.transfers, 0);
-  const totalIncome = onlineData.reduce((sum, day) => sum + ((day.cbIncome + day.spIncome + day.sodaIncome) * 0.6 + day.transfers * 0.6), 0);
+  const totalIncome = onlineData.reduce((sum, day) => sum + ((day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income) * 0.6 + day.transfers * 0.6), 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -124,6 +128,15 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
               strokeWidth={3}
               name="CamSoda"
               dot={{ fill: '#06b6d4', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="cam4Income"
+              stroke="#a855f7"
+              strokeWidth={3}
+              name="Cam4"
+              dot={{ fill: '#a855f7', r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -221,8 +234,12 @@ const FinancesCharts = ({ onlineData }: FinancesChartsProps) => {
             <p className="text-2xl font-bold text-cyan-900 dark:text-cyan-200">${totalSodaIncome.toFixed(2)}</p>
           </div>
           <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20 border border-purple-200 dark:border-purple-800">
-            <p className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">Переводы</p>
-            <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">${totalTransfers.toFixed(2)}</p>
+            <p className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">Доход Cam4</p>
+            <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">${totalCam4Income.toFixed(2)}</p>
+          </div>
+          <div className="p-3 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-950/30 dark:to-slate-900/20 border border-slate-200 dark:border-slate-800">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-400 mb-1">Переводы</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">${totalTransfers.toFixed(2)}</p>
           </div>
           <div className="col-span-2">
             <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 border-2 border-green-400 dark:border-green-600 shadow-lg">

@@ -21,6 +21,8 @@ interface DayData {
   spIncome: number;
   sodaIncome: number;
   stripchatTokens: number;
+  cam4Tokens: number;
+  cam4Income: number;
   transfers: number;
   operator: string;
   shift: boolean;
@@ -73,6 +75,7 @@ const FinancesTable = ({
     { key: 'spTokens', label: 'Stripchat (токены)', type: 'tokens', platform: 'stripchat' },
     { key: 'soda', label: 'Online Soda', type: 'online', platform: 'camsoda' },
     { key: 'sodaTokens', label: 'CamSoda (токены)', type: 'tokens', platform: 'camsoda' },
+    { key: 'cam4Tokens', label: 'Cam4 (токены)', type: 'tokens', platform: 'cam4' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
     { key: 'totalIncome', label: 'Income ($)', type: 'totalCalculated', platform: 'none' },
   ];
@@ -115,6 +118,7 @@ const FinancesTable = ({
                 if (platform === 'chaturbate') return 'bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20';
                 if (platform === 'stripchat') return 'bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20';
                 if (platform === 'camsoda') return 'bg-gradient-to-r from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20';
+                if (platform === 'cam4') return 'bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20';
                 return 'bg-gradient-to-r from-background to-muted/30';
               };
               
@@ -142,7 +146,7 @@ const FinancesTable = ({
 
                     const isTotalCalculated = field.type === 'totalCalculated';
                     const totalIncome = isTotalCalculated
-                      ? ((day.cbIncome + day.spIncome + day.sodaIncome) * 0.6 + day.transfers * 0.6).toFixed(2)
+                      ? ((day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income) * 0.6 + day.transfers * 0.6).toFixed(2)
                       : null;
 
                     return (
@@ -173,7 +177,7 @@ const FinancesTable = ({
                     {(() => {
                       if (field.type === 'totalCalculated') {
                         const total = onlineData.reduce((sum, day) => 
-                          sum + ((day.cbTokens * 0.045 + day.spTokens * 0.05 + day.sodaTokens * 0.04) * 0.6 + day.transfers * 0.6), 0
+                          sum + ((day.cbTokens * 0.045 + day.spTokens * 0.05 + day.sodaTokens * 0.04 + day.cam4Tokens * 0.05) * 0.6 + day.transfers * 0.6), 0
                         );
                         return (
                           <div className="text-center py-2 font-bold text-lg text-green-600 dark:text-green-400">
