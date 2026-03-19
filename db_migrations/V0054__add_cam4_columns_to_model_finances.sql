@@ -1,0 +1,3 @@
+ALTER TABLE t_p35405502_model_agency_website.model_finances
+  ADD COLUMN IF NOT EXISTS cam4_tokens NUMERIC(10,2) NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS cam4_income NUMERIC(10,2) NULL DEFAULT 0;
