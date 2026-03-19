@@ -5,6 +5,7 @@ export interface DayData {
   onlineSP: number;
   stripchat: number;
   camsoda: number;
+  cam4: number;
   transfers: number;
   operator: string;
   isShift: boolean;
