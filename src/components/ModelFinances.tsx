@@ -32,6 +32,8 @@ interface DayData {
   spIncome: number;
   sodaIncome: number;
   stripchatTokens: number;
+  cam4Tokens: number;
+  cam4Income: number;
   transfers: number;
   operator: string;
   shift: boolean;
@@ -52,6 +54,8 @@ const generateInitialData = (period: Period): DayData[] => {
     spIncome: 0,
     sodaIncome: 0,
     stripchatTokens: 0,
+    cam4Tokens: 0,
+    cam4Income: 0,
     transfers: 0,
     operator: "",
     shift: false,
@@ -326,6 +330,8 @@ const ModelFinances = ({
           const cbIncome = cbTokens * 0.045;
           const spIncome = spTokens * 0.05;
           const sodaIncome = sodaTokens * 0.04;
+          const cam4Tokens = savedDay.cam4Tokens || 0;
+          const cam4Income = cam4Tokens * 0.05;
           
           return {
             ...initDay,
@@ -339,6 +345,8 @@ const ModelFinances = ({
             spIncome,
             sodaIncome,
             stripchatTokens: savedDay.stripchatTokens || 0,
+            cam4Tokens,
+            cam4Income,
             transfers: savedDay.transfers || 0,
             operator: savedDay.operator || "",
             shift: savedDay.shift || false,
@@ -408,6 +416,7 @@ const ModelFinances = ({
         if (field === 'cbTokens') updatedDay.cbIncome = numValue * 0.045;
         else if (field === 'spTokens') updatedDay.spIncome = numValue * 0.05;
         else if (field === 'sodaTokens') updatedDay.sodaIncome = numValue * 0.04;
+        else if (field === 'cam4Tokens') updatedDay.cam4Income = numValue * 0.05;
         return updatedDay;
       }),
     );

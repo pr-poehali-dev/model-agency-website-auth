@@ -69,7 +69,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             SELECT date, cb_tokens, sp_tokens, soda_tokens,
                    cb_income, sp_income, soda_income, 
                    cb_online, sp_online, soda_online,
-                   stripchat_tokens, operator_name, has_shift, transfers
+                   stripchat_tokens, cam4_tokens, cam4_income,
+                   operator_name, has_shift, transfers
             FROM t_p35405502_model_agency_website.model_finances
             WHERE model_id = %s
             ORDER BY date ASC
@@ -102,6 +103,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'sp': to_float(row['sp_online']),
                 'soda': to_float(row['soda_online']),
                 'stripchatTokens': to_float(row['stripchat_tokens']),
+                'cam4Tokens': to_float(row['cam4_tokens']),
+                'cam4Income': to_float(row['cam4_income']),
                 'transfers': to_float(row['transfers']),
                 'operator': row['operator_name'] or '',
                 'shift': row['has_shift'] or False
@@ -176,6 +179,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             r2(record.get('sp', 0)),
             r2(record.get('soda', 0)),
             r2(record.get('stripchatTokens', 0)),
+            r2(record.get('cam4Tokens', 0)),
+            r2(record.get('cam4Income', 0)),
             r2(record.get('transfers', 0)),
             record.get('operator', ''),
             bool(record.get('shift', False))
@@ -186,7 +191,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         INSERT INTO t_p35405502_model_agency_website.model_finances 
         (model_id, date, cb_tokens, sp_tokens, soda_tokens, 
          cb_income, sp_income, soda_income, cb_online, sp_online, soda_online,
-         stripchat_tokens, transfers, operator_name, has_shift, updated_at)
+         stripchat_tokens, cam4_tokens, cam4_income, transfers, operator_name, has_shift, updated_at)
         VALUES %s
         ON CONFLICT (model_id, date) 
         DO UPDATE SET
@@ -200,13 +205,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             sp_online = EXCLUDED.sp_online,
             soda_online = EXCLUDED.soda_online,
             stripchat_tokens = EXCLUDED.stripchat_tokens,
+            cam4_tokens = EXCLUDED.cam4_tokens,
+            cam4_income = EXCLUDED.cam4_income,
             transfers = EXCLUDED.transfers,
             operator_name = EXCLUDED.operator_name,
             has_shift = EXCLUDED.has_shift,
             updated_at = CURRENT_TIMESTAMP
     '''
     
-    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
+    execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
     conn.commit()
     
     cursor.close()
