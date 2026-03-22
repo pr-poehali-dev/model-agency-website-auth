@@ -146,7 +146,7 @@ const FinancesTable = ({
 
                     const isTotalCalculated = field.type === 'totalCalculated';
                     const totalIncome = isTotalCalculated
-                      ? ((day.cbIncome + day.spIncome + day.sodaIncome + day.cam4Income) * 0.6 + day.transfers * 0.6).toFixed(2)
+                      ? ((day.cbIncome + day.spIncome + day.sodaIncome) * 0.6 + day.cam4Tokens * 0.6 + day.transfers * 0.6).toFixed(2)
                       : null;
 
                     return (
@@ -177,7 +177,7 @@ const FinancesTable = ({
                     {(() => {
                       if (field.type === 'totalCalculated') {
                         const total = onlineData.reduce((sum, day) => 
-                          sum + ((day.cbTokens * 0.045 + day.spTokens * 0.05 + day.sodaTokens * 0.04 + day.cam4Tokens * 0.05) * 0.6 + day.transfers * 0.6), 0
+                          sum + ((day.cbTokens * 0.045 + day.spTokens * 0.05 + day.sodaTokens * 0.04) * 0.6 + day.cam4Tokens * 0.6 + day.transfers * 0.6), 0
                         );
                         return (
                           <div className="text-center py-2 font-bold text-lg text-green-600 dark:text-green-400">
