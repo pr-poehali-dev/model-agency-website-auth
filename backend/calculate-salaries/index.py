@@ -258,8 +258,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         if operator_email or producer_operator_email:
                             producer_percentage = 30 - operator_percentage
                         else:
-                            producer_percentage = 10
-                            print(f"DEBUG: No operator for model_id={model_id}, producer gets 10%")
+                            producer_percentage = 30
+                            print(f"DEBUG: No operator for model_id={model_id}, producer gets 30%")
                         
                         producer_salary_amount = total_check * (producer_percentage / 100)
                         
