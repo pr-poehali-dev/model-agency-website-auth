@@ -75,7 +75,7 @@ const FinancesTable = ({
     { key: 'spTokens', label: 'Stripchat (токены)', type: 'tokens', platform: 'stripchat' },
     { key: 'soda', label: 'Online Soda', type: 'online', platform: 'camsoda' },
     { key: 'sodaTokens', label: 'CamSoda (токены)', type: 'tokens', platform: 'camsoda' },
-    { key: 'cam4Tokens', label: 'Cam4 (токены)', type: 'tokens', platform: 'cam4' },
+    { key: 'cam4Tokens', label: 'Cam4 ($)', type: 'tokens', platform: 'cam4' },
     { key: 'transfers', label: 'Переводы ($)', type: 'income', platform: 'none' },
     { key: 'totalIncome', label: 'Income ($)', type: 'totalCalculated', platform: 'none' },
   ];
