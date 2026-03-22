@@ -144,13 +144,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cam4_tokens = float(finance['cam4_tokens'] or 0)
             transfers_dollars = float(finance['transfers'] or 0)
             
-            # Always calculate from tokens (tokens are primary data source)
-            cb_dollars = cb_tokens * 0.045
-            sp_dollars = sp_tokens * 0.05
-            soda_dollars = soda_tokens * 0.04
-            cam4_dollars = cam4_tokens * 0.05
+            # Calculate income: CB/SP/Soda tokens → dollars → 60%, Cam4 already in $ → 60%, transfers → 60%
+            cb_dollars = cb_tokens * 0.045 * 0.6
+            sp_dollars = sp_tokens * 0.05 * 0.6
+            soda_dollars = soda_tokens * 0.04 * 0.6
+            cam4_dollars = cam4_tokens * 0.6
+            transfers_income = transfers_dollars * 0.6
             
-            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_dollars + transfers_dollars
+            total_check = cb_dollars + sp_dollars + soda_dollars + cam4_dollars + transfers_income
             
             print(f"DEBUG CALC: model_id={model_id}, date={finance['date']}, cb_tokens={cb_tokens}, sp_tokens={sp_tokens}, soda_tokens={soda_tokens}, cam4_tokens={cam4_tokens}, cb$={cb_dollars:.2f}, sp$={sp_dollars:.2f}, soda$={soda_dollars:.2f}, cam4$={cam4_dollars:.2f}, total_check=${total_check:.2f}, transfers=${transfers_dollars}")
             
