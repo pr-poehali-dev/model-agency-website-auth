@@ -70,7 +70,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 u.role,
                 u.solo_percentage
             FROM {schema}.users u
-            WHERE u.role IN ('operator', 'content_maker', 'producer', 'solo_maker')
+            WHERE u.role IN ('operator', 'content_maker', 'producer', 'solo_maker', 'director')
         """)
         users = cur.fetchall()
         
@@ -128,6 +128,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         print(f"DEBUG: period={period_start} to {period_end}, finances_count={len(finances)}")
         
+        directors = [u for u in users if u['role'] == 'director']
+        director_pool = 0.0
+        director_pool_details = []
+        
         operator_salaries = {}
         model_salaries = {}
         producer_salaries = {}
@@ -166,10 +170,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 # For solo makers, use their percentage from profile
                 solo_percentage = int(model_user.get('solo_percentage', '50'))
                 model_salary = total_check * (solo_percentage / 100)
-                print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}% = ${model_salary}")
+                director_amount = total_check * ((100 - solo_percentage) / 100)
+                print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}% = ${model_salary}, directors get {100 - solo_percentage}% = ${director_amount}")
             else:
-                # For regular content makers, use 30%
+                # For regular content makers, use 30%; directors get 40%
                 model_salary = total_check * 0.3
+                director_amount = total_check * 0.4
+            
+            director_pool += director_amount
+            director_pool_details.append({
+                'date': finance['date'].isoformat(),
+                'model_id': model_id,
+                'model_email': model_email,
+                'amount': director_amount,
+                'check': total_check
+            })
             
             operator_email = None
             producer_operator_email = None
@@ -291,10 +306,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                                 'check': total_check
                             })
         
+        director_salaries = {}
+        if directors and director_pool > 0:
+            share = director_pool / len(directors)
+            for d in directors:
+                director_salaries[d['email']] = {
+                    'email': d['email'],
+                    'full_name': d['full_name'],
+                    'total': share,
+                    'details': director_pool_details
+                }
+            print(f"DEBUG DIRECTORS: pool=${director_pool:.2f}, directors={len(directors)}, share=${share:.2f}")
+        
         result = {
             'operators': operator_salaries,
             'models': model_salaries,
-            'producers': producer_salaries
+            'producers': producer_salaries,
+            'directors': director_salaries
         }
         
         print(f"DEBUG FINAL: operators={len(operator_salaries)}, models={len(model_salaries)}, producers={len(producer_salaries)}")
