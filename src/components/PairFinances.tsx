@@ -233,8 +233,9 @@ const PairFinances = ({
         </Card>
       </div>
 
-      <Card className="overflow-x-auto">
-        <table className="w-full text-xs">
+      <Card className="p-0 shadow-lg border-2">
+        <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[700px]">
           <thead>
             <tr className="border-b bg-muted/50">
               <th className="text-left p-2 font-medium">Дата</th>
@@ -297,6 +298,7 @@ const PairFinances = ({
             </tr>
           </tfoot>
         </table>
+        </div>
       </Card>
 
       <FinancesCharts onlineData={combinedData} />
