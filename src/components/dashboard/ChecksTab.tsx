@@ -24,6 +24,7 @@ const ChecksTab = () => {
     users,
     salaries,
     adjustments,
+    modelPairs,
     loadExchangeRate,
     handleUpdateProducer: updateProducer,
     handleUpdateEmployee: updateEmployee
@@ -99,6 +100,9 @@ const ChecksTab = () => {
     };
   }) : [];
   
+  const getPairForModel = (email: string) =>
+    modelPairs.find((p: any) => p.model1_email === email || p.model2_email === email) || null;
+
   if (userRole === 'director' && users.length > 0) {
     const operatorUsers = users.filter(u => u.role === 'operator');
     const modelUsers = users.filter(u => u.role === 'content_maker');
@@ -142,6 +146,7 @@ const ChecksTab = () => {
       const adj = adjustments[cm.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
+      const pair = getPairForModel(cm.email);
       return {
         name: cm.fullName || cm.email,
         email: cm.email,
@@ -152,7 +157,9 @@ const ChecksTab = () => {
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
-        total: Math.round(sumRubles - adj.advance - adj.penalty)
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        isInPair: !!pair,
+        pairModelPercentage: pair ? pair.model_percentage : undefined
       };
     });
     
@@ -225,6 +232,7 @@ const ChecksTab = () => {
       const adj = adjustments[cm.email] || { advance: 0, penalty: 0 };
       const sumDollars = salary.total;
       const sumRubles = sumDollars * exchangeRate;
+      const pair = getPairForModel(cm.email);
       return {
         name: cm.fullName || cm.email,
         email: cm.email,
@@ -235,7 +243,9 @@ const ChecksTab = () => {
         sumRubles: Math.round(sumRubles),
         advance: adj.advance,
         penalty: adj.penalty,
-        total: Math.round(sumRubles - adj.advance - adj.penalty)
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        isInPair: !!pair,
+        pairModelPercentage: pair ? pair.model_percentage : undefined
       };
     });
   }

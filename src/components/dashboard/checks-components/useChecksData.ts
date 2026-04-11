@@ -8,6 +8,7 @@ const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-
 const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SALARIES_API_URL = 'https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e';
 const ADJUSTMENTS_API_URL = 'https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7';
+const MODEL_PAIRS_API_URL = 'https://functions.poehali.dev/cdf24c81-2f72-4f88-bddc-77533a2d119f';
 
 export const useChecksData = (currentPeriod: Period) => {
   const [exchangeRate, setExchangeRate] = useState(72.47);
@@ -23,6 +24,7 @@ export const useChecksData = (currentPeriod: Period) => {
   const [users, setUsers] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any>({ operators: {}, models: {}, producers: {} });
   const [adjustments, setAdjustments] = useState<any>({});
+  const [modelPairs, setModelPairs] = useState<any[]>([]);
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -31,6 +33,7 @@ export const useChecksData = (currentPeriod: Period) => {
     loadExchangeRate();
     loadUsers();
     loadAllAssignments();
+    loadModelPairs();
     if (email) {
       loadProducerAssignments(email);
     }
@@ -99,6 +102,18 @@ export const useChecksData = (currentPeriod: Period) => {
     } catch (err) {
       console.error('Failed to load all assignments', err);
       setAllAssignments([]);
+    }
+  };
+
+  const loadModelPairs = async () => {
+    try {
+      const response = await authenticatedFetch(MODEL_PAIRS_API_URL);
+      if (!response.ok) return;
+      const data = await response.json();
+      setModelPairs(Array.isArray(data) ? data.filter((p: any) => p.is_active) : []);
+    } catch (err) {
+      console.error('Failed to load model pairs', err);
+      setModelPairs([]);
     }
   };
 
@@ -267,6 +282,7 @@ export const useChecksData = (currentPeriod: Period) => {
     users,
     salaries,
     adjustments,
+    modelPairs,
     loadExchangeRate,
     handleUpdateProducer,
     handleUpdateEmployee

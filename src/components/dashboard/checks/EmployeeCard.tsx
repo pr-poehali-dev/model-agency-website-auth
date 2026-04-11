@@ -72,19 +72,30 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
         
         {employee.role === 'operator' && employee.operatorPercentage !== undefined && (
           <div className="flex justify-between items-center py-2 border-b bg-emerald-500/5 px-3 rounded">
-            <span className="text-muted-foreground font-medium">Распределение</span>
+            <span className="text-muted-foreground font-medium">Процент</span>
             <span className="font-semibold text-sm">
-              Оп: {employee.operatorPercentage}% | Пр: {employee.producerPercentage}%
+              {employee.operatorPercentage}%
             </span>
           </div>
         )}
         
         {!employee.role && color === 'amber' && (
-          <div className="flex justify-between items-center py-2 border-b bg-amber-500/5 px-3 rounded">
-            <span className="text-muted-foreground font-medium">Процент модели</span>
-            <span className="font-semibold text-lg text-amber-600 dark:text-amber-400">
-              30%
-            </span>
+          <div className="flex flex-col gap-1 py-2 border-b">
+            {employee.isInPair && (
+              <div className="flex justify-center">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                  Пара
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-center bg-amber-500/5 px-3 rounded py-1">
+              <span className="text-muted-foreground font-medium">Процент модели</span>
+              <span className="font-semibold text-lg text-amber-600 dark:text-amber-400">
+                {employee.isInPair && employee.pairModelPercentage !== undefined
+                  ? `${employee.pairModelPercentage}%`
+                  : '30%'}
+              </span>
+            </div>
           </div>
         )}
         

@@ -14,6 +14,8 @@ export interface Employee {
   producerPercentage?: number;
   role?: string;
   soloPercentage?: string;
+  isInPair?: boolean;
+  pairModelPercentage?: number;
 }
 
 export interface ProducerData {
