@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "GET pairs list",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Email": "director@test.com",
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"pairs": []},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

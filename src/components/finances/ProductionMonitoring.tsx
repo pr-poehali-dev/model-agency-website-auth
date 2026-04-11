@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { Period, getPreviousPeriod } from '@/utils/periodUtils';
+import { Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
 
 interface ModelStats {
@@ -54,9 +54,20 @@ interface ProductionMonitoringProps {
   onDataLoaded?: (data: ProducerData[]) => void;
 }
 
+interface ModelPairFinance {
+  id: number;
+  model1_email: string;
+  model2_email: string;
+  model1_name: string;
+  model2_name: string;
+}
+
+const PAIRS_API_URL = 'https://functions.poehali.dev/cdf24c81-2f72-4f88-bddc-77533a2d119f';
+
 const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, onNextPeriod, onDataLoaded }: ProductionMonitoringProps) => {
   const [data, setData] = useState<ProducerData | null>(null);
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
+  const [pairs, setPairs] = useState<ModelPairFinance[]>([]);
   const [loading, setLoading] = useState(true);
   const API_URL = 'https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b';
 
@@ -66,19 +77,27 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
 
   const loadData = async () => {
     setLoading(true);
-    const previousPeriod = getPreviousPeriod(period);
-    
     const periodStart = formatDate(period.startDate);
     const periodEnd = formatDate(period.endDate);
 
     try {
-      const response = await authenticatedFetch(
-        `${API_URL}?user_email=${encodeURIComponent(userEmail)}&role=${userRole}&period_start=${periodStart}&period_end=${periodEnd}`
-      );
-      const result = await response.json();
-      
-      console.log('Production stats loaded:', result);
-      
+      const [statsResponse, pairsResponse] = await Promise.all([
+        authenticatedFetch(
+          `${API_URL}?user_email=${encodeURIComponent(userEmail)}&role=${userRole}&period_start=${periodStart}&period_end=${periodEnd}`
+        ),
+        fetch(PAIRS_API_URL, {
+          headers: {
+            'X-User-Email': userEmail,
+            'X-User-Role': userRole,
+            'X-Auth-Token': localStorage.getItem('authToken') || ''
+          }
+        })
+      ]);
+
+      const result = await statsResponse.json();
+      const pairsData = await pairsResponse.json();
+      setPairs(pairsData.pairs || []);
+
       if (userRole === 'director') {
         const producers = result.producers || [];
         setProducersData(producers);
@@ -149,6 +168,14 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
   }
 
   const renderProducerStats = (producerData: ProducerData, isNested: boolean = false) => {
+    const pairedEmails = new Set(pairs.flatMap(p => [p.model1_email, p.model2_email]));
+    const soloModels = producerData.models.filter(m => !pairedEmails.has(m.email));
+
+    const activePairs = pairs.filter(p =>
+      producerData.models.some(m => m.email === p.model1_email) &&
+      producerData.models.some(m => m.email === p.model2_email)
+    );
+
     const totalCurrentIncome = producerData.models.reduce((sum, m) => sum + m.current_income, 0);
     const totalPreviousIncome = producerData.models.reduce((sum, m) => sum + m.previous_income, 0);
     
@@ -239,7 +266,43 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
                 </tr>
               </thead>
               <tbody>
-                {producerData.models.map((model, index) => (
+                {activePairs.map((pair) => {
+                  const m1 = producerData.models.find(m => m.email === pair.model1_email);
+                  const m2 = producerData.models.find(m => m.email === pair.model2_email);
+                  if (!m1 || !m2) return null;
+                  const curIncome = m1.current_income + m2.current_income;
+                  const prevIncome = m1.previous_income + m2.previous_income;
+                  const curShifts = Math.max(m1.current_shifts, m2.current_shifts);
+                  const prevShifts = Math.max(m1.previous_shifts, m2.previous_shifts);
+                  return (
+                    <tr key={`pair-${pair.id}`} className="border-b hover:bg-muted/20 transition-colors bg-primary/5">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs gap-1 shrink-0">
+                            <Icon name="Users" size={11} />
+                            Пара
+                          </Badge>
+                          <div>
+                            <div className="font-medium">{pair.model1_name} & {pair.model2_name}</div>
+                            <div className="text-xs text-muted-foreground">{pair.model1_email}, {pair.model2_email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-right font-medium">{formatCurrency(curIncome)}</td>
+                      <td className="p-4 text-right text-muted-foreground">{formatCurrency(prevIncome)}</td>
+                      <td className={`p-4 text-right font-medium ${getDifferenceColor(curIncome, prevIncome)}`}>
+                        {getDifference(curIncome, prevIncome)}
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge variant="secondary">{curShifts}</Badge>
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge variant="outline">{prevShifts}</Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {soloModels.map((model, index) => (
                   <tr key={index} className="border-b hover:bg-muted/20 transition-colors">
                     <td className="p-4">
                       <div>
