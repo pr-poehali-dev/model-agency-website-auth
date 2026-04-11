@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { getCurrentPeriod } from '@/utils/periodUtils';
+import { getCurrentPeriod, getPreviousPeriod } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
 import { RATE_OFFSET } from '@/lib/constants';
 
@@ -41,6 +41,12 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const [isLoadingSalary, setIsLoadingSalary] = useState(false);
   const [myProducer, setMyProducer] = useState<string>('MBA Production');
   const [currentPeriodLabel, setCurrentPeriodLabel] = useState<string>('');
+  const [prevSalary, setPrevSalary] = useState<number | null>(null);
+  const [prevAdvance, setPrevAdvance] = useState<number>(0);
+  const [prevPenalty, setPrevPenalty] = useState<number>(0);
+  const [prevExpenses, setPrevExpenses] = useState<number>(0);
+  const [prevPeriodLabel, setPrevPeriodLabel] = useState<string>('');
+  const [isLoadingPrevSalary, setIsLoadingPrevSalary] = useState(false);
 
   useEffect(() => {
     if (userRole === 'director') {
@@ -49,6 +55,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
       loadUsers();
     } else if (userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && userEmail) {
       loadMySalary();
+      loadPrevSalary();
       loadMyProducer();
       
       const interval = setInterval(() => {
@@ -186,6 +193,57 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
     }
   };
 
+  const loadPrevSalary = async () => {
+    if (!userEmail) return;
+    setIsLoadingPrevSalary(true);
+    try {
+      const currentPeriod = getCurrentPeriod();
+      const prevPeriod = getPreviousPeriod(currentPeriod);
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      const periodStart = formatDate(prevPeriod.startDate);
+      const periodEnd = formatDate(prevPeriod.endDate);
+      setPrevPeriodLabel(prevPeriod.label);
+
+      const [salaryRes, adjustmentsRes, rateRes] = await Promise.all([
+        authenticatedFetch(`https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e?period_start=${periodStart}&period_end=${periodEnd}`),
+        authenticatedFetch(`https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7?period_start=${periodStart}&period_end=${periodEnd}`),
+        authenticatedFetch('https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a')
+      ]);
+
+      const salaryData = await salaryRes.json();
+      const adjustmentsData = await adjustmentsRes.json();
+      const rateData = await rateRes.json();
+
+      const exchangeRate = rateData.rate ? rateData.rate - RATE_OFFSET : 95;
+
+      let baseSalaryUSD = 0;
+      if (userRole === 'operator' && salaryData.operators?.[userEmail]) {
+        baseSalaryUSD = salaryData.operators[userEmail].total || 0;
+      } else if ((userRole === 'content_maker' || userRole === 'solo_maker') && salaryData.models?.[userEmail]) {
+        baseSalaryUSD = salaryData.models[userEmail].total || 0;
+      }
+
+      const adjustments = adjustmentsData[userEmail] || { advance: 0, penalty: 0, expenses: 0 };
+      const baseRUB = baseSalaryUSD * exchangeRate;
+      const totalRUB = baseRUB + (adjustments.expenses || 0) - (adjustments.advance || 0) - (adjustments.penalty || 0);
+
+      setPrevSalary(totalRUB);
+      setPrevAdvance(adjustments.advance || 0);
+      setPrevPenalty(adjustments.penalty || 0);
+      setPrevExpenses(adjustments.expenses || 0);
+    } catch (err) {
+      console.error('Failed to load prev salary', err);
+      setPrevSalary(0);
+    } finally {
+      setIsLoadingPrevSalary(false);
+    }
+  };
+
   const loadMyProducer = async () => {
     if (!userEmail || !userRole) return;
     
@@ -247,6 +305,47 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
 
       {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 bg-gradient-to-br from-slate-500/10 to-gray-500/10 border-slate-500/20">
+            <div className="flex items-center justify-between mb-4">
+              <Icon name="History" size={24} className="text-slate-500" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadPrevSalary}
+                disabled={isLoadingPrevSalary}
+                className="h-8 w-8 p-0"
+              >
+                <Icon name="RefreshCw" size={16} className={isLoadingPrevSalary ? 'animate-spin' : ''} />
+              </Button>
+            </div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Прошлый период{prevPeriodLabel ? ` (${prevPeriodLabel})` : ''}</h3>
+            <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
+              {isLoadingPrevSalary ? '...' : prevSalary !== null ? `${Math.round(prevSalary).toLocaleString('ru-RU')} ₽` : '—'}
+            </p>
+            {!isLoadingPrevSalary && prevSalary !== null && (
+              <div className="space-y-1 text-sm">
+                {prevAdvance > 0 && (
+                  <div className="flex justify-between text-red-600 dark:text-red-400">
+                    <span>Аванс:</span>
+                    <span>-{prevAdvance.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+                {prevPenalty > 0 && (
+                  <div className="flex justify-between text-red-600 dark:text-red-400">
+                    <span>Штраф:</span>
+                    <span>-{prevPenalty.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+                {prevExpenses > 0 && (
+                  <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                    <span>Расходы:</span>
+                    <span>+{prevExpenses.toLocaleString('ru-RU')} ₽</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
           <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
             <div className="flex items-center justify-between mb-4">
               <Icon name="Wallet" size={24} className="text-green-600" />
