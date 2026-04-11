@@ -94,7 +94,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             WHERE pma.assignment_type = 'model' AND pma.model_email IS NOT NULL
         """)
         producer_assignments = cur.fetchall()
-        
+
+        cur.execute(f"""
+            SELECT
+                mp.id as pair_id,
+                mp.model1_email,
+                mp.model2_email,
+                mp.model_percentage,
+                mp.operator_percentage,
+                mp.producer_percentage,
+                mp.operator_email,
+                u1.id as model1_id,
+                u2.id as model2_id
+            FROM {schema}.model_pairs mp
+            JOIN {schema}.users u1 ON u1.email = mp.model1_email
+            JOIN {schema}.users u2 ON u2.email = mp.model2_email
+            WHERE mp.is_active = true
+        """)
+        model_pairs = cur.fetchall()
+
+        def get_pair_for_model(model_id_val):
+            for p in model_pairs:
+                if p['model1_id'] == model_id_val or p['model2_id'] == model_id_val:
+                    return p
+            return None
+
         cur.execute(f"""
             SELECT 
                 mf.model_id,
@@ -163,10 +187,79 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_email = model_assignment['model_email'] if model_assignment else None
             if not model_email:
                 model_email = next((u['email'] for u in users if u['user_id'] == model_id), None)
-            
+
+            # Check if this model is part of an active pair
+            pair = get_pair_for_model(model_id)
+
             # Check if this model is a solo_maker
             model_user = next((u for u in users if u['user_id'] == model_id), None)
-            if model_user and model_user.get('role') == 'solo_maker':
+
+            if pair:
+                # PAIR LOGIC: use percentages from model_pairs table
+                pair_model_pct = float(pair['model_percentage'] or 17.5)
+                pair_operator_pct = float(pair['operator_percentage'] or 15.0)
+                pair_producer_pct = float(pair['producer_percentage'] or 10.0)
+                pair_operator_email = pair['operator_email']
+                used_sum = pair_model_pct + pair_operator_pct + pair_producer_pct
+                director_pct = max(0.0, 100.0 - used_sum)
+
+                model_salary = total_check * (pair_model_pct / 100)
+                director_amount = total_check * (director_pct / 100)
+
+                # Override operator_percentage and pair operator for downstream logic
+                operator_percentage = pair_operator_pct
+                pair_producer_salary = total_check * (pair_producer_pct / 100)
+
+                print(f"DEBUG PAIR: model_id={model_id} in pair {pair['pair_id']}, model%={pair_model_pct}, op%={pair_operator_pct}, prod%={pair_producer_pct}, dir%={director_pct}")
+
+                # Add pair producer salary directly here
+                if pair_producer_email_val := next(
+                    (pa['producer_email'] for pa in producer_assignments if pa['model_email'] == model_email),
+                    None
+                ):
+                    if pair_producer_email_val not in producer_salaries:
+                        producer_salaries[pair_producer_email_val] = {'email': pair_producer_email_val, 'total': 0, 'details': []}
+                    producer_salaries[pair_producer_email_val]['total'] += pair_producer_salary
+                    producer_salaries[pair_producer_email_val]['details'].append({
+                        'date': finance['date'].isoformat(),
+                        'model_id': model_id,
+                        'model_email': model_email,
+                        'amount': pair_producer_salary,
+                        'check': total_check,
+                        'note': f'pair_producer_{pair_producer_pct}%'
+                    })
+
+                # Add pair operator salary directly here (if pair has dedicated operator)
+                if pair_operator_email:
+                    op_user = next((u for u in users if u['email'] == pair_operator_email), None)
+                    if op_user and op_user['role'] == 'operator':
+                        pair_op_salary = total_check * (pair_operator_pct / 100)
+                        if pair_operator_email not in operator_salaries:
+                            operator_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
+                        operator_salaries[pair_operator_email]['total'] += pair_op_salary
+                        operator_salaries[pair_operator_email]['details'].append({
+                            'date': finance['date'].isoformat(),
+                            'model_id': model_id,
+                            'model_email': model_email,
+                            'amount': pair_op_salary,
+                            'check': total_check,
+                            'note': f'pair_operator_{pair_operator_pct}%'
+                        })
+                    elif op_user and op_user['role'] == 'producer':
+                        pair_op_salary = total_check * (pair_operator_pct / 100)
+                        if pair_operator_email not in producer_salaries:
+                            producer_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
+                        producer_salaries[pair_operator_email]['total'] += pair_op_salary
+                        producer_salaries[pair_operator_email]['details'].append({
+                            'date': finance['date'].isoformat(),
+                            'model_id': model_id,
+                            'model_email': model_email,
+                            'amount': pair_op_salary,
+                            'check': total_check,
+                            'note': f'pair_operator_as_producer_{pair_operator_pct}%'
+                        })
+
+            elif model_user and model_user.get('role') == 'solo_maker':
                 # For solo makers, use their percentage from profile
                 solo_percentage = int(model_user.get('solo_percentage', '50'))
                 model_salary = total_check * (solo_percentage / 100)
@@ -190,66 +283,56 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             producer_operator_email = None
             assigned_operator_email = None
             operator_user = None
-            
-            if operator_name:
-                print(f"DEBUG: operator_name '{operator_name}' found in finance row for model_id={model_id}")
-                # Try to find by email first (new format), then by full_name (old format)
-                operator_user = next((u for u in users if u['email'] == operator_name or u['full_name'] == operator_name), None)
-                if operator_user:
-                    assigned_operator_email = operator_user['email']
-                    print(f"DEBUG: Found operator user {assigned_operator_email} with role {operator_user['role']}")
-                    
-                    if operator_user['role'] == 'operator':
-                        operator_email = assigned_operator_email
-                    elif operator_user['role'] == 'producer':
-                        producer_operator_email = assigned_operator_email
+
+            if not pair:
+                # OLD LOGIC: resolve operator from finance row operator_name
+                if operator_name:
+                    print(f"DEBUG: operator_name '{operator_name}' found in finance row for model_id={model_id}")
+                    operator_user = next((u for u in users if u['email'] == operator_name or u['full_name'] == operator_name), None)
+                    if operator_user:
+                        assigned_operator_email = operator_user['email']
+                        print(f"DEBUG: Found operator user {assigned_operator_email} with role {operator_user['role']}")
+                        if operator_user['role'] == 'operator':
+                            operator_email = assigned_operator_email
+                        elif operator_user['role'] == 'producer':
+                            producer_operator_email = assigned_operator_email
                     else:
-                        print(f"DEBUG: operator {assigned_operator_email} has wrong role {operator_user['role']}")
+                        print(f"DEBUG: operator_name '{operator_name}' not found in users")
                 else:
-                    print(f"DEBUG: operator_name '{operator_name}' not found in users")
-            else:
-                print(f"DEBUG: No operator_name for model_id={model_id}, no operator salary will be calculated")
-            
-            print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
-            
-            if producer_operator_email:
-                operator_salary = total_check * (operator_percentage / 100)
-                producer_percentage = 30 - operator_percentage
-                producer_salary = total_check * (producer_percentage / 100)
-                combined_salary = operator_salary + producer_salary
-                if producer_operator_email not in producer_salaries:
-                    producer_salaries[producer_operator_email] = {
-                        'email': producer_operator_email,
-                        'total': 0,
-                        'details': []
-                    }
-                producer_salaries[producer_operator_email]['total'] += combined_salary
-                producer_salaries[producer_operator_email]['details'].append({
-                    'date': finance['date'].isoformat(),
-                    'model_id': model_id,
-                    'model_email': model_email,
-                    'amount': combined_salary,
-                    'check': total_check,
-                    'note': f'operator_{operator_percentage}%_+_producer_{producer_percentage}%'
-                })
-            elif operator_email:
-                operator_salary = total_check * (operator_percentage / 100)
-                if operator_email not in operator_salaries:
-                    operator_salaries[operator_email] = {
-                        'email': operator_email,
-                        'total': 0,
-                        'details': []
-                    }
-                operator_salaries[operator_email]['total'] += operator_salary
-                operator_salaries[operator_email]['details'].append({
-                    'date': finance['date'].isoformat(),
-                    'model_id': model_id,
-                    'amount': operator_salary,
-                    'check': total_check
-                })
-            else:
-                print(f"DEBUG: No operator assigned for model_id={model_id}, producer gets 10%")
-            
+                    print(f"DEBUG: No operator_name for model_id={model_id}, no operator salary will be calculated")
+
+                print(f"DEBUG: model_id={model_id}, assigned_operator={assigned_operator_email}, operator_email={operator_email}, producer_operator_email={producer_operator_email}, model_email={model_email}")
+
+                if producer_operator_email:
+                    op_sal = total_check * (operator_percentage / 100)
+                    producer_percentage = 30 - operator_percentage
+                    prod_sal = total_check * (producer_percentage / 100)
+                    combined_salary = op_sal + prod_sal
+                    if producer_operator_email not in producer_salaries:
+                        producer_salaries[producer_operator_email] = {'email': producer_operator_email, 'total': 0, 'details': []}
+                    producer_salaries[producer_operator_email]['total'] += combined_salary
+                    producer_salaries[producer_operator_email]['details'].append({
+                        'date': finance['date'].isoformat(),
+                        'model_id': model_id,
+                        'model_email': model_email,
+                        'amount': combined_salary,
+                        'check': total_check,
+                        'note': f'operator_{operator_percentage}%_+_producer_{producer_percentage}%'
+                    })
+                elif operator_email:
+                    op_sal = total_check * (operator_percentage / 100)
+                    if operator_email not in operator_salaries:
+                        operator_salaries[operator_email] = {'email': operator_email, 'total': 0, 'details': []}
+                    operator_salaries[operator_email]['total'] += op_sal
+                    operator_salaries[operator_email]['details'].append({
+                        'date': finance['date'].isoformat(),
+                        'model_id': model_id,
+                        'amount': op_sal,
+                        'check': total_check
+                    })
+                else:
+                    print(f"DEBUG: No operator assigned for model_id={model_id}, producer gets 10%")
+
             if model_email:
                 if model_email not in model_salaries:
                     model_salaries[model_email] = {
@@ -263,28 +346,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'amount': model_salary,
                     'check': total_check
                 })
-                
-                if total_check > 0:
+
+                if not pair and total_check > 0:
                     producer_assignment = next((pa for pa in producer_assignments if pa['model_email'] == model_email), None)
                     print(f"DEBUG: Looking for producer with model_email={model_email}, found={producer_assignment is not None}")
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
-                        
+
                         if operator_email or producer_operator_email:
                             producer_percentage = 30 - operator_percentage
                         else:
                             producer_percentage = 30
                             print(f"DEBUG: No operator for model_id={model_id}, producer gets 30%")
-                        
+
                         producer_salary_amount = total_check * (producer_percentage / 100)
-                        
+
                         if producer_email not in producer_salaries:
                             producer_salaries[producer_email] = {
                                 'email': producer_email,
                                 'total': 0,
                                 'details': []
                             }
-                        
+
                         if producer_email == producer_operator_email:
                             print(f"DEBUG: Producer {producer_email} already paid as operator, adding to details with 0 amount")
                             producer_salaries[producer_email]['details'].append({
