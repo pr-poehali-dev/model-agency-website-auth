@@ -831,6 +831,70 @@ const ModelsTab = ({
                       </div>
                     )}
 
+                    {/* Финансы и аккаунты пары */}
+                    {canManagePairs && (() => {
+                      const m1 = displayModels.find(m => m.email === pair.model1_email);
+                      const m2 = displayModels.find(m => m.email === pair.model2_email);
+                      return (
+                        <div className="pt-2 border-t space-y-2">
+                          {onViewFinances && (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="flex-1 gap-1 text-xs"
+                                onClick={() => m1 && onViewFinances(m1.id, pair.model1_name)}
+                              >
+                                <Icon name="DollarSign" size={13} />
+                                {pair.model1_name.split(' ')[0]}
+                              </Button>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="flex-1 gap-1 text-xs"
+                                onClick={() => m2 && onViewFinances(m2.id, pair.model2_name)}
+                              >
+                                <Icon name="DollarSign" size={13} />
+                                {pair.model2_name.split(' ')[0]}
+                              </Button>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 gap-1 text-xs"
+                              onClick={async () => {
+                                if (!m1) return;
+                                setSelectedModel(m1);
+                                const accounts = await fetchModelAccounts(m1.id);
+                                setModelAccounts({ ...modelAccounts, [m1.id]: accounts });
+                                setAccountsDialogOpen(true);
+                              }}
+                            >
+                              <Icon name="Globe" size={13} />
+                              {modelAccounts[m1?.id ?? 0] ? 'Аккаунты' : 'Добавить'} 1
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 gap-1 text-xs"
+                              onClick={async () => {
+                                if (!m2) return;
+                                setSelectedModel(m2);
+                                const accounts = await fetchModelAccounts(m2.id);
+                                setModelAccounts({ ...modelAccounts, [m2.id]: accounts });
+                                setAccountsDialogOpen(true);
+                              }}
+                            >
+                              <Icon name="Globe" size={13} />
+                              {modelAccounts[m2?.id ?? 0] ? 'Аккаунты' : 'Добавить'} 2
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Проценты и оператор */}
                     {canManagePairs && (
                       <div className="pt-2 border-t space-y-1">
