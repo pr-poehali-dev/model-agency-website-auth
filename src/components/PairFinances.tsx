@@ -242,18 +242,22 @@ const PairFinances = ({
       const data1 = res1.ok ? await res1.json() : [];
       const data2 = res2.ok ? await res2.json() : [];
 
-      const merged1 = initial.map((day) => {
+      // Пара работает как единый счёт: берём данные только из первой модели.
+      // Вторая модель используется только как резерв, если у первой нет данных за день.
+      const merged = initial.map((day) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const saved = Array.isArray(data1) ? data1.find((d: any) => d.date === day.date) : null;
-        return saved ? parseSavedDay(saved, day) : day;
-      });
-      const merged2 = initial.map((day) => {
+        const saved1 = Array.isArray(data1) ? data1.find((d: any) => d.date === day.date) : null;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const saved = Array.isArray(data2) ? data2.find((d: any) => d.date === day.date) : null;
-        return saved ? parseSavedDay(saved, day) : day;
+        const saved2 = Array.isArray(data2) ? data2.find((d: any) => d.date === day.date) : null;
+        const hasData1 = saved1 && (saved1.cbTokens || saved1.spTokens || saved1.sodaTokens || saved1.cam4Tokens || saved1.transfers || saved1.cb || saved1.sp || saved1.soda);
+        const hasData2 = saved2 && (saved2.cbTokens || saved2.spTokens || saved2.sodaTokens || saved2.cam4Tokens || saved2.transfers || saved2.cb || saved2.sp || saved2.soda);
+        if (hasData1) return parseSavedDay(saved1, day);
+        if (hasData2) return parseSavedDay(saved2, day);
+        if (saved1) return parseSavedDay(saved1, day);
+        return day;
       });
 
-      setOnlineData(merged1.map((day, i) => mergeDays(day, merged2[i])));
+      setOnlineData(merged);
     } catch (err) {
       console.error("Failed to load financial data", err);
       setOnlineData(generateInitialData(currentPeriod));
