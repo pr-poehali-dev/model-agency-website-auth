@@ -14,6 +14,7 @@ import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
+import PairFinances from '@/components/PairFinances';
 import CalculationTab from '@/components/CalculationTab';
 import SettingsTab from '@/components/SettingsTab';
 import TasksTab from '@/components/TasksTab';
@@ -78,6 +79,7 @@ const STATISTICS_API_URL = 'https://functions.poehali.dev/a154a7bf-592e-48d3-b0c
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [selectedPair, setSelectedPair] = useState<{ m1Id: number; m1Name: string; m2Id: number; m2Name: string } | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -252,10 +254,31 @@ const Dashboard = () => {
 
   const handleViewModelFinances = (modelId: number, modelName: string) => {
     setSelectedModelId(modelId);
+    setSelectedPair(null);
+    setActiveTab('model-finances');
+  };
+
+  const handleViewPairFinances = (m1Id: number, m1Name: string, m2Id: number, m2Name: string) => {
+    setSelectedPair({ m1Id, m1Name, m2Id, m2Name });
+    setSelectedModelId(null);
     setActiveTab('model-finances');
   };
 
   const renderTabContent = () => {
+    if (activeTab === 'model-finances' && selectedPair) {
+      return (
+        <PairFinances
+          model1Id={selectedPair.m1Id}
+          model1Name={selectedPair.m1Name}
+          model2Id={selectedPair.m2Id}
+          model2Name={selectedPair.m2Name}
+          currentUserEmail={userEmail}
+          userRole={userRole || undefined}
+          onBack={() => setActiveTab('models')}
+        />
+      );
+    }
+
     if (activeTab === 'model-finances' && selectedModelId) {
       const model = modelsData.find(m => m.id === selectedModelId);
       return (
@@ -284,6 +307,7 @@ const Dashboard = () => {
           producerAssignments={producerAssignments}
           assignedProducer={assignedProducer}
           onViewFinances={handleViewModelFinances}
+          onViewPairFinances={handleViewPairFinances}
           userRole={userRole || undefined}
         />;
       case 'finances':

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import ModelAccountsDialog from '@/components/ModelAccountsDialog';
+import PairAccountsDialog from '@/components/PairAccountsDialog';
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ interface ModelsTabProps {
   producerAssignments?: number[];
   assignedProducer?: string;
   onViewFinances?: (modelId: number, modelName: string) => void;
+  onViewPairFinances?: (model1Id: number, model1Name: string, model2Id: number, model2Name: string) => void;
   userRole?: string;
 }
 
@@ -72,6 +74,7 @@ const ModelsTab = ({
   producerAssignments = [],
   assignedProducer = '',
   onViewFinances,
+  onViewPairFinances,
   userRole 
 }: ModelsTabProps) => {
 
@@ -92,6 +95,10 @@ const ModelsTab = ({
   const [uploadingPairPhoto, setUploadingPairPhoto] = useState<number | null>(null);
   const pairPhotoInputRef = useRef<HTMLInputElement>(null);
   const [activePairPhotoId, setActivePairPhotoId] = useState<number | null>(null);
+
+  // Аккаунты пары
+  const [pairAccountsDialogOpen, setPairAccountsDialogOpen] = useState(false);
+  const [selectedPairForAccounts, setSelectedPairForAccounts] = useState<ModelPair | null>(null);
 
   // Настройки пары (проценты + оператор)
   const [settingsDialogPair, setSettingsDialogPair] = useState<ModelPair | null>(null);
@@ -554,6 +561,46 @@ const ModelsTab = ({
         />
       )}
 
+      {selectedPairForAccounts && (() => {
+        const m1 = displayModels.find(m => m.email === selectedPairForAccounts.model1_email);
+        const m2 = displayModels.find(m => m.email === selectedPairForAccounts.model2_email);
+        return (
+          <PairAccountsDialog
+            open={pairAccountsDialogOpen}
+            onOpenChange={setPairAccountsDialogOpen}
+            model1Name={selectedPairForAccounts.model1_name}
+            model2Name={selectedPairForAccounts.model2_name}
+            model1Accounts={(modelAccounts[m1?.id ?? -1] || {}) as Record<string, { login: string; password: string }>}
+            model2Accounts={(modelAccounts[m2?.id ?? -1] || {}) as Record<string, { login: string; password: string }>}
+            userRole={userRole}
+            onSave1={async (accounts) => {
+              if (!m1) return;
+              const response = await fetch('https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-User-Role': userRole || 'operator' },
+                body: JSON.stringify({ model_id: m1.id, model_name: m1.name, accounts }),
+              });
+              if (response.ok) {
+                setModelAccounts(prev => ({ ...prev, [m1.id]: accounts }));
+                toast({ title: 'Успешно', description: `Аккаунты ${m1.name} сохранены` });
+              }
+            }}
+            onSave2={async (accounts) => {
+              if (!m2) return;
+              const response = await fetch('https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-User-Role': userRole || 'operator' },
+                body: JSON.stringify({ model_id: m2.id, model_name: m2.name, accounts }),
+              });
+              if (response.ok) {
+                setModelAccounts(prev => ({ ...prev, [m2.id]: accounts }));
+                toast({ title: 'Успешно', description: `Аккаунты ${m2.name} сохранены` });
+              }
+            }}
+          />
+        );
+      })()}
+
       {/* Скрытый input для загрузки фото пары */}
       <input
         ref={pairPhotoInputRef}
@@ -836,60 +883,41 @@ const ModelsTab = ({
                       const m1 = displayModels.find(m => m.email === pair.model1_email);
                       const m2 = displayModels.find(m => m.email === pair.model2_email);
                       return (
-                        <div className="pt-2 border-t space-y-2">
-                          {onViewFinances && (
-                            <div className="flex gap-2">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="flex-1 gap-1 text-xs"
-                                onClick={() => m1 && onViewFinances(m1.id, pair.model1_name)}
-                              >
-                                <Icon name="DollarSign" size={13} />
-                                {pair.model1_name.split(' ')[0]}
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="flex-1 gap-1 text-xs"
-                                onClick={() => m2 && onViewFinances(m2.id, pair.model2_name)}
-                              >
-                                <Icon name="DollarSign" size={13} />
-                                {pair.model2_name.split(' ')[0]}
-                              </Button>
-                            </div>
-                          )}
+                        <div className="pt-2 border-t">
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 gap-1 text-xs"
-                              onClick={async () => {
-                                if (!m1) return;
-                                setSelectedModel(m1);
-                                const accounts = await fetchModelAccounts(m1.id);
-                                setModelAccounts({ ...modelAccounts, [m1.id]: accounts });
-                                setAccountsDialogOpen(true);
-                              }}
-                            >
-                              <Icon name="Globe" size={13} />
-                              {modelAccounts[m1?.id ?? 0] ? 'Аккаунты' : 'Добавить'} 1
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 gap-1 text-xs"
-                              onClick={async () => {
-                                if (!m2) return;
-                                setSelectedModel(m2);
-                                const accounts = await fetchModelAccounts(m2.id);
-                                setModelAccounts({ ...modelAccounts, [m2.id]: accounts });
-                                setAccountsDialogOpen(true);
-                              }}
-                            >
-                              <Icon name="Globe" size={13} />
-                              {modelAccounts[m2?.id ?? 0] ? 'Аккаунты' : 'Добавить'} 2
-                            </Button>
+                            {onViewPairFinances && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="flex-1 gap-2"
+                                onClick={() => {
+                                  if (m1 && m2) onViewPairFinances(m1.id, pair.model1_name, m2.id, pair.model2_name);
+                                }}
+                              >
+                                <Icon name="DollarSign" size={16} />
+                                Финансы
+                              </Button>
+                            )}
+                            {(userRole === 'operator' || userRole === 'producer' || userRole === 'director' || userRole === 'solo_maker') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 gap-2"
+                                onClick={async () => {
+                                  if (!m1 || !m2) return;
+                                  const [acc1, acc2] = await Promise.all([
+                                    fetchModelAccounts(m1.id),
+                                    fetchModelAccounts(m2.id),
+                                  ]);
+                                  setModelAccounts({ ...modelAccounts, [m1.id]: acc1, [m2.id]: acc2 });
+                                  setSelectedPairForAccounts(pair);
+                                  setPairAccountsDialogOpen(true);
+                                }}
+                              >
+                                <Icon name="Globe" size={16} />
+                                Аккаунты
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
