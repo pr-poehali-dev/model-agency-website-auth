@@ -113,9 +113,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """)
         model_pairs = cur.fetchall()
 
+        print(f"DEBUG PAIRS LOADED: {[(p['pair_id'], p['model1_id'], p['model2_id'], type(p['model1_id'])) for p in model_pairs]}")
+
         def get_pair_for_model(model_id_val):
+            mid = int(model_id_val)
             for p in model_pairs:
-                if p['model1_id'] == model_id_val or p['model2_id'] == model_id_val:
+                if int(p['model1_id']) == mid or int(p['model2_id']) == mid:
                     return p
             return None
 
