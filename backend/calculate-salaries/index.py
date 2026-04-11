@@ -159,6 +159,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         operator_salaries = {}
         model_salaries = {}
         producer_salaries = {}
+        paid_pair_dates = set()  # tracks (pair_id, date) to avoid double-paying operator/producer
         
         for finance in finances:
             model_id = finance['model_id']
@@ -212,52 +213,82 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
                 print(f"DEBUG PAIR: model_id={model_id} in pair {pair['pair_id']}, model%={pair_model_pct}, op%={pair_operator_pct}, prod%={pair_producer_pct}, dir%={director_pct}")
 
-                # Add pair producer salary directly here
-                if pair_producer_email_val := next(
-                    (pa['producer_email'] for pa in producer_assignments if pa['model_email'] == model_email),
-                    None
-                ):
-                    if pair_producer_email_val not in producer_salaries:
-                        producer_salaries[pair_producer_email_val] = {'email': pair_producer_email_val, 'total': 0, 'details': []}
-                    producer_salaries[pair_producer_email_val]['total'] += pair_producer_salary
-                    producer_salaries[pair_producer_email_val]['details'].append({
-                        'date': finance['date'].isoformat(),
-                        'model_id': model_id,
-                        'model_email': model_email,
-                        'amount': pair_producer_salary,
-                        'check': total_check,
-                        'note': f'pair_producer_{pair_producer_pct}%'
-                    })
+                pair_date_key = (pair['pair_id'], finance['date'].isoformat())
+                is_first_model_in_pair = pair_date_key not in paid_pair_dates
 
-                # Add pair operator salary directly here (if pair has dedicated operator)
-                if pair_operator_email:
-                    op_user = next((u for u in users if u['email'] == pair_operator_email), None)
-                    if op_user and op_user['role'] == 'operator':
-                        pair_op_salary = total_check * (pair_operator_pct / 100)
-                        if pair_operator_email not in operator_salaries:
-                            operator_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
-                        operator_salaries[pair_operator_email]['total'] += pair_op_salary
-                        operator_salaries[pair_operator_email]['details'].append({
+                if is_first_model_in_pair:
+                    paid_pair_dates.add(pair_date_key)
+
+                    # Sum both models' total_check for this pair on this date
+                    other_model_id = pair['model2_id'] if pair['model1_id'] == model_id else pair['model1_id']
+                    other_finances = [f for f in finances if f['model_id'] == other_model_id and f['date'] == finance['date']]
+                    pair_total_check = total_check
+                    for of in other_finances:
+                        ocb = float(of['cb_tokens'] or 0) * 0.045
+                        osp = float(of['sp_tokens'] or 0) * 0.05
+                        osoda = float(of['soda_tokens'] or 0) * 0.04
+                        ocam4 = float(of['cam4_tokens'] or 0)
+                        otransfers = float(of['transfers'] or 0)
+                        pair_total_check += ocb + osp + osoda + ocam4 + otransfers
+
+                    pair_op_salary = pair_total_check * (pair_operator_pct / 100)
+                    pair_prod_salary = pair_total_check * (pair_producer_pct / 100)
+
+                    print(f"DEBUG PAIR pay: pair_id={pair['pair_id']}, date={finance['date']}, pair_total_check=${pair_total_check:.2f}, op={pair_operator_pct}%=${pair_op_salary:.2f}, prod={pair_producer_pct}%=${pair_prod_salary:.2f}")
+
+                    # Pay producer
+                    pair_producer_email_val = next(
+                        (pa['producer_email'] for pa in producer_assignments if pa['model_email'] == model_email),
+                        None
+                    )
+                    if not pair_producer_email_val:
+                        other_model_email = pair['model2_email'] if pair['model1_id'] == model_id else pair['model1_email']
+                        pair_producer_email_val = next(
+                            (pa['producer_email'] for pa in producer_assignments if pa['model_email'] == other_model_email),
+                            None
+                        )
+                    if pair_producer_email_val:
+                        if pair_producer_email_val not in producer_salaries:
+                            producer_salaries[pair_producer_email_val] = {'email': pair_producer_email_val, 'total': 0, 'details': []}
+                        producer_salaries[pair_producer_email_val]['total'] += pair_prod_salary
+                        producer_salaries[pair_producer_email_val]['details'].append({
                             'date': finance['date'].isoformat(),
                             'model_id': model_id,
                             'model_email': model_email,
-                            'amount': pair_op_salary,
-                            'check': total_check,
-                            'note': f'pair_operator_{pair_operator_pct}%'
+                            'amount': pair_prod_salary,
+                            'check': pair_total_check,
+                            'note': f'pair_producer_{pair_producer_pct}%'
                         })
-                    elif op_user and op_user['role'] == 'producer':
-                        pair_op_salary = total_check * (pair_operator_pct / 100)
-                        if pair_operator_email not in producer_salaries:
-                            producer_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
-                        producer_salaries[pair_operator_email]['total'] += pair_op_salary
-                        producer_salaries[pair_operator_email]['details'].append({
-                            'date': finance['date'].isoformat(),
-                            'model_id': model_id,
-                            'model_email': model_email,
-                            'amount': pair_op_salary,
-                            'check': total_check,
-                            'note': f'pair_operator_as_producer_{pair_operator_pct}%'
-                        })
+
+                    # Pay operator
+                    if pair_operator_email:
+                        op_user = next((u for u in users if u['email'] == pair_operator_email), None)
+                        if op_user and op_user['role'] == 'operator':
+                            if pair_operator_email not in operator_salaries:
+                                operator_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
+                            operator_salaries[pair_operator_email]['total'] += pair_op_salary
+                            operator_salaries[pair_operator_email]['details'].append({
+                                'date': finance['date'].isoformat(),
+                                'model_id': model_id,
+                                'model_email': model_email,
+                                'amount': pair_op_salary,
+                                'check': pair_total_check,
+                                'note': f'pair_operator_{pair_operator_pct}%'
+                            })
+                        elif op_user and op_user['role'] == 'producer':
+                            if pair_operator_email not in producer_salaries:
+                                producer_salaries[pair_operator_email] = {'email': pair_operator_email, 'total': 0, 'details': []}
+                            producer_salaries[pair_operator_email]['total'] += pair_op_salary
+                            producer_salaries[pair_operator_email]['details'].append({
+                                'date': finance['date'].isoformat(),
+                                'model_id': model_id,
+                                'model_email': model_email,
+                                'amount': pair_op_salary,
+                                'check': pair_total_check,
+                                'note': f'pair_operator_as_producer_{pair_operator_pct}%'
+                            })
+                else:
+                    print(f"DEBUG PAIR skip: pair_id={pair['pair_id']}, date={finance['date']}, already paid op/prod for this pair today")
 
             elif model_user and model_user.get('role') == 'solo_maker':
                 # For solo makers, use their percentage from profile
