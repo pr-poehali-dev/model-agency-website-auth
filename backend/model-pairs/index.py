@@ -1,6 +1,6 @@
 '''
 Управление парами моделей (две модели работают вместе на одной смене).
-Методы: GET — получить все пары, POST — создать пару, DELETE — удалить пару, PUT — обновить фото пары.
+GET — список пар, POST — создать пару, PUT — обновить настройки/фото/оператора, DELETE — расформировать.
 Доступно директорам и продюсерам.
 '''
 
@@ -57,10 +57,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     u1.full_name AS model1_name,
                     u1.photo_url AS model1_photo,
                     u2.full_name AS model2_name,
-                    u2.photo_url AS model2_photo
+                    u2.photo_url AS model2_photo,
+                    mp.model_percentage,
+                    mp.operator_percentage,
+                    mp.producer_percentage,
+                    mp.operator_email,
+                    uop.full_name AS operator_name
                 FROM {SCHEMA}.model_pairs mp
                 LEFT JOIN {SCHEMA}.users u1 ON u1.email = mp.model1_email
                 LEFT JOIN {SCHEMA}.users u2 ON u2.email = mp.model2_email
+                LEFT JOIN {SCHEMA}.users uop ON uop.email = mp.operator_email
                 WHERE mp.is_active = true
                 ORDER BY mp.created_at DESC
             """)
@@ -78,7 +84,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'model1_name': row[7] or row[1],
                     'model1_photo': row[8],
                     'model2_name': row[9] or row[2],
-                    'model2_photo': row[10]
+                    'model2_photo': row[10],
+                    'model_percentage': float(row[11]) if row[11] is not None else 17.5,
+                    'operator_percentage': float(row[12]) if row[12] is not None else 15.0,
+                    'producer_percentage': float(row[13]) if row[13] is not None else 10.0,
+                    'operator_email': row[14],
+                    'operator_name': row[15]
                 })
             return {
                 'statusCode': 200,
@@ -105,21 +116,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Нельзя объединить модель с самой собой'})
                 }
 
-            # Проверяем, что ни одна из моделей уже не в активной паре
             cur.execute(f"""
                 SELECT id FROM {SCHEMA}.model_pairs
                 WHERE is_active = true
                 AND (model1_email = %s OR model2_email = %s OR model1_email = %s OR model2_email = %s)
             """, (model1_email, model1_email, model2_email, model2_email))
-            existing = cur.fetchone()
-            if existing:
+            if cur.fetchone():
                 return {
                     'statusCode': 409,
                     'headers': {**cors_headers, 'Content-Type': 'application/json'},
                     'body': json.dumps({'error': 'Одна из моделей уже состоит в активной паре'})
                 }
 
-            # Нормализуем порядок (меньший email первым)
             e1, e2 = sorted([model1_email, model2_email])
 
             cur.execute(f"""
@@ -141,7 +149,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'PUT':
             body = json.loads(event.get('body') or '{}')
             pair_id = body.get('pair_id')
-            pair_photo_url = body.get('pair_photo_url')
 
             if not pair_id:
                 return {
@@ -150,12 +157,48 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Укажите pair_id'})
                 }
 
+            # Строим UPDATE динамически — обновляем только переданные поля
+            fields = []
+            values = []
+
+            if 'pair_photo_url' in body:
+                fields.append('pair_photo_url = %s')
+                values.append(body['pair_photo_url'])
+
+            if 'model_percentage' in body:
+                mp = float(body['model_percentage'])
+                op = float(body.get('operator_percentage', 0))
+                pp = float(body.get('producer_percentage', 0))
+                total = mp * 2 + op + pp
+                if round(total, 2) != 60.0:
+                    return {
+                        'statusCode': 400,
+                        'headers': {**cors_headers, 'Content-Type': 'application/json'},
+                        'body': json.dumps({'error': f'Сумма процентов должна быть 60%. Сейчас: {total}%'})
+                    }
+                fields += ['model_percentage = %s', 'operator_percentage = %s', 'producer_percentage = %s']
+                values += [mp, op, pp]
+
+            if 'operator_email' in body:
+                fields.append('operator_email = %s')
+                values.append(body['operator_email'] or None)
+
+            if not fields:
+                return {
+                    'statusCode': 400,
+                    'headers': {**cors_headers, 'Content-Type': 'application/json'},
+                    'body': json.dumps({'error': 'Нет данных для обновления'})
+                }
+
+            fields.append('updated_at = NOW()')
+            values.append(pair_id)
+
             cur.execute(f"""
                 UPDATE {SCHEMA}.model_pairs
-                SET pair_photo_url = %s, updated_at = NOW()
+                SET {', '.join(fields)}
                 WHERE id = %s
                 RETURNING id
-            """, (pair_photo_url, pair_id))
+            """, values)
             updated = cur.fetchone()
             conn.commit()
 

@@ -47,6 +47,11 @@ interface ModelPair {
   model1_photo: string | null;
   model2_name: string;
   model2_photo: string | null;
+  model_percentage: number;
+  operator_percentage: number;
+  producer_percentage: number;
+  operator_email: string | null;
+  operator_name: string | null;
 }
 
 interface ModelsTabProps {
@@ -88,6 +93,15 @@ const ModelsTab = ({
   const pairPhotoInputRef = useRef<HTMLInputElement>(null);
   const [activePairPhotoId, setActivePairPhotoId] = useState<number | null>(null);
 
+  // Настройки пары (проценты + оператор)
+  const [settingsDialogPair, setSettingsDialogPair] = useState<ModelPair | null>(null);
+  const [settingsModelPct, setSettingsModelPct] = useState<string>('17.5');
+  const [settingsOperatorPct, setSettingsOperatorPct] = useState<string>('15');
+  const [settingsProducerPct, setSettingsProducerPct] = useState<string>('10');
+  const [settingsOperatorEmail, setSettingsOperatorEmail] = useState<string>('');
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [operators, setOperators] = useState<Record<string, string>[]>([]);
+
   const BACKEND_URL = 'https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c';
   const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
   const USERS_API_URL = AUTH_API_URL;
@@ -126,6 +140,72 @@ const ModelsTab = ({
     } catch (error) {
       console.error('Error loading pairs:', error);
     }
+  };
+
+  const loadOperators = async () => {
+    try {
+      const response = await fetch(USERS_API_URL, {
+        headers: { 'X-Auth-Token': localStorage.getItem('authToken') || '' },
+        credentials: 'include'
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const ops = (Array.isArray(data) ? data : []).filter((u: Record<string, string>) => u.role === 'operator');
+      setOperators(ops);
+    } catch (_) {
+      setOperators([]);
+    }
+  };
+
+  const openPairSettings = async (pair: ModelPair) => {
+    setSettingsDialogPair(pair);
+    setSettingsModelPct(String(pair.model_percentage ?? 17.5));
+    setSettingsOperatorPct(String(pair.operator_percentage ?? 15));
+    setSettingsProducerPct(String(pair.producer_percentage ?? 10));
+    setSettingsOperatorEmail(pair.operator_email || '');
+    await loadOperators();
+  };
+
+  const handleSavePairSettings = async () => {
+    if (!settingsDialogPair) return;
+    setSettingsSaving(true);
+    try {
+      const mp = parseFloat(settingsModelPct) || 0;
+      const op = parseFloat(settingsOperatorPct) || 0;
+      const pp = parseFloat(settingsProducerPct) || 0;
+      const response = await fetch(PAIRS_API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail,
+          'X-User-Role': userRole || '',
+          'X-Auth-Token': localStorage.getItem('authToken') || ''
+        },
+        body: JSON.stringify({
+          pair_id: settingsDialogPair.id,
+          model_percentage: mp,
+          operator_percentage: op,
+          producer_percentage: pp,
+          operator_email: settingsOperatorEmail || null
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Ошибка');
+      toast({ title: 'Настройки сохранены' });
+      setSettingsDialogPair(null);
+      await loadPairs();
+    } catch (error) {
+      toast({ title: 'Ошибка', description: error instanceof Error ? error.message : 'Не удалось сохранить', variant: 'destructive' });
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const settingsTotal = () => {
+    const mp = parseFloat(settingsModelPct) || 0;
+    const op = parseFloat(settingsOperatorPct) || 0;
+    const pp = parseFloat(settingsProducerPct) || 0;
+    return Math.round((mp * 2 + op + pp) * 100) / 100;
   };
 
   const loadAllModelAccounts = async () => {
@@ -533,6 +613,93 @@ const ModelsTab = ({
         </DialogContent>
       </Dialog>
 
+      {/* Диалог настроек пары */}
+      <Dialog open={!!settingsDialogPair} onOpenChange={(open) => { if (!open) setSettingsDialogPair(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Настройки пары</DialogTitle>
+          </DialogHeader>
+          {settingsDialogPair && (
+            <div className="space-y-5 pt-2">
+              <p className="text-sm text-muted-foreground">
+                {settingsDialogPair.model1_name} & {settingsDialogPair.model2_name}
+              </p>
+
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Распределение 60% от общего чека</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Каждой модели (%)</label>
+                    <Input
+                      type="number"
+                      min="0" max="60" step="0.5"
+                      value={settingsModelPct}
+                      onChange={e => setSettingsModelPct(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">× 2 = {((parseFloat(settingsModelPct)||0)*2).toFixed(1)}%</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Оператору (%)</label>
+                    <Input
+                      type="number"
+                      min="0" max="60" step="0.5"
+                      value={settingsOperatorPct}
+                      onChange={e => setSettingsOperatorPct(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Продюсеру (%)</label>
+                    <Input
+                      type="number"
+                      min="0" max="60" step="0.5"
+                      value={settingsProducerPct}
+                      onChange={e => setSettingsProducerPct(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1 flex flex-col justify-end">
+                    <label className="text-xs text-muted-foreground">Итого</label>
+                    <div className={`text-lg font-bold ${settingsTotal() === 60 ? 'text-green-600' : 'text-destructive'}`}>
+                      {settingsTotal()}% / 60%
+                    </div>
+                  </div>
+                </div>
+
+                {settingsTotal() !== 60 && (
+                  <p className="text-xs text-destructive">Сумма должна быть ровно 60%</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Оператор пары</label>
+                <select
+                  value={settingsOperatorEmail}
+                  onChange={e => setSettingsOperatorEmail(e.target.value)}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Без оператора</option>
+                  {operators.map((op) => (
+                    <option key={op.email} value={op.email}>{op.fullName || op.email}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={() => setSettingsDialogPair(null)}>Отмена</Button>
+                <Button
+                  className="flex-1"
+                  disabled={settingsSaving || settingsTotal() !== 60}
+                  onClick={handleSavePairSettings}
+                >
+                  {settingsSaving ? <Icon name="Loader2" size={16} className="animate-spin mr-2" /> : null}
+                  Сохранить
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {(filteredModels.length === 0 && filteredPairs.length === 0) && searchQuery && (
         <Card className="p-8 text-center">
           <Icon name="Search" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
@@ -661,6 +828,35 @@ const ModelsTab = ({
                             </Button>
                           )}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Проценты и оператор */}
+                    {canManagePairs && (
+                      <div className="pt-2 border-t space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Каждой модели</span>
+                          <span className="font-medium text-foreground">{pair.model_percentage}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Оператор</span>
+                          <span className="font-medium text-foreground">
+                            {pair.operator_name || pair.operator_email || '—'} · {pair.operator_percentage}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Продюсер</span>
+                          <span className="font-medium text-foreground">{pair.producer_percentage}%</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-1 text-xs mt-1"
+                          onClick={() => openPairSettings(pair)}
+                        >
+                          <Icon name="Settings2" size={13} />
+                          Настроить проценты и оператора
+                        </Button>
                       </div>
                     )}
 

@@ -60,6 +60,11 @@ interface ModelPairFinance {
   model2_email: string;
   model1_name: string;
   model2_name: string;
+  model_percentage: number;
+  operator_percentage: number;
+  producer_percentage: number;
+  operator_email: string | null;
+  operator_name: string | null;
 }
 
 const PAIRS_API_URL = 'https://functions.poehali.dev/cdf24c81-2f72-4f88-bddc-77533a2d119f';
@@ -274,32 +279,64 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
                   const prevIncome = m1.previous_income + m2.previous_income;
                   const curShifts = Math.max(m1.current_shifts, m2.current_shifts);
                   const prevShifts = Math.max(m1.previous_shifts, m2.previous_shifts);
+                  const modelPct = (pair.model_percentage ?? 17.5) / 100;
+                  const operatorPct = (pair.operator_percentage ?? 15) / 100;
+                  const producerPct = (pair.producer_percentage ?? 10) / 100;
+                  const eachModelSalary = curIncome * modelPct;
+                  const operatorSalary = curIncome * operatorPct;
+                  const producerSalary = curIncome * producerPct;
                   return (
-                    <tr key={`pair-${pair.id}`} className="border-b hover:bg-muted/20 transition-colors bg-primary/5">
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs gap-1 shrink-0">
-                            <Icon name="Users" size={11} />
-                            Пара
-                          </Badge>
-                          <div>
-                            <div className="font-medium">{pair.model1_name} & {pair.model2_name}</div>
-                            <div className="text-xs text-muted-foreground">{pair.model1_email}, {pair.model2_email}</div>
+                    <>
+                      <tr key={`pair-${pair.id}`} className="border-b hover:bg-muted/20 transition-colors bg-primary/5">
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs gap-1 shrink-0">
+                              <Icon name="Users" size={11} />
+                              Пара
+                            </Badge>
+                            <div>
+                              <div className="font-medium">{pair.model1_name} & {pair.model2_name}</div>
+                              <div className="text-xs text-muted-foreground">{pair.model1_email}, {pair.model2_email}</div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-right font-medium">{formatCurrency(curIncome)}</td>
-                      <td className="p-4 text-right text-muted-foreground">{formatCurrency(prevIncome)}</td>
-                      <td className={`p-4 text-right font-medium ${getDifferenceColor(curIncome, prevIncome)}`}>
-                        {getDifference(curIncome, prevIncome)}
-                      </td>
-                      <td className="p-4 text-center">
-                        <Badge variant="secondary">{curShifts}</Badge>
-                      </td>
-                      <td className="p-4 text-center">
-                        <Badge variant="outline">{prevShifts}</Badge>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="p-4 text-right font-medium">{formatCurrency(curIncome)}</td>
+                        <td className="p-4 text-right text-muted-foreground">{formatCurrency(prevIncome)}</td>
+                        <td className={`p-4 text-right font-medium ${getDifferenceColor(curIncome, prevIncome)}`}>
+                          {getDifference(curIncome, prevIncome)}
+                        </td>
+                        <td className="p-4 text-center">
+                          <Badge variant="secondary">{curShifts}</Badge>
+                        </td>
+                        <td className="p-4 text-center">
+                          <Badge variant="outline">{prevShifts}</Badge>
+                        </td>
+                      </tr>
+                      <tr key={`pair-${pair.id}-breakdown`} className="border-b bg-muted/10">
+                        <td colSpan={6} className="px-4 pb-3 pt-0">
+                          <div className="ml-16 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                            <span>
+                              <span className="font-medium text-foreground">{pair.model1_name}:</span>{' '}
+                              {formatCurrency(eachModelSalary)} ({pair.model_percentage}%)
+                            </span>
+                            <span>
+                              <span className="font-medium text-foreground">{pair.model2_name}:</span>{' '}
+                              {formatCurrency(eachModelSalary)} ({pair.model_percentage}%)
+                            </span>
+                            {pair.operator_email && (
+                              <span>
+                                <span className="font-medium text-foreground">{pair.operator_name || pair.operator_email}:</span>{' '}
+                                {formatCurrency(operatorSalary)} ({pair.operator_percentage}%)
+                              </span>
+                            )}
+                            <span>
+                              <span className="font-medium text-foreground">Продюсер:</span>{' '}
+                              {formatCurrency(producerSalary)} ({pair.producer_percentage}%)
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
                   );
                 })}
                 {soloModels.map((model, index) => (
