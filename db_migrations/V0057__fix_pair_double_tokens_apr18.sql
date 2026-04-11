@@ -1,0 +1,1 @@
+UPDATE t_p35405502_model_agency_website.model_finances SET sp_tokens = 10000, sp_income = 500 WHERE model_id IN (71, 79) AND date = '2026-04-18' AND sp_tokens = 20000;

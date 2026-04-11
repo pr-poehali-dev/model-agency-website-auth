@@ -168,7 +168,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             model_id = finance['model_id']
             operator_name = finance.get('operator_name', '').strip()
             
-            print(f"DEBUG: Processing finance for model_id={model_id}, operator_name='{operator_name}'")
+            pair_check = get_pair_for_model(model_id)
+            print(f"DEBUG: Processing finance for model_id={model_id}, operator_name='{operator_name}', in_pair={pair_check is not None}")
             
             cb_tokens = float(finance['cb_tokens'] or 0)
             sp_tokens = float(finance['sp_tokens'] or 0)
@@ -222,17 +223,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if is_first_model_in_pair:
                     paid_pair_dates.add(pair_date_key)
 
-                    # Sum both models' total_check for this pair on this date
-                    other_model_id = pair['model2_id'] if pair['model1_id'] == model_id else pair['model1_id']
-                    other_finances = [f for f in finances if f['model_id'] == other_model_id and f['date'] == finance['date']]
+                    # Пара хранит одни и те же данные в обеих моделях БД.
+                    # Берём total_check только из ТЕКУЩЕЙ (первой встреченной) модели — не суммируем.
                     pair_total_check = total_check
-                    for of in other_finances:
-                        ocb = float(of['cb_tokens'] or 0) * 0.045
-                        osp = float(of['sp_tokens'] or 0) * 0.05
-                        osoda = float(of['soda_tokens'] or 0) * 0.04
-                        ocam4 = float(of['cam4_tokens'] or 0)
-                        otransfers = float(of['transfers'] or 0)
-                        pair_total_check += ocb + osp + osoda + ocam4 + otransfers
 
                     pair_op_salary = pair_total_check * (pair_operator_pct / 100)
                     pair_prod_salary = pair_total_check * (pair_producer_pct / 100)
