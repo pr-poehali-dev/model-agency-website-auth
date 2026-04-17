@@ -265,8 +265,7 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
           method: 'GET',
           headers: {
             'X-Auth-Token': localStorage.getItem('authToken') || ''
-          },
-          credentials: 'include'
+          }
         });
         
         if (usersRes.ok) {
