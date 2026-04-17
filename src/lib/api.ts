@@ -27,7 +27,8 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers
+    headers,
+    credentials: 'include'
   });
   
   return response;
@@ -49,7 +50,8 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   try {
     const response = await fetch(url, {
       ...options,
-      headers
+      headers,
+      credentials: 'include'
     });
     
     return response;
