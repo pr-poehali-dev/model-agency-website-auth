@@ -1,3 +1,4 @@
+# updated
 '''
 Business: Управление назначениями продюсерам (директор назначает модели и операторов продюсерам)
 Args: event с httpMethod (GET/POST/DELETE), body, headers с X-User-Role

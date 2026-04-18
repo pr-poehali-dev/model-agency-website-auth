@@ -1,3 +1,4 @@
+# updated
 '''
 Business: Управление назначением моделей для операторов (продюсеры/директора назначают, операторы видят)
 Args: event с httpMethod (GET/POST/DELETE), body для POST/DELETE

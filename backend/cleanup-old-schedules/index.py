@@ -1,3 +1,4 @@
+# updated
 '''
 Очистка старых записей расписания (старше 7 дней)
 Args: event с httpMethod (POST)

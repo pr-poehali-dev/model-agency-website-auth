@@ -1,3 +1,4 @@
+# updated
 '''
 Business: Schedule management API for apartments and shifts
 Args: event with httpMethod (GET/POST/PUT), body, queryStringParameters

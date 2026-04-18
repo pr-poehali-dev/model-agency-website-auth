@@ -1,3 +1,4 @@
+# updated
 '''
 Очистка устаревших назначений для удалённых пользователей
 Args: event с httpMethod (POST), headers с X-User-Role
