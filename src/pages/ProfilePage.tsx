@@ -209,28 +209,30 @@ export default function ProfilePage() {
           </Card>
 
           {/* Прогресс */}
-          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
+          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="text-foreground flex items-center gap-2 font-heading">
                 <Icon name="TrendingUp" size={20} className="text-primary" />
                 Прогресс
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
-              {MOCK_PROGRESS.map((item) => (
-                <div key={item.label}>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                    <span className="text-sm font-semibold text-foreground">{item.value}%</span>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {MOCK_PROGRESS.slice(0, 2).map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-sm text-muted-foreground">{item.label}</span>
+                      <span className="text-sm font-semibold text-foreground">{item.value}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.color} transition-all duration-700`}
+                        style={{ width: `${item.value}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${item.color} transition-all duration-700`}
-                      style={{ width: `${item.value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
 
