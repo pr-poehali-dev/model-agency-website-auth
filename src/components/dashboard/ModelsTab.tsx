@@ -465,7 +465,7 @@ const ModelsTab = ({
     ? []
     : userRole === 'solo_maker'
     ? models.filter(m => m.email === currentUserEmail)
-    : operatorAssignments.length > 0 
+    : userRole === 'operator'
     ? models.filter(m => operatorAssignments.includes(m.id))
     : producerAssignments.length > 0
     ? models.filter(m => producerAssignments.includes(m.email))
@@ -746,6 +746,14 @@ const ModelsTab = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {userRole === 'operator' && operatorAssignments.length === 0 && (
+        <Card className="p-8 text-center">
+          <Icon name="UserX" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
+          <p className="text-foreground font-medium mb-1">Вам ещё не назначили контент-мейкера</p>
+          <p className="text-muted-foreground text-sm">Обратитесь к вашему продюсеру или директору</p>
+        </Card>
+      )}
 
       {(filteredModels.length === 0 && filteredPairs.length === 0) && searchQuery && (
         <Card className="p-8 text-center">
