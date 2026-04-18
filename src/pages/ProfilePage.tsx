@@ -156,10 +156,7 @@ export default function ProfilePage() {
                   <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
                     {ROLE_LABELS[userRole] || userRole}
                   </Badge>
-                  <span className="text-muted-foreground text-sm flex items-center gap-1">
-                    <Icon name="MapPin" size={13} />
-                    {MOCK_USER.location}
-                  </span>
+
                   <span className="text-muted-foreground text-sm flex items-center gap-1">
                     <Icon name="Calendar" size={13} />
                     С {MOCK_USER.joinedAt}
