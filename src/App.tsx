@@ -13,8 +13,7 @@ import { ThemeProvider } from "./hooks/useTheme";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 const App = () => (
@@ -25,7 +24,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Login />} />
             <Route 
               path="/dashboard" 
               element={
