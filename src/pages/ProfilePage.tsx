@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import Icon from "@/components/ui/icon";
 
@@ -96,6 +98,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole") || "model";
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
   const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
@@ -110,6 +113,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="text-muted-foreground hover:text-foreground -ml-2"
+        >
+          <Icon name="ArrowLeft" size={18} className="mr-2" />
+          Назад
+        </Button>
 
         {/* Шапка профиля */}
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm overflow-hidden">
