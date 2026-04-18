@@ -444,6 +444,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cur.execute("DELETE FROM t_p35405502_model_agency_website.operator_model_assignments WHERE operator_email = %s", (user_email,))
             cur.execute("DELETE FROM t_p35405502_model_agency_website.operator_model_assignments WHERE model_email = %s", (user_email,))
             
+            cur.execute("DELETE FROM t_p35405502_model_agency_website.sessions WHERE user_id = %s", (user_id,))
+            cur.execute("DELETE FROM t_p35405502_model_agency_website.task_comments WHERE author_email = %s", (user_email,))
+            cur.execute("DELETE FROM t_p35405502_model_agency_website.tasks WHERE assigned_to_email = %s OR assigned_by_email = %s", (user_email, user_email))
+            
             cur.execute("DELETE FROM t_p35405502_model_agency_website.users WHERE id = %s", (user_id,))
             conn.commit()
             

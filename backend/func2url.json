@@ -1,3 +1,23 @@
 {
-  "calculate-salaries": "https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e"
+  "model-pairs": "https://functions.poehali.dev/cdf24c81-2f72-4f88-bddc-77533a2d119f",
+  "tasks": "https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edcb005ce100",
+  "clear-model-finances": "https://functions.poehali.dev/b4aca0ee-fbf4-49fb-b9d9-0f18274c1ee7",
+  "update-password": "https://functions.poehali.dev/42c72b89-8952-49f8-be8f-ea3834487a01",
+  "migrate-passwords": "https://functions.poehali.dev/2bb7593a-a13f-433a-b83b-f2202e90abaa",
+  "blocked-dates": "https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c",
+  "director-finances": "https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec",
+  "cleanup-old-schedules": "https://functions.poehali.dev/3d052c34-5e62-42e8-840c-ce2fcc665eef",
+  "cleanup-orphaned-assignments": "https://functions.poehali.dev/ebdade58-dd83-497b-bd3b-570e724eed8b",
+  "producer-stats": "https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b",
+  "salary-adjustments": "https://functions.poehali.dev/d43e7388-65e1-4856-9631-1a460d38abd7",
+  "statistics": "https://functions.poehali.dev/a154a7bf-592e-48d3-b0ce-6724de856af0",
+  "aggregated-finances": "https://functions.poehali.dev/003274b3-54d7-44d9-8411-b37a5048c3c9",
+  "calculate-salaries": "https://functions.poehali.dev/c430d601-e77e-494f-bf3a-73a45e7a5a4e",
+  "model-accounts": "https://functions.poehali.dev/6eb743de-2cae-499d-8e8f-4aa975cb470c",
+  "cbr-rate": "https://functions.poehali.dev/be3de232-e5c9-421e-8335-c4f67a2d744a",
+  "save-finances": "https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e",
+  "schedule": "https://functions.poehali.dev/c792d156-9cde-432c-9dbf-1f7374a94184",
+  "producer-assignments": "https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6",
+  "operator-assignments": "https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30",
+  "auth": "https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066"
 }
