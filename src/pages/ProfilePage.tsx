@@ -114,6 +114,11 @@ export default function ProfilePage() {
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
   const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
 
+  const createdAtRaw = localStorage.getItem("userCreatedAt");
+  const joinedLabel = createdAtRaw
+    ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
+    : MOCK_USER.joinedAt;
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
@@ -170,7 +175,7 @@ export default function ProfilePage() {
 
                   <span className="text-muted-foreground text-sm flex items-center gap-1">
                     <Icon name="Calendar" size={13} />
-                    С {MOCK_USER.joinedAt}
+                    В компании с {joinedLabel}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-sm mt-1">{userEmail}</p>

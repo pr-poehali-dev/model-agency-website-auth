@@ -40,6 +40,7 @@ const Login = () => {
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userRole', data.user.role);
       localStorage.setItem('userName', data.user.fullName);
+      if (data.user.createdAt) localStorage.setItem('userCreatedAt', data.user.createdAt);
       
       addAuditLog(data.user.email, 'Вход в систему', 'Успешная авторизация', 'auth');
       navigate('/dashboard');
