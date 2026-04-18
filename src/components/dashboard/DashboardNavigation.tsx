@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import NotificationBell from '@/components/NotificationBell';
+import { useNavigate } from 'react-router-dom';
 
 
 interface NavigationItem {
@@ -44,6 +45,7 @@ const DashboardNavigation = ({
   onLogout,
   onToggleMobileMenu
 }: DashboardNavigationProps) => {
+  const navigate = useNavigate();
   return (
     <>
       <aside className={`fixed left-0 top-0 h-full bg-card border-r border-border z-50 transition-transform duration-300 ${
@@ -95,6 +97,10 @@ const DashboardNavigation = ({
             <span className="text-xs text-muted-foreground">Уведомления</span>
             <NotificationBell userRole={userRole || undefined} userEmail={userEmail} onTaskClick={() => onTabChange('tasks')} />
           </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="w-full justify-start">
+            <Icon name="UserCircle" size={18} className="mr-2" />
+            Мой профиль
+          </Button>
           <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full justify-start">
             <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
             {theme === 'dark' ? 'Светлая' : 'Темная'}

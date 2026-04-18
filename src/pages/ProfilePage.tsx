@@ -1,0 +1,264 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import Icon from "@/components/ui/icon";
+
+const MOCK_USER = {
+  name: "Анастасия Волкова",
+  role: "Модель",
+  email: "anastasia@agency.com",
+  avatar: "https://cdn.poehali.dev/projects/25df84be-2a57-474f-bb58-132a6c9f8811/files/5e020e37-1504-41c9-a68f-aa839b86978e.jpg",
+  joinedAt: "Март 2024",
+  location: "Москва",
+};
+
+const MOCK_ACHIEVEMENTS = [
+  {
+    id: 1,
+    emoji: "🥇",
+    title: "Лучший месяц",
+    description: "Наивысший результат по продажам за Март 2024",
+    grantedBy: "Директор",
+    date: "01.04.2024",
+    color: "from-yellow-500/20 to-amber-500/10 border-yellow-500/30",
+  },
+  {
+    id: 2,
+    emoji: "⭐",
+    title: "Звезда команды",
+    description: "Отмечена коллегами за помощь и поддержку",
+    grantedBy: "Продюсер Иван",
+    date: "15.03.2024",
+    color: "from-purple-500/20 to-violet-500/10 border-purple-500/30",
+  },
+  {
+    id: 3,
+    emoji: "🔥",
+    title: "Стабильность",
+    description: "30 дней без пропусков и опозданий",
+    grantedBy: "Продюсер Иван",
+    date: "01.03.2024",
+    color: "from-orange-500/20 to-red-500/10 border-orange-500/30",
+  },
+  {
+    id: 4,
+    emoji: "💎",
+    title: "Топ-профиль",
+    description: "Один из самых посещаемых профилей платформы",
+    grantedBy: "Директор",
+    date: "20.02.2024",
+    color: "from-cyan-500/20 to-blue-500/10 border-cyan-500/30",
+  },
+];
+
+const MOCK_COMMENTS = [
+  {
+    id: 1,
+    author: "Иван Петров",
+    role: "Продюсер",
+    text: "Отличная работа в этом месяце! Настя показывает стабильный рост и всегда вовремя выполняет задачи.",
+    date: "18.04.2024",
+    avatar: "ИП",
+  },
+  {
+    id: 2,
+    author: "Мария Соколова",
+    role: "Оператор",
+    text: "Приятно работать в паре, всегда на связи и готова к изменениям графика.",
+    date: "12.04.2024",
+    avatar: "МС",
+  },
+  {
+    id: 3,
+    author: "Директор",
+    role: "Директор",
+    text: "Продолжай в том же духе, результаты говорят сами за себя.",
+    date: "05.04.2024",
+    avatar: "Д",
+  },
+];
+
+const MOCK_PROGRESS = [
+  { label: "Выполнение задач", value: 87, color: "bg-primary" },
+  { label: "Посещаемость", value: 96, color: "bg-green-500" },
+  { label: "Качество контента", value: 74, color: "bg-purple-500" },
+  { label: "Активность", value: 62, color: "bg-cyan-500" },
+];
+
+const ROLE_LABELS: Record<string, string> = {
+  director: "Директор",
+  producer: "Продюсер",
+  operator: "Оператор",
+  model: "Модель",
+  content_maker: "Контент-мейкер",
+};
+
+export default function ProfilePage() {
+  const userRole = localStorage.getItem("userRole") || "model";
+  const userName = localStorage.getItem("userName") || MOCK_USER.name;
+  const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
+
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+
+        {/* Шапка профиля */}
+        <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm overflow-hidden">
+          <div className="h-24 bg-gradient-to-r from-primary/30 via-purple-500/20 to-cyan-500/20" />
+          <CardContent className="px-6 pb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
+              <div className="relative">
+                <Avatar className="w-24 h-24 border-4 border-background shadow-xl">
+                  <AvatarImage src={MOCK_USER.avatar} />
+                  <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Медали-бейджи на аватаре */}
+                <div className="absolute -bottom-1 -right-1 flex gap-0.5">
+                  {MOCK_ACHIEVEMENTS.slice(0, 3).map((a) => (
+                    <span
+                      key={a.id}
+                      title={a.title}
+                      className="text-base leading-none cursor-default"
+                    >
+                      {a.emoji}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex-1 pb-1">
+                <h1 className="text-2xl font-bold text-foreground font-heading">
+                  {userName}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                    {ROLE_LABELS[userRole] || userRole}
+                  </Badge>
+                  <span className="text-muted-foreground text-sm flex items-center gap-1">
+                    <Icon name="MapPin" size={13} />
+                    {MOCK_USER.location}
+                  </span>
+                  <span className="text-muted-foreground text-sm flex items-center gap-1">
+                    <Icon name="Calendar" size={13} />
+                    С {MOCK_USER.joinedAt}
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm mt-1">{userEmail}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Достижения */}
+          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-foreground flex items-center gap-2 font-heading">
+                <Icon name="Trophy" size={20} className="text-primary" />
+                Достижения
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {MOCK_ACHIEVEMENTS.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`rounded-xl border bg-gradient-to-br p-4 ${achievement.color} transition-all hover:scale-[1.02] cursor-default`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl leading-none">{achievement.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground">{achievement.title}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5 leading-snug">
+                          {achievement.description}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Icon name="User" size={11} />
+                            {achievement.grantedBy}
+                          </span>
+                          <span className="text-xs text-muted-foreground">·</span>
+                          <span className="text-xs text-muted-foreground">{achievement.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Прогресс */}
+          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-foreground flex items-center gap-2 font-heading">
+                <Icon name="TrendingUp" size={20} className="text-primary" />
+                Прогресс
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {MOCK_PROGRESS.map((item) => (
+                <div key={item.label}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="text-sm font-semibold text-foreground">{item.value}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${item.color} transition-all duration-700`}
+                      style={{ width: `${item.value}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Комментарии */}
+          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-foreground flex items-center gap-2 font-heading">
+                <Icon name="MessageSquare" size={20} className="text-primary" />
+                Отзывы коллег
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {MOCK_COMMENTS.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                    {comment.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-foreground">
+                        {comment.author}
+                      </span>
+                      <Badge variant="outline" className="text-xs py-0 px-1.5 border-border/50 text-muted-foreground">
+                        {comment.role}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-snug">{comment.text}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">{comment.date}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
+    </div>
+  );
+}
