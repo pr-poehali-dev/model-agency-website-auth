@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Missing params",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400
+    },
+    {
+      "name": "Unsupported role returns zero",
+      "method": "GET",
+      "path": "/?user_email=test@test.com&role=director&period_start=2025-01-01&period_end=2025-01-15",
+      "expectedStatus": 200,
+      "expectedBody": {"supported": false},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

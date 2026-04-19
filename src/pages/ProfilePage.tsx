@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import Icon from "@/components/ui/icon";
+import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
+import funcUrls from "../../backend/func2url.json";
+
+const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
+
+const formatIsoDate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 const MOCK_USER = {
   name: "Анастасия Волкова",
@@ -84,10 +95,7 @@ const MOCK_COMMENTS = [
 ];
 
 const MOCK_PROGRESS = [
-  { label: "Выполнение задач", value: 87, color: "bg-primary" },
   { label: "Посещаемость", value: 96, color: "bg-green-500" },
-  { label: "Качество контента", value: 74, color: "bg-purple-500" },
-  { label: "Активность", value: 62, color: "bg-cyan-500" },
 ];
 
 const MOCK_RATING = [
@@ -118,6 +126,32 @@ export default function ProfilePage() {
   const joinedLabel = createdAtRaw
     ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
     : MOCK_USER.joinedAt;
+
+  const isShiftTracked = userRole === "operator" || userRole === "content_maker";
+  const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
+  const [shiftData, setShiftData] = useState<{ shifts_count: number; target: number; models_assigned: number; bonus_ready: boolean } | null>(null);
+  const [loadingShifts, setLoadingShifts] = useState(false);
+
+  useEffect(() => {
+    if (!isShiftTracked || !userEmail) return;
+    setLoadingShifts(true);
+    setShiftData(null);
+    const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userRole)}&period_start=${formatIsoDate(period.startDate)}&period_end=${formatIsoDate(period.endDate)}`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data.shifts_count === "number") {
+          setShiftData({
+            shifts_count: data.shifts_count,
+            target: data.target,
+            models_assigned: data.models_assigned,
+            bonus_ready: data.bonus_ready,
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingShifts(false));
+  }, [isShiftTracked, userEmail, userRole, period]);
 
   const initials = userName
     .split(" ")
@@ -227,14 +261,79 @@ export default function ProfilePage() {
           {/* Прогресс */}
           <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
             <CardHeader className="pb-3">
-              <CardTitle className="text-foreground flex items-center gap-2 font-heading">
-                <Icon name="TrendingUp" size={20} className="text-primary" />
-                Прогресс
-              </CardTitle>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2 font-heading">
+                  <Icon name="TrendingUp" size={20} className="text-primary" />
+                  Прогресс
+                </CardTitle>
+                {isShiftTracked && (
+                  <div className="flex items-center gap-1 bg-background/50 rounded-lg px-2 py-1 border border-border/50">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => setPeriod(getPreviousPeriod(period))}
+                    >
+                      <Icon name="ChevronLeft" size={14} />
+                    </Button>
+                    <span className="text-xs text-muted-foreground px-1 min-w-[70px] text-center">{period.label}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => setPeriod(getNextPeriod(period))}
+                    >
+                      <Icon name="ChevronRight" size={14} />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {MOCK_PROGRESS.slice(0, 2).map((item) => (
+                {/* Посещаемость смен (для оператора/мейкера) */}
+                {isShiftTracked && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-sm text-muted-foreground">
+                        Посещаемость смен
+                        {shiftData && shiftData.models_assigned > 1 && (
+                          <span className="text-xs ml-1">
+                            ({shiftData.models_assigned} моделей)
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {loadingShifts
+                          ? "..."
+                          : shiftData
+                          ? `${shiftData.shifts_count} / ${shiftData.target}`
+                          : "0 / 10"}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          shiftData?.bonus_ready ? "bg-green-500" : "bg-primary"
+                        }`}
+                        style={{
+                          width: shiftData
+                            ? `${Math.min(100, (shiftData.shifts_count / shiftData.target) * 100)}%`
+                            : "0%",
+                        }}
+                      />
+                    </div>
+                    <p
+                      className={`text-xs mt-2 font-semibold transition-colors ${
+                        shiftData?.bonus_ready ? "text-green-500" : "text-muted-foreground/60"
+                      }`}
+                    >
+                      Премия 5000 руб.
+                    </p>
+                  </div>
+                )}
+
+                {MOCK_PROGRESS.slice(0, isShiftTracked ? 1 : 2).map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between items-center mb-1.5">
                       <span className="text-sm text-muted-foreground">{item.label}</span>
