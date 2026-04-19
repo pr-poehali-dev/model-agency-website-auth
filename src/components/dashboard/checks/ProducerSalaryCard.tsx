@@ -5,6 +5,7 @@ import { ProducerData } from './types';
 import { Period } from '@/utils/periodUtils';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useEarnedBonus } from '@/hooks/useEarnedBonus';
 
 interface ProducerSalaryCardProps {
   producerData: ProducerData;
@@ -55,7 +56,9 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate, s
     }
   };
 
-  const total = producerData.sumRubles + expenses - advance - penalty;
+  const { bonus } = useEarnedBonus(producerData.email, period.startDate, period.endDate);
+  const bonusAmount = bonus?.amount || 0;
+  const total = producerData.sumRubles + expenses - advance - penalty + bonusAmount;
   return (
     <Card className="overflow-hidden max-w-2xl mx-auto border-2 border-red-500/30 shadow-lg">
       <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 p-4 text-center border-b-2 border-red-500/30">
@@ -162,8 +165,28 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate, s
           </CollapsibleContent>
         </Collapsible>
         
+        {bonus && (
+          <div className="flex justify-between items-center py-2 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+            <div className="flex items-center gap-2">
+              <Icon name="Award" size={16} className="text-amber-500" />
+              <span className="font-medium text-sm">{bonus.reason}</span>
+            </div>
+            <span className="font-bold text-lg text-amber-600 dark:text-amber-400">
+              +{Math.round(bonus.amount).toLocaleString()}₽
+            </span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border-2 border-green-500/40 mt-4">
-          <span className="font-bold text-lg">Итог</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-lg">Итог</span>
+            {bonus && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40">
+                <Icon name="Award" size={12} />
+                Премия +{Math.round(bonus.amount).toLocaleString()}₽
+              </span>
+            )}
+          </div>
           <span className="font-bold text-2xl text-green-600 dark:text-green-400">{total.toLocaleString()}₽</span>
         </div>
       </div>

@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getPreviousPeriod } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
 import { RATE_OFFSET } from '@/lib/constants';
+import { useEarnedBonus } from '@/hooks/useEarnedBonus';
 
 interface Model {
   id: number;
@@ -47,6 +48,11 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
   const [prevExpenses, setPrevExpenses] = useState<number>(0);
   const [prevPeriodLabel, setPrevPeriodLabel] = useState<string>('');
   const [isLoadingPrevSalary, setIsLoadingPrevSalary] = useState(false);
+
+  const currentPeriodObj = getCurrentPeriod();
+  const prevPeriodObj = getPreviousPeriod(currentPeriodObj);
+  const { bonus: currentBonus } = useEarnedBonus(userEmail, currentPeriodObj.startDate, currentPeriodObj.endDate);
+  const { bonus: prevBonus } = useEarnedBonus(userEmail, prevPeriodObj.startDate, prevPeriodObj.endDate);
 
   useEffect(() => {
     if (userRole === 'director') {
@@ -319,8 +325,14 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
               </Button>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Прошлый период{prevPeriodLabel ? ` (${prevPeriodLabel})` : ''}</h3>
+            {prevBonus && (
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                <Icon name="Award" size={12} />
+                Премия: +{Math.round(prevBonus.amount).toLocaleString('ru-RU')} ₽
+              </p>
+            )}
             <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
-              {isLoadingPrevSalary ? '...' : prevSalary !== null ? `${Math.round(prevSalary).toLocaleString('ru-RU')} ₽` : '—'}
+              {isLoadingPrevSalary ? '...' : prevSalary !== null ? `${Math.round(prevSalary + (prevBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
             </p>
             {!isLoadingPrevSalary && prevSalary !== null && (
               <div className="space-y-1 text-sm">
@@ -360,8 +372,14 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
               </Button>
             </div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Моя зарплата{currentPeriodLabel ? ` (${currentPeriodLabel})` : ''}</h3>
+            {currentBonus && (
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                <Icon name="Award" size={12} />
+                Премия: +{Math.round(currentBonus.amount).toLocaleString('ru-RU')} ₽
+              </p>
+            )}
             <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
-              {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary).toLocaleString('ru-RU')} ₽` : '—'}
+              {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary + (currentBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
             </p>
             {!isLoadingSalary && mySalary !== null && (
               <div className="space-y-1 text-sm">

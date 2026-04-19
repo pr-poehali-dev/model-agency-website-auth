@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
 import { useState, useEffect } from 'react';
+import { useEarnedBonus } from '@/hooks/useEarnedBonus';
+import { getCurrentPeriod, type Period } from '@/utils/periodUtils';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -12,9 +14,13 @@ interface EmployeeCardProps {
   canEdit?: boolean;
   onUpdate?: (email: string, field: 'advance' | 'penalty', value: number) => void;
   onPercentageUpdate?: (email: string, percentage: string) => void;
+  period?: Period;
 }
 
-const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPercentageUpdate }: EmployeeCardProps) => {
+const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPercentageUpdate, period }: EmployeeCardProps) => {
+  const effectivePeriod = period || getCurrentPeriod();
+  const { bonus } = useEarnedBonus(employee.email, effectivePeriod.startDate, effectivePeriod.endDate);
+  const bonusAmount = bonus?.amount || 0;
   const [advance, setAdvance] = useState(employee.advance);
   const [penalty, setPenalty] = useState(employee.penalty);
   const [percentage, setPercentage] = useState(employee.soloPercentage || '50');
@@ -31,7 +37,7 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
     }
   };
 
-  const total = employee.sumRubles - advance - penalty;
+  const total = employee.sumRubles - advance - penalty + bonusAmount;
   const colorClasses = {
     emerald: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30',
     amber: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30',
@@ -153,8 +159,28 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
           )}
         </div>
         
+        {bonus && (
+          <div className="flex justify-between items-center py-2 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+            <div className="flex items-center gap-2">
+              <Icon name="Award" size={16} className="text-amber-500" />
+              <span className="font-medium text-sm">{bonus.reason}</span>
+            </div>
+            <span className="font-bold text-lg text-amber-600 dark:text-amber-400">
+              +{Math.round(bonus.amount).toLocaleString()}₽
+            </span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border-2 border-green-500/40 mt-4">
-          <span className="font-bold text-lg">Итог</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-lg">Итог</span>
+            {bonus && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40">
+                <Icon name="Award" size={12} />
+                Премия +{Math.round(bonus.amount).toLocaleString()}₽
+              </span>
+            )}
+          </div>
           <span className="font-bold text-2xl text-green-600 dark:text-green-400">{total.toLocaleString()}₽</span>
         </div>
       </div>
