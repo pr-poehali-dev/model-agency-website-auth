@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import Icon from "@/components/ui/icon";
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
+import ProducerPlansManager from "@/components/ProducerPlansManager";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
-const PRODUCER_PLANS_URL = (funcUrls as Record<string, string>)["producer-plans"];
 
 const formatIsoDate = (d: Date) => {
   const y = d.getFullYear();
@@ -131,9 +129,12 @@ export default function ProfilePage() {
     : MOCK_USER.joinedAt;
 
   const currentUserRole = localStorage.getItem("userRole") || "model";
+  const currentUserEmail = localStorage.getItem("userEmail") || "";
   const isProducer = userRole === "producer";
   const isShiftTracked = userRole === "operator" || userRole === "content_maker" || isProducer;
   const viewerIsDirector = currentUserRole === "director";
+  const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
+  const showProducerPlansSection = viewerIsDirector && isOwnProfile;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
   const [shiftData, setShiftData] = useState<{
     shifts_count: number;
@@ -146,13 +147,14 @@ export default function ProfilePage() {
     income_ready?: boolean;
   } | null>(null);
   const [loadingShifts, setLoadingShifts] = useState(false);
-  const [planDialogOpen, setPlanDialogOpen] = useState(false);
-  const [planInputValue, setPlanInputValue] = useState("");
-  const [savingPlan, setSavingPlan] = useState(false);
 
-  const reloadShiftData = () => {
-    if (!isShiftTracked || !userEmail) return;
+  useEffect(() => {
+    if (!isShiftTracked || !userEmail) {
+      setShiftData(null);
+      return;
+    }
     setLoadingShifts(true);
+    setShiftData(null);
     const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userRole)}&period_start=${formatIsoDate(period.startDate)}&period_end=${formatIsoDate(period.endDate)}`;
     fetch(url)
       .then((r) => r.json())
@@ -172,52 +174,7 @@ export default function ProfilePage() {
       })
       .catch(() => {})
       .finally(() => setLoadingShifts(false));
-  };
-
-  useEffect(() => {
-    setShiftData(null);
-    reloadShiftData();
   }, [isShiftTracked, userEmail, userRole, period]);
-
-  const openPlanDialog = () => {
-    setPlanInputValue(shiftData?.income_plan ? String(shiftData.income_plan) : "");
-    setPlanDialogOpen(true);
-  };
-
-  const savePlan = async () => {
-    const amount = parseFloat(planInputValue);
-    if (isNaN(amount) || amount < 0) {
-      toast.error("Введите корректную сумму");
-      return;
-    }
-    setSavingPlan(true);
-    try {
-      const response = await fetch(PRODUCER_PLANS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          producer_email: userEmail,
-          period_start: formatIsoDate(period.startDate),
-          period_end: formatIsoDate(period.endDate),
-          plan_amount: amount,
-          set_by_email: localStorage.getItem("userEmail") || "",
-          user_role: currentUserRole,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success("План дохода сохранён");
-        setPlanDialogOpen(false);
-        reloadShiftData();
-      } else {
-        toast.error(data.error || "Ошибка сохранения");
-      }
-    } catch {
-      toast.error("Ошибка соединения");
-    } finally {
-      setSavingPlan(false);
-    }
-  };
 
   const initials = userName
     .split(" ")
@@ -407,18 +364,8 @@ export default function ProfilePage() {
                 {isProducer && (
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                      <span className="text-sm text-muted-foreground">
                         План дохода
-                        {viewerIsDirector && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0"
-                            onClick={openPlanDialog}
-                          >
-                            <Icon name="Pencil" size={12} />
-                          </Button>
-                        )}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
                         {loadingShifts
@@ -440,7 +387,7 @@ export default function ProfilePage() {
                         }}
                       />
                     </div>
-                    {!shiftData?.income_plan && !viewerIsDirector && (
+                    {!shiftData?.income_plan && (
                       <p className="text-xs mt-1 text-muted-foreground/60">План не задан директором</p>
                     )}
                     <p
@@ -508,6 +455,14 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
+          {/* Блок управления планами продюсеров (только для директора в своём профиле) */}
+          {showProducerPlansSection && (
+            <ProducerPlansManager
+              currentUserEmail={currentUserEmail}
+              currentUserRole={currentUserRole}
+            />
+          )}
+
         </div>
       </div>
 
@@ -547,42 +502,6 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог задания плана дохода (для директора) */}
-      <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
-        <DialogContent className="max-w-md bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-heading text-foreground">
-              <Icon name="Target" size={20} className="text-primary" />
-              План дохода продюсера
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-2">
-            <div className="text-sm text-muted-foreground">
-              <div>Продюсер: <span className="text-foreground font-medium">{userName}</span></div>
-              <div>Период: <span className="text-foreground font-medium">{period.label}</span></div>
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Сумма плана, $</label>
-              <Input
-                type="number"
-                min="0"
-                step="1"
-                value={planInputValue}
-                onChange={(e) => setPlanInputValue(e.target.value)}
-                placeholder="Например, 5000"
-              />
-            </div>
-          </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setPlanDialogOpen(false)} disabled={savingPlan}>
-              Отмена
-            </Button>
-            <Button onClick={savePlan} disabled={savingPlan}>
-              {savingPlan ? "Сохранение..." : "Сохранить"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
