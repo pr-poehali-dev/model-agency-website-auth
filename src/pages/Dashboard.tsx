@@ -11,6 +11,7 @@ import DashboardHome from '@/components/dashboard/DashboardHome';
 import UserManagement from './UserManagement';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
+import ProducerPlansManager from '@/components/ProducerPlansManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
@@ -249,6 +250,7 @@ const Dashboard = () => {
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
     { id: 'producer-assignments', label: 'Продюсеры', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_PRODUCERS },
+    { id: 'producer-plans', label: 'Планы продюсеров', icon: 'Target', permission: PERMISSIONS.MANAGE_PRODUCERS },
 
   ];
 
@@ -343,6 +345,8 @@ const Dashboard = () => {
         />;
       case 'producer-assignments':
         return <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
+      case 'producer-plans':
+        return <ProducerPlansManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
 
       default:
         return <DashboardHome 
