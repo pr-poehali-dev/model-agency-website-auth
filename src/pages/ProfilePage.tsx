@@ -4,13 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import Icon from "@/components/ui/icon";
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
+const PRODUCER_PLANS_URL = (funcUrls as Record<string, string>)["producer-plans"];
 
 const formatIsoDate = (d: Date) => {
   const y = d.getFullYear();
@@ -127,15 +130,29 @@ export default function ProfilePage() {
     ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
     : MOCK_USER.joinedAt;
 
-  const isShiftTracked = userRole === "operator" || userRole === "content_maker";
+  const currentUserRole = localStorage.getItem("userRole") || "model";
+  const isProducer = userRole === "producer";
+  const isShiftTracked = userRole === "operator" || userRole === "content_maker" || isProducer;
+  const viewerIsDirector = currentUserRole === "director";
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
-  const [shiftData, setShiftData] = useState<{ shifts_count: number; target: number; models_assigned: number; bonus_ready: boolean } | null>(null);
+  const [shiftData, setShiftData] = useState<{
+    shifts_count: number;
+    target: number;
+    models_assigned: number;
+    bonus_ready: boolean;
+    income_fact?: number;
+    income_plan?: number;
+    shifts_ready?: boolean;
+    income_ready?: boolean;
+  } | null>(null);
   const [loadingShifts, setLoadingShifts] = useState(false);
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [planInputValue, setPlanInputValue] = useState("");
+  const [savingPlan, setSavingPlan] = useState(false);
 
-  useEffect(() => {
+  const reloadShiftData = () => {
     if (!isShiftTracked || !userEmail) return;
     setLoadingShifts(true);
-    setShiftData(null);
     const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userRole)}&period_start=${formatIsoDate(period.startDate)}&period_end=${formatIsoDate(period.endDate)}`;
     fetch(url)
       .then((r) => r.json())
@@ -146,12 +163,61 @@ export default function ProfilePage() {
             target: data.target,
             models_assigned: data.models_assigned,
             bonus_ready: data.bonus_ready,
+            income_fact: data.income_fact,
+            income_plan: data.income_plan,
+            shifts_ready: data.shifts_ready,
+            income_ready: data.income_ready,
           });
         }
       })
       .catch(() => {})
       .finally(() => setLoadingShifts(false));
+  };
+
+  useEffect(() => {
+    setShiftData(null);
+    reloadShiftData();
   }, [isShiftTracked, userEmail, userRole, period]);
+
+  const openPlanDialog = () => {
+    setPlanInputValue(shiftData?.income_plan ? String(shiftData.income_plan) : "");
+    setPlanDialogOpen(true);
+  };
+
+  const savePlan = async () => {
+    const amount = parseFloat(planInputValue);
+    if (isNaN(amount) || amount < 0) {
+      toast.error("Введите корректную сумму");
+      return;
+    }
+    setSavingPlan(true);
+    try {
+      const response = await fetch(PRODUCER_PLANS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          producer_email: userEmail,
+          period_start: formatIsoDate(period.startDate),
+          period_end: formatIsoDate(period.endDate),
+          plan_amount: amount,
+          set_by_email: localStorage.getItem("userEmail") || "",
+          user_role: currentUserRole,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("План дохода сохранён");
+        setPlanDialogOpen(false);
+        reloadShiftData();
+      } else {
+        toast.error(data.error || "Ошибка сохранения");
+      }
+    } catch {
+      toast.error("Ошибка соединения");
+    } finally {
+      setSavingPlan(false);
+    }
+  };
 
   const initials = userName
     .split(" ")
@@ -291,7 +357,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Посещаемость смен (для оператора/мейкера) */}
+                {/* Посещаемость смен (для оператора/мейкера/продюсера) */}
                 {isShiftTracked && (
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
@@ -314,15 +380,69 @@ export default function ProfilePage() {
                     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ${
-                          shiftData?.bonus_ready ? "bg-green-500" : "bg-primary"
+                          (isProducer ? shiftData?.shifts_ready : shiftData?.bonus_ready)
+                            ? "bg-green-500"
+                            : "bg-primary"
                         }`}
                         style={{
-                          width: shiftData
+                          width: shiftData && shiftData.target > 0
                             ? `${Math.min(100, (shiftData.shifts_count / shiftData.target) * 100)}%`
                             : "0%",
                         }}
                       />
                     </div>
+                    {!isProducer && (
+                      <p
+                        className={`text-xs mt-2 font-semibold transition-colors ${
+                          shiftData?.bonus_ready ? "text-green-500" : "text-muted-foreground/60"
+                        }`}
+                      >
+                        Премия 5000 руб.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* План дохода (только для продюсера) */}
+                {isProducer && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        План дохода
+                        {viewerIsDirector && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={openPlanDialog}
+                          >
+                            <Icon name="Pencil" size={12} />
+                          </Button>
+                        )}
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {loadingShifts
+                          ? "..."
+                          : shiftData
+                          ? `$${(shiftData.income_fact || 0).toFixed(0)} / $${(shiftData.income_plan || 0).toFixed(0)}`
+                          : "$0 / $0"}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          shiftData?.income_ready ? "bg-green-500" : "bg-purple-500"
+                        }`}
+                        style={{
+                          width: shiftData && (shiftData.income_plan || 0) > 0
+                            ? `${Math.min(100, ((shiftData.income_fact || 0) / (shiftData.income_plan || 1)) * 100)}%`
+                            : "0%",
+                        }}
+                      />
+                    </div>
+                    {!shiftData?.income_plan && !viewerIsDirector && (
+                      <p className="text-xs mt-1 text-muted-foreground/60">План не задан директором</p>
+                    )}
                     <p
                       className={`text-xs mt-2 font-semibold transition-colors ${
                         shiftData?.bonus_ready ? "text-green-500" : "text-muted-foreground/60"
@@ -333,7 +453,7 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {MOCK_PROGRESS.slice(0, isShiftTracked ? 1 : 2).map((item) => (
+                {MOCK_PROGRESS.slice(0, isShiftTracked ? (isProducer ? 0 : 1) : 2).map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between items-center mb-1.5">
                       <span className="text-sm text-muted-foreground">{item.label}</span>
@@ -424,6 +544,43 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог задания плана дохода (для директора) */}
+      <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
+        <DialogContent className="max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-heading text-foreground">
+              <Icon name="Target" size={20} className="text-primary" />
+              План дохода продюсера
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="text-sm text-muted-foreground">
+              <div>Продюсер: <span className="text-foreground font-medium">{userName}</span></div>
+              <div>Период: <span className="text-foreground font-medium">{period.label}</span></div>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Сумма плана, $</label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={planInputValue}
+                onChange={(e) => setPlanInputValue(e.target.value)}
+                placeholder="Например, 5000"
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setPlanDialogOpen(false)} disabled={savingPlan}>
+              Отмена
+            </Button>
+            <Button onClick={savePlan} disabled={savingPlan}>
+              {savingPlan ? "Сохранение..." : "Сохранить"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

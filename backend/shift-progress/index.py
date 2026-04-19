@@ -91,6 +91,75 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
             shifts_count = int(cur.fetchone()['c'] or 0)
 
+    elif user_role == 'producer':
+        cur.execute(
+            f"""SELECT DISTINCT model_email
+                FROM {schema}.producer_assignments
+                WHERE producer_email = %s AND assignment_type = 'model'""",
+            (user_email,)
+        )
+        model_emails = [r['model_email'] for r in cur.fetchall()]
+        models_assigned = max(1, len(model_emails))
+
+        income_fact = 0.0
+        if model_emails:
+            cur.execute(
+                f"""SELECT COUNT(*) AS c
+                    FROM {schema}.model_finances mf
+                    JOIN {schema}.users u ON u.id = mf.model_id
+                    WHERE mf.has_shift = true
+                      AND u.email = ANY(%s)
+                      AND mf.operator_name IS NOT NULL AND mf.operator_name <> ''
+                      AND mf.date >= %s AND mf.date <= %s""",
+                (model_emails, period_start, period_end)
+            )
+            shifts_count = int(cur.fetchone()['c'] or 0)
+
+            cur.execute(
+                f"""SELECT COALESCE(SUM(
+                        (COALESCE(mf.cb_income,0) + COALESCE(mf.sp_income,0) + COALESCE(mf.soda_income,0)
+                         + COALESCE(mf.cam4_income,0) + COALESCE(mf.transfers,0)) * 0.6
+                    ), 0) AS total
+                    FROM {schema}.model_finances mf
+                    JOIN {schema}.users u ON u.id = mf.model_id
+                    WHERE u.email = ANY(%s)
+                      AND mf.date >= %s AND mf.date <= %s""",
+                (model_emails, period_start, period_end)
+            )
+            income_fact = float(cur.fetchone()['total'] or 0.0)
+
+        cur.execute(
+            f"""SELECT plan_amount FROM {schema}.producer_income_plans
+                WHERE producer_email = %s AND period_start = %s AND period_end = %s""",
+            (user_email, period_start, period_end)
+        )
+        plan_row = cur.fetchone()
+        income_plan = float(plan_row['plan_amount']) if plan_row else 0.0
+
+        cur.close()
+        conn.close()
+
+        target = 10 * models_assigned
+        shifts_ready = shifts_count >= target
+        income_ready = income_plan > 0 and income_fact >= income_plan
+        bonus_ready = shifts_ready and income_ready
+
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({
+                'shifts_count': shifts_count,
+                'target': target,
+                'models_assigned': models_assigned,
+                'income_fact': round(income_fact, 2),
+                'income_plan': round(income_plan, 2),
+                'shifts_ready': shifts_ready,
+                'income_ready': income_ready,
+                'bonus_ready': bonus_ready,
+                'supported': True
+            })
+        }
+
     else:
         cur.close()
         conn.close()

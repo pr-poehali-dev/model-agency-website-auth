@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET missing params",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400
+    },
+    {
+      "name": "POST without director role forbidden",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "producer_email": "test@test.com",
+        "period_start": "2025-01-01",
+        "period_end": "2025-01-15",
+        "plan_amount": 1000,
+        "user_role": "operator"
+      },
+      "expectedStatus": 403
+    }
+  ]
+}
