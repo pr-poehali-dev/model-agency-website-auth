@@ -177,6 +177,12 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
   const pctIncome = (r: ProducerRow) =>
     r.income_plan > 0 ? Math.min(100, (r.income_fact / r.income_plan) * 100) : 0;
 
+  const totalProducers = rows.length;
+  const bonusReadyCount = rows.filter((r) => r.bonus_ready).length;
+  const shiftsReadyCount = rows.filter((r) => r.shifts_ready).length;
+  const incomeReadyCount = rows.filter((r) => r.income_ready).length;
+  const totalBonusRub = bonusReadyCount * 5000;
+
   return (
     <div className="animate-fade-in space-y-4">
       <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
@@ -210,6 +216,53 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
           </div>
         </CardHeader>
         <CardContent>
+          {!loading && rows.length > 0 && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <div className="rounded-lg border border-border/50 bg-background/40 p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Icon name="Users" size={14} />
+                  Всего продюсеров
+                </div>
+                <div className="text-2xl font-bold text-foreground">{totalProducers}</div>
+              </div>
+
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Icon name="CalendarCheck" size={14} className="text-emerald-500" />
+                  Выполнили смены
+                </div>
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {shiftsReadyCount} / {totalProducers}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Icon name="TrendingUp" size={14} className="text-purple-500" />
+                  Выполнили план $
+                </div>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {incomeReadyCount} / {totalProducers}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Icon name="Award" size={14} className="text-amber-500" />
+                  Получили премию
+                </div>
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  {bonusReadyCount} / {totalProducers}
+                </div>
+                {totalBonusRub > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Сумма: {totalBonusRub.toLocaleString('ru-RU')} ₽
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="py-10 text-center text-muted-foreground">Загрузка...</div>
           ) : rows.length === 0 ? (
