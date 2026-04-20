@@ -159,7 +159,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         target = 10 * models_assigned
         shifts_ready = shifts_count >= target
         income_ready = income_plan > 0 and income_fact >= income_plan
-        bonus_ready = shifts_ready and income_ready
+        bonus_ready = income_ready
 
         bonus_locked = check_locked(user_email)
         if bonus_ready and not bonus_locked:

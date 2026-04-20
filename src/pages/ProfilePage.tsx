@@ -131,7 +131,7 @@ export default function ProfilePage() {
   const currentUserRole = localStorage.getItem("userRole") || "model";
   const currentUserEmail = localStorage.getItem("userEmail") || "";
   const isProducer = userRole === "producer";
-  const isShiftTracked = userRole === "operator" || userRole === "content_maker" || isProducer;
+  const isShiftTracked = userRole === "operator" || userRole === "content_maker";
   const viewerIsDirector = currentUserRole === "director";
   const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
@@ -149,7 +149,8 @@ export default function ProfilePage() {
   const [loadingShifts, setLoadingShifts] = useState(false);
 
   useEffect(() => {
-    if (!isShiftTracked || !userEmail) {
+    const shouldLoad = isShiftTracked || isProducer;
+    if (!shouldLoad || !userEmail) {
       setShiftData(null);
       return;
     }
@@ -174,7 +175,7 @@ export default function ProfilePage() {
       })
       .catch(() => {})
       .finally(() => setLoadingShifts(false));
-  }, [isShiftTracked, userEmail, userRole, period]);
+  }, [isShiftTracked, isProducer, userEmail, userRole, period]);
 
   const initials = userName
     .split(" ")

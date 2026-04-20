@@ -151,7 +151,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
         updateRow(row.email, {
           income_plan: amount,
           income_ready: incomeReady,
-          bonus_ready: row.shifts_ready && incomeReady,
+          bonus_ready: incomeReady,
           saving: false,
         });
       } else {
@@ -172,14 +172,11 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     );
   }
 
-  const pctShifts = (r: ProducerRow) =>
-    r.shifts_target > 0 ? Math.min(100, (r.shifts_count / r.shifts_target) * 100) : 0;
   const pctIncome = (r: ProducerRow) =>
     r.income_plan > 0 ? Math.min(100, (r.income_fact / r.income_plan) * 100) : 0;
 
   const totalProducers = rows.length;
   const bonusReadyCount = rows.filter((r) => r.bonus_ready).length;
-  const shiftsReadyCount = rows.filter((r) => r.shifts_ready).length;
   const incomeReadyCount = rows.filter((r) => r.income_ready).length;
   const totalBonusRub = bonusReadyCount * 5000;
 
@@ -217,23 +214,13 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
         </CardHeader>
         <CardContent>
           {!loading && rows.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <div className="rounded-lg border border-border/50 bg-background/40 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Icon name="Users" size={14} />
                   Всего продюсеров
                 </div>
                 <div className="text-2xl font-bold text-foreground">{totalProducers}</div>
-              </div>
-
-              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Icon name="CalendarCheck" size={14} className="text-emerald-500" />
-                  Выполнили смены
-                </div>
-                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {shiftsReadyCount} / {totalProducers}
-                </div>
               </div>
 
               <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
@@ -306,31 +293,17 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Смены</span>
-                        <span className="font-semibold text-foreground">
-                          {row.shifts_count} / {row.shifts_target}
-                        </span>
-                      </div>
-                      <Progress
-                        value={pctShifts(row)}
-                        className={row.shifts_ready ? '[&>div]:bg-green-500' : ''}
-                      />
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">Доход на продакшн</span>
+                      <span className="font-semibold text-foreground">
+                        ${row.income_fact.toFixed(0)} / ${row.income_plan.toFixed(0)}
+                      </span>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Доход на продакшн</span>
-                        <span className="font-semibold text-foreground">
-                          ${row.income_fact.toFixed(0)} / ${row.income_plan.toFixed(0)}
-                        </span>
-                      </div>
-                      <Progress
-                        value={pctIncome(row)}
-                        className={row.income_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
-                      />
-                    </div>
+                    <Progress
+                      value={pctIncome(row)}
+                      className={row.income_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
+                    />
                   </div>
 
                   <p
