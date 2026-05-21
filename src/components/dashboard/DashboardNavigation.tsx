@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ROLE_LABELS, type UserRole } from '@/lib/permissions';
 import NotificationBell from '@/components/NotificationBell';
 import { useNavigate } from 'react-router-dom';
@@ -97,10 +98,32 @@ const DashboardNavigation = ({
             <span className="text-xs text-muted-foreground">Уведомления</span>
             <NotificationBell userRole={userRole || undefined} userEmail={userEmail} onTaskClick={() => onTabChange('tasks')} />
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="w-full justify-start">
-            <Icon name="UserCircle" size={18} className="mr-2" />
-            Мой профиль
-          </Button>
+          {userRole === 'director' ? (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="w-full justify-start">
+              <Icon name="UserCircle" size={18} className="mr-2" />
+              Мой профиль
+            </Button>
+          ) : (
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled
+                      aria-disabled="true"
+                      className="w-full justify-start opacity-40 pointer-events-none"
+                    >
+                      <Icon name="UserCircle" size={18} className="mr-2" />
+                      Мой профиль
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">В разработке</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full justify-start">
             <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={18} className="mr-2" />
             {theme === 'dark' ? 'Светлая' : 'Темная'}
