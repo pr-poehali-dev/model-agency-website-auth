@@ -15,7 +15,6 @@ import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
 import ModelFinances from '@/components/ModelFinances';
 import PairFinances from '@/components/PairFinances';
-import CalculationTab from '@/components/CalculationTab';
 import SettingsTab from '@/components/SettingsTab';
 import TasksTab from '@/components/TasksTab';
 import { TasksProvider } from '@/context/TasksContext';
@@ -247,7 +246,6 @@ const Dashboard = () => {
     { id: 'models', label: 'Модели', icon: 'Users', permission: PERMISSIONS.VIEW_MODELS },
     { id: 'finances', label: 'Финансы', icon: 'DollarSign', permission: PERMISSIONS.VIEW_FINANCES },
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
-    { id: 'calculation', label: 'Подсчёт', icon: 'Calculator', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'tasks', label: 'Задачи', icon: 'ClipboardList', permission: PERMISSIONS.VIEW_TASKS },
     { id: 'settings', label: 'Настройки', icon: 'Settings', permission: PERMISSIONS.MANAGE_USERS },
@@ -326,8 +324,6 @@ const Dashboard = () => {
         />;
       case 'checks':
         return <ChecksTab />;
-      case 'calculation':
-        return <CalculationTab />;
       case 'schedule':
         return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
       case 'tasks':
