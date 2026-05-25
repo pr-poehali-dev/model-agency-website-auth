@@ -75,6 +75,27 @@ const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-99
 const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
 const STATISTICS_API_URL = 'https://functions.poehali.dev/a154a7bf-592e-48d3-b0ce-6724de856af0';
 
+interface ApiUser {
+  id: number;
+  email: string;
+  role: string;
+  fullName?: string;
+  photoUrl?: string;
+  permissions?: string[];
+}
+
+interface OperatorAssignment {
+  modelId: number;
+}
+
+interface ProducerAssignment {
+  modelEmail: string;
+  operatorEmail?: string;
+  producerEmail?: string;
+}
+
+type StatRow = Record<string, unknown>;
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
@@ -89,9 +110,9 @@ const Dashboard = () => {
   const [assignedProducer, setAssignedProducer] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modelsData, setModelsData] = useState(models);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
-  const [modelPerformance, setModelPerformance] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<StatRow[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<StatRow[]>([]);
+  const [modelPerformance, setModelPerformance] = useState<StatRow[]>([]);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
@@ -122,8 +143,8 @@ const Dashboard = () => {
         return;
       }
 
-      const contentMakers = users.filter((u: any) => u.role === 'content_maker' || u.role === 'solo_maker');
-      const modelsFromUsers = contentMakers.map((user: any) => ({
+      const contentMakers = users.filter((u: ApiUser) => u.role === 'content_maker' || u.role === 'solo_maker');
+      const modelsFromUsers = contentMakers.map((user: ApiUser) => ({
         id: user.id,
         email: user.email,
         name: user.fullName || user.email,
@@ -141,7 +162,7 @@ const Dashboard = () => {
       }
 
       if (email) {
-        const currentUser = users.find((u: any) => u.email === email);
+        const currentUser = users.find((u: ApiUser) => u.email === email);
         if (currentUser) {
           setUserRole(currentUser.role);
           setUserName(currentUser.fullName || '');
@@ -193,7 +214,7 @@ const Dashboard = () => {
     try {
       const response = await fetch(`${ASSIGNMENTS_API_URL}?operator=${encodeURIComponent(email)}`);
       const assignments = await response.json();
-      const modelIds = assignments.map((a: any) => a.modelId);
+      const modelIds = assignments.map((a: OperatorAssignment) => a.modelId);
       setOperatorAssignments(modelIds);
     } catch (err) {
       console.error('Failed to load operator assignments', err);
@@ -204,7 +225,7 @@ const Dashboard = () => {
     try {
       const response = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
       const assignments = await response.json();
-      const modelEmails = assignments.map((a: any) => a.modelEmail);
+      const modelEmails = assignments.map((a: ProducerAssignment) => a.modelEmail);
       setProducerAssignments(modelEmails);
     } catch (err) {
       console.error('Failed to load producer assignments', err);
@@ -215,7 +236,7 @@ const Dashboard = () => {
     try {
       const response = await fetch(`${PRODUCER_API_URL}?type=operator`);
       const assignments = await response.json();
-      const assignment = assignments.find((a: any) => a.operatorEmail === operatorEmail);
+      const assignment = assignments.find((a: ProducerAssignment) => a.operatorEmail === operatorEmail);
       if (assignment) {
         const usersResponse = await fetch(API_URL, {
           method: 'GET',
@@ -223,7 +244,7 @@ const Dashboard = () => {
           credentials: 'include'
         });
         const users = await usersResponse.json();
-        const producer = users.find((u: any) => u.email === assignment.producerEmail);
+        const producer = users.find((u: ApiUser) => u.email === assignment.producerEmail);
         setAssignedProducer(producer?.fullName || assignment.producerEmail);
       }
     } catch (err) {
