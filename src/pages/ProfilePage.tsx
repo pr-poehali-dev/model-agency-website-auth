@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useProfileData, useShiftProgress } from "@/hooks/useProfileQueries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -15,17 +16,6 @@ import AchievementTypesManager from "@/components/profile/AchievementTypesManage
 import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
 import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
 import ProfileGallery from "@/components/profile/ProfileGallery";
-import funcUrls from "../../backend/func2url.json";
-
-const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
-const PROFILE_URL = (funcUrls as Record<string, string>)["profile"];
-
-const formatIsoDate = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
 
 const MOCK_USER = {
   name: "Анастасия Волкова",
@@ -155,69 +145,29 @@ export default function ProfilePage() {
   const canGrantAchievement = viewerIsDirector || viewerIsProducer;
   const showTypesManager = viewerIsDirector && isOwnProfile;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
-  const [shiftData, setShiftData] = useState<{
-    shifts_count: number;
-    target: number;
-    models_assigned: number;
-    bonus_ready: boolean;
-    income_fact?: number;
-    income_plan?: number;
-    shifts_ready?: boolean;
-    income_ready?: boolean;
-  } | null>(null);
-  const [loadingShifts, setLoadingShifts] = useState(false);
+
+  const { data: profileData } = useProfileData(userEmail);
+  const { data: shiftData = null, isFetching: loadingShifts } = useShiftProgress(
+    userEmail,
+    userRole,
+    period.startDate,
+    period.endDate,
+    isShiftTracked || isProducer,
+  );
 
   useEffect(() => {
-    if (!userEmail || !PROFILE_URL) return;
-    fetch(PROFILE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get_profile", email: userEmail }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.success) {
-          if (data.cover_url) {
-            setCoverUrl(data.cover_url);
-            if (isOwnProfile) localStorage.setItem("userCoverUrl", data.cover_url);
-          }
-          if (data.photo_url && isOwnProfile) {
-            setPhotoUrl(data.photo_url);
-            localStorage.setItem("userPhotoUrl", data.photo_url);
-          }
-        }
-      })
-      .catch(() => {});
-  }, [userEmail, isOwnProfile]);
-
-  useEffect(() => {
-    const shouldLoad = isShiftTracked || isProducer;
-    if (!shouldLoad || !userEmail) {
-      setShiftData(null);
-      return;
+    if (!profileData?.success) return;
+    if (profileData.cover_url) {
+      setCoverUrl(profileData.cover_url);
+      if (isOwnProfile) localStorage.setItem("userCoverUrl", profileData.cover_url);
     }
-    setLoadingShifts(true);
-    setShiftData(null);
-    const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userRole)}&period_start=${formatIsoDate(period.startDate)}&period_end=${formatIsoDate(period.endDate)}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data && typeof data.shifts_count === "number") {
-          setShiftData({
-            shifts_count: data.shifts_count,
-            target: data.target,
-            models_assigned: data.models_assigned,
-            bonus_ready: data.bonus_ready,
-            income_fact: data.income_fact,
-            income_plan: data.income_plan,
-            shifts_ready: data.shifts_ready,
-            income_ready: data.income_ready,
-          });
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoadingShifts(false));
-  }, [isShiftTracked, isProducer, userEmail, userRole, period]);
+    if (profileData.photo_url && isOwnProfile) {
+      setPhotoUrl(profileData.photo_url);
+      localStorage.setItem("userPhotoUrl", profileData.photo_url);
+    }
+  }, [profileData, isOwnProfile]);
+
+
 
   const initials = userName
     .split(" ")
