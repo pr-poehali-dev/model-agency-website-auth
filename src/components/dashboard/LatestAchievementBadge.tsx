@@ -35,6 +35,33 @@ interface Particle {
 
 const CONFETTI_EMOJIS = ['🎉', '✨', '🎊', '⭐', '💫', '🌟'];
 
+const playDingSound = () => {
+  try {
+    type WindowWithWebkit = Window & { webkitAudioContext?: typeof AudioContext };
+    const Ctx = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    const notes = [880, 1175, 1568];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = now + i * 0.06;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.6);
+    });
+    setTimeout(() => ctx.close(), 1200);
+  } catch {
+    /* ignore */
+  }
+};
+
 const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
   const [latest, setLatest] = useState<Achievement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -56,6 +83,7 @@ const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
 
   const burstConfetti = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    playDingSound();
     const rect = e.currentTarget.getBoundingClientRect();
     const parentRect = e.currentTarget.parentElement?.getBoundingClientRect();
     if (!parentRect) return;
