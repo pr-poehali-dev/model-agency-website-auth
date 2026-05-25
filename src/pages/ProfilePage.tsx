@@ -16,6 +16,7 @@ import AchievementTypesManager from "@/components/profile/AchievementTypesManage
 import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
 import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
 import ProfileGallery from "@/components/profile/ProfileGallery";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MOCK_USER = {
   name: "Анастасия Волкова",
@@ -380,11 +381,13 @@ export default function ProfilePage() {
                         )}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
-                        {loadingShifts
-                          ? "..."
-                          : shiftData
-                          ? `${shiftData.shifts_count} / ${shiftData.target}`
-                          : "0 / 10"}
+                        {loadingShifts ? (
+                          <Skeleton className="h-4 w-16 inline-block align-middle" />
+                        ) : shiftData ? (
+                          `${shiftData.shifts_count} / ${shiftData.target}`
+                        ) : (
+                          "0 / 10"
+                        )}
                       </span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
@@ -421,11 +424,13 @@ export default function ProfilePage() {
                         План дохода
                       </span>
                       <span className="text-sm font-semibold text-foreground">
-                        {loadingShifts
-                          ? "..."
-                          : shiftData
-                          ? `$${(shiftData.income_fact || 0).toFixed(0)} / $${(shiftData.income_plan || 0).toFixed(0)}`
-                          : "$0 / $0"}
+                        {loadingShifts ? (
+                          <Skeleton className="h-4 w-24 inline-block align-middle" />
+                        ) : shiftData ? (
+                          `$${(shiftData.income_fact || 0).toFixed(0)} / $${(shiftData.income_plan || 0).toFixed(0)}`
+                        ) : (
+                          "$0 / $0"
+                        )}
                       </span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">

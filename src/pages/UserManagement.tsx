@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Icon from '@/components/ui/icon';
+import { CardSkeleton } from '@/components/ui/table-skeleton';
 import UserCard from '@/components/UserManagement/UserCard';
 import UserManagementHeader from './user-management-components/UserManagementHeader';
 import UserManagementDialogs from './user-management-components/UserManagementDialogs';
@@ -64,11 +64,8 @@ const UserManagement = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon name="Loader2" size={48} className="animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка пользователей...</p>
-        </div>
+      <div className="animate-fade-in p-4 md:p-6">
+        <CardSkeleton count={6} />
       </div>
     );
   }
