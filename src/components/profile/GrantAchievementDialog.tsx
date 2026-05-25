@@ -202,13 +202,13 @@ export default function GrantAchievementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle className="font-heading">Назначить достижение</DialogTitle>
           <DialogDescription>{headerSubtitle}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-hidden flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
           {needsUserPicker && (
             <div className="space-y-2">
               <Label>Сотрудник</Label>
@@ -217,7 +217,7 @@ export default function GrantAchievementDialog({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <ScrollArea className="h-[30vh] pr-2 border rounded-md">
+              <ScrollArea className="h-56 pr-2 border rounded-md">
                 {loading ? (
                   <p className="text-sm text-muted-foreground p-3">Загрузка...</p>
                 ) : filteredUsers.length === 0 ? (
@@ -270,7 +270,7 @@ export default function GrantAchievementDialog({
                   : 'Нет доступных достижений'}
               </p>
             ) : (
-              <ScrollArea className="h-[30vh] pr-2">
+              <ScrollArea className="h-56 pr-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {visibleTypes.map((t) => (
                     <button
@@ -309,7 +309,9 @@ export default function GrantAchievementDialog({
               placeholder="За что именно?"
             />
           </div>
+        </div>
 
+        <div className="border-t px-6 py-4 shrink-0 bg-background">
           <Button
             onClick={handleGrant}
             disabled={submitting || !selectedId || (needsUserPicker && !selectedEmail)}
