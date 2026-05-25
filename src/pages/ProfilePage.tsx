@@ -133,6 +133,7 @@ export default function ProfilePage() {
   const [achievementsRefresh, setAchievementsRefresh] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
   const [coverUrl, setCoverUrl] = useState<string>(() => localStorage.getItem("userCoverUrl") || "");
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const userRole = localStorage.getItem("userRole") || "model";
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
   const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
@@ -256,13 +257,26 @@ export default function ProfilePage() {
           <CardContent className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
               <div className="relative">
-                <Avatar className="w-24 h-24 border-4 border-background shadow-xl">
+                <Avatar
+                  className="w-24 h-24 border-4 border-background shadow-xl cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => setAvatarOpen(true)}
+                >
                   <AvatarImage src={photoUrl || MOCK_USER.avatar} />
                   <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
               </div>
+
+              <Dialog open={avatarOpen} onOpenChange={setAvatarOpen}>
+                <DialogContent className="max-w-lg p-2 bg-background/95 backdrop-blur-sm">
+                  <img
+                    src={photoUrl || MOCK_USER.avatar}
+                    alt={userName}
+                    className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                  />
+                </DialogContent>
+              </Dialog>
 
               <div className="flex-1 pb-1">
                 <h1 className="text-2xl font-bold text-foreground font-heading">
