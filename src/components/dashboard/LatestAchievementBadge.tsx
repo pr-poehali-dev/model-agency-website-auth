@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, MouseEvent } from 'react';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { formatRelativeTime } from '@/lib/relativeTime';
@@ -23,9 +23,23 @@ interface Props {
   onClick?: () => void;
 }
 
+interface Particle {
+  id: number;
+  emoji: string;
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  rot: number;
+}
+
+const CONFETTI_EMOJIS = ['🎉', '✨', '🎊', '⭐', '💫', '🌟'];
+
 const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
   const [latest, setLatest] = useState<Achievement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const idRef = useRef(0);
 
   useEffect(() => {
     if (!userEmail || !ACHIEVEMENTS_URL) return;
@@ -39,6 +53,35 @@ const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
       .catch(() => setLatest(null))
       .finally(() => setLoading(false));
   }, [userEmail]);
+
+  const burstConfetti = (e: MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const parentRect = e.currentTarget.parentElement?.getBoundingClientRect();
+    if (!parentRect) return;
+    const cx = rect.left - parentRect.left + rect.width / 2;
+    const cy = rect.top - parentRect.top + rect.height / 2;
+
+    const fresh: Particle[] = Array.from({ length: 14 }).map(() => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 60 + Math.random() * 80;
+      return {
+        id: ++idRef.current,
+        emoji: CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)],
+        x: cx,
+        y: cy,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed - 40,
+        rot: (Math.random() - 0.5) * 540,
+      };
+    });
+
+    setParticles((p) => [...p, ...fresh]);
+    const ids = new Set(fresh.map((f) => f.id));
+    setTimeout(() => {
+      setParticles((p) => p.filter((x) => !ids.has(x.id)));
+    }, 1100);
+  };
 
   if (loading || !latest) return null;
 
@@ -54,7 +97,13 @@ const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
         aria-hidden
       />
       <div className="flex items-start gap-4 relative">
-        <div className="text-5xl leading-none shrink-0 animate-emoji-pulse origin-center">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={burstConfetti}
+          className="text-5xl leading-none shrink-0 animate-emoji-pulse origin-center cursor-pointer select-none active:scale-90 transition-transform"
+          title="Кликни меня!"
+        >
           {latest.emoji}
         </div>
         <div className="flex-1 min-w-0">
@@ -87,6 +136,34 @@ const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
           </div>
         </div>
       </div>
+
+      {particles.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 overflow-visible">
+          {particles.map((p) => (
+            <span
+              key={p.id}
+              className="absolute text-2xl will-change-transform"
+              style={{
+                left: `${p.x}px`,
+                top: `${p.y}px`,
+                animation: 'confetti-fly 1s ease-out forwards',
+                ['--dx' as string]: `${p.dx}px`,
+                ['--dy' as string]: `${p.dy}px`,
+                ['--rot' as string]: `${p.rot}deg`,
+              }}
+            >
+              {p.emoji}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes confetti-fly {
+          0% { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+          100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 120px)) rotate(var(--rot)) scale(0.6); }
+        }
+      `}</style>
     </Card>
   );
 };
