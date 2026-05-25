@@ -170,14 +170,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 ids = body.get('ids') or []
                 if not isinstance(ids, list):
                     return _resp(400, {'error': 'ids must be list'})
-                cur.execute(f"UPDATE {SCHEMA}.producer_allowed_achievements SET achievement_type_id = achievement_type_id WHERE 1=0")
-                cur.execute(f"INSERT INTO {SCHEMA}.producer_allowed_achievements (achievement_type_id) SELECT id FROM {SCHEMA}.achievement_types WHERE FALSE")
-                cur.execute(f"DELETE FROM {SCHEMA}.producer_allowed_achievements WHERE achievement_type_id NOT IN %s" if ids else f"DELETE FROM {SCHEMA}.producer_allowed_achievements WHERE TRUE",
-                            (tuple(ids),) if ids else None)
-                for tid in ids:
+                clean_ids = [int(x) for x in ids if str(x).isdigit()]
+                if clean_ids:
+                    cur.execute(
+                        f"DELETE FROM {SCHEMA}.producer_allowed_achievements WHERE achievement_type_id NOT IN %s",
+                        (tuple(clean_ids),),
+                    )
+                else:
+                    cur.execute(f"DELETE FROM {SCHEMA}.producer_allowed_achievements")
+                for tid in clean_ids:
                     cur.execute(
                         f"INSERT INTO {SCHEMA}.producer_allowed_achievements (achievement_type_id) VALUES (%s) ON CONFLICT DO NOTHING",
-                        (int(tid),),
+                        (tid,),
                     )
                 conn.commit()
                 return _resp(200, {'success': True, 'allowed_ids': _list_allowed_ids(cur)})
@@ -208,7 +212,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 grant_id = body.get('id')
                 if not grant_id:
                     return _resp(400, {'error': 'id required'})
-                cur.execute(f"UPDATE {SCHEMA}.user_achievements SET user_email = user_email WHERE id = %s", (grant_id,))
                 cur.execute(f"DELETE FROM {SCHEMA}.user_achievements WHERE id = %s", (grant_id,))
                 conn.commit()
                 return _resp(200, {'success': True})

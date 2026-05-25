@@ -11,6 +11,8 @@ import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from 
 import ProducerPlansManager from "@/components/ProducerPlansManager";
 import ProfileEditDialog from "@/components/profile/ProfileEditDialog";
 import AchievementsSection from "@/components/profile/AchievementsSection";
+import AchievementTypesManager from "@/components/profile/AchievementTypesManager";
+import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
@@ -122,6 +124,9 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [ratingOpen, setRatingOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [typesManagerOpen, setTypesManagerOpen] = useState(false);
+  const [grantOpen, setGrantOpen] = useState(false);
+  const [achievementsRefresh, setAchievementsRefresh] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
   const userRole = localStorage.getItem("userRole") || "model";
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
@@ -137,8 +142,11 @@ export default function ProfilePage() {
   const isProducer = userRole === "producer";
   const isShiftTracked = userRole === "operator" || userRole === "content_maker";
   const viewerIsDirector = currentUserRole === "director";
+  const viewerIsProducer = currentUserRole === "producer";
   const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
+  const canGrantAchievement = !isOwnProfile && (viewerIsDirector || viewerIsProducer);
+  const showTypesManager = viewerIsDirector && isOwnProfile;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
   const [shiftData, setShiftData] = useState<{
     shifts_count: number;
@@ -257,7 +265,45 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          <AchievementsSection userEmail={userEmail} />
+          <div className="md:col-span-2 space-y-3">
+            {(showTypesManager || canGrantAchievement) && (
+              <div className="flex flex-wrap gap-2 justify-end">
+                {showTypesManager && (
+                  <Button variant="outline" size="sm" onClick={() => setTypesManagerOpen(true)}>
+                    <Icon name="Settings2" size={14} className="mr-2" />
+                    Управление достижениями
+                  </Button>
+                )}
+                {canGrantAchievement && (
+                  <Button size="sm" onClick={() => setGrantOpen(true)}>
+                    <Icon name="Award" size={14} className="mr-2" />
+                    Назначить достижение
+                  </Button>
+                )}
+              </div>
+            )}
+            <AchievementsSection userEmail={userEmail} refreshKey={achievementsRefresh} />
+          </div>
+
+          {showTypesManager && (
+            <AchievementTypesManager
+              open={typesManagerOpen}
+              onOpenChange={setTypesManagerOpen}
+              actorEmail={currentUserEmail}
+            />
+          )}
+
+          {canGrantAchievement && (
+            <GrantAchievementDialog
+              open={grantOpen}
+              onOpenChange={setGrantOpen}
+              targetEmail={userEmail}
+              targetName={userName}
+              actorEmail={currentUserEmail}
+              actorRole={currentUserRole}
+              onGranted={() => setAchievementsRefresh((x) => x + 1)}
+            />
+          )}
 
           {/* Прогресс */}
           <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
