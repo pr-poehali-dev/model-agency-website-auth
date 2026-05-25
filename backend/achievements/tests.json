@@ -1,0 +1,43 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET types returns list",
+      "method": "GET",
+      "path": "/?action=types",
+      "expectedStatus": 200,
+      "expectedBody": {"types": "array"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET allowed_for_producer",
+      "method": "GET",
+      "path": "/?action=allowed_for_producer",
+      "expectedStatus": 200,
+      "expectedBody": {"allowed_ids": "array"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET user without email returns 400",
+      "method": "GET",
+      "path": "/?action=user",
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST without auth forbidden",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "create_type", "title": "Test"},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

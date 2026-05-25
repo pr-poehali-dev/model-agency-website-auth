@@ -10,6 +10,7 @@ import Icon from "@/components/ui/icon";
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
 import ProducerPlansManager from "@/components/ProducerPlansManager";
 import ProfileEditDialog from "@/components/profile/ProfileEditDialog";
+import AchievementsSection from "@/components/profile/AchievementsSection";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
@@ -256,43 +257,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* Достижения */}
-          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-foreground flex items-center gap-2 font-heading">
-                <Icon name="Trophy" size={20} className="text-primary" />
-                Достижения
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {MOCK_ACHIEVEMENTS.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`rounded-xl border bg-gradient-to-br p-4 ${achievement.color} transition-all hover:scale-[1.02] cursor-default`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl leading-none">{achievement.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground">{achievement.title}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5 leading-snug">
-                          {achievement.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Icon name="User" size={11} />
-                            {achievement.grantedBy}
-                          </span>
-                          <span className="text-xs text-muted-foreground">·</span>
-                          <span className="text-xs text-muted-foreground">{achievement.date}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <AchievementsSection userEmail={userEmail} />
 
           {/* Прогресс */}
           <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
