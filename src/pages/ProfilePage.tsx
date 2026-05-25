@@ -211,16 +211,6 @@ export default function ProfilePage() {
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                {isOwnProfile && (
-                  <button
-                    type="button"
-                    onClick={() => setEditOpen(true)}
-                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground border-2 border-background shadow-md flex items-center justify-center hover:scale-105 transition-transform"
-                    aria-label="Редактировать профиль"
-                  >
-                    <Icon name="Pencil" size={14} />
-                  </button>
-                )}
               </div>
 
               <div className="flex-1 pb-1">
