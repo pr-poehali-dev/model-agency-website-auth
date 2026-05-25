@@ -72,7 +72,6 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
               {initials}
             </AvatarFallback>
           </Avatar>
-          {icon && <Icon name={icon} size={20} className={iconClasses[color]} />}
           <h3 className="text-xl font-serif font-bold">{employee.name}</h3>
         </div>
       </div>
