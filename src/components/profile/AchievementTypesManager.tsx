@@ -148,21 +148,21 @@ export default function AchievementTypesManager({ open, onOpenChange, actorEmail
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle className="font-heading">Управление достижениями</DialogTitle>
           <DialogDescription>Создавай типы достижений и настраивай, что могут выдавать продюсеры</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="list" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="list" className="flex-1 min-h-0 flex flex-col">
+          <TabsList className="grid w-[calc(100%-3rem)] grid-cols-3 mx-6 mt-3 shrink-0">
             <TabsTrigger value="list">Список</TabsTrigger>
             <TabsTrigger value="create">Создать</TabsTrigger>
             <TabsTrigger value="allowed">Продюсеры</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="list" className="flex-1 overflow-hidden mt-3">
-            <ScrollArea className="h-[55vh] pr-3">
+          <TabsContent value="list" className="flex-1 min-h-0 mt-3 px-6 pb-6">
+            <ScrollArea className="h-full pr-3">
               {loading ? (
                 <p className="text-sm text-muted-foreground">Загрузка...</p>
               ) : types.length === 0 ? (
@@ -192,7 +192,8 @@ export default function AchievementTypesManager({ open, onOpenChange, actorEmail
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="create" className="flex-1 overflow-auto mt-3 space-y-3">
+          <TabsContent value="create" className="flex-1 min-h-0 mt-3 flex flex-col">
+            <div className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0">
             <div className="space-y-1.5">
               <Label htmlFor="ach-title">Название</Label>
               <Input id="ach-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например: Лучший оператор недели" />
@@ -230,20 +231,23 @@ export default function AchievementTypesManager({ open, onOpenChange, actorEmail
                 ))}
               </div>
             </div>
-            <Button onClick={handleCreate} disabled={creating} className="w-full">
-              {creating ? (
-                <><Icon name="Loader2" size={16} className="mr-2 animate-spin" />Создание...</>
-              ) : (
-                <><Icon name="Plus" size={16} className="mr-2" />Создать достижение</>
-              )}
-            </Button>
+            </div>
+            <div className="border-t px-6 py-4 shrink-0 bg-background">
+              <Button onClick={handleCreate} disabled={creating} className="w-full">
+                {creating ? (
+                  <><Icon name="Loader2" size={16} className="mr-2 animate-spin" />Создание...</>
+                ) : (
+                  <><Icon name="Plus" size={16} className="mr-2" />Создать достижение</>
+                )}
+              </Button>
+            </div>
           </TabsContent>
 
-          <TabsContent value="allowed" className="flex-1 overflow-hidden mt-3 flex flex-col">
-            <p className="text-sm text-muted-foreground mb-2">
+          <TabsContent value="allowed" className="flex-1 min-h-0 mt-3 flex flex-col">
+            <p className="text-sm text-muted-foreground mb-2 px-6 shrink-0">
               Отметь достижения, которые продюсер сможет выдавать своим сотрудникам.
             </p>
-            <ScrollArea className="h-[45vh] pr-3 flex-1">
+            <ScrollArea className="flex-1 min-h-0 pr-3 px-6">
               <div className="space-y-2">
                 {types.filter((t) => t.is_active).map((t) => (
                   <label
@@ -260,10 +264,12 @@ export default function AchievementTypesManager({ open, onOpenChange, actorEmail
                 ))}
               </div>
             </ScrollArea>
-            <Button onClick={saveAllowed} className="mt-3">
-              <Icon name="Check" size={16} className="mr-2" />
-              Сохранить разрешения
-            </Button>
+            <div className="border-t px-6 py-4 mt-3 shrink-0 bg-background">
+              <Button onClick={saveAllowed} className="w-full">
+                <Icon name="Check" size={16} className="mr-2" />
+                Сохранить разрешения
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>

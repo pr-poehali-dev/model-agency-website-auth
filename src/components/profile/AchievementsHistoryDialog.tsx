@@ -144,20 +144,22 @@ export default function AchievementsHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle className="font-heading">История достижений</DialogTitle>
           <DialogDescription>Все выданные достижения. Можно отозвать любое.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+        <div className="px-6 pt-4 pb-3 shrink-0 border-b">
           <Input
             placeholder="Поиск по сотруднику, достижению или автору..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
 
-          <ScrollArea className="flex-1 h-[60vh] pr-2 border rounded-md">
+        <div className="flex-1 min-h-0 flex flex-col px-6 pt-3 pb-2">
+          <ScrollArea className="flex-1 min-h-0 pr-2 border rounded-md">
             {loading ? (
               <p className="text-sm text-muted-foreground p-4">Загрузка...</p>
             ) : filtered.length === 0 ? (
@@ -226,14 +228,16 @@ export default function AchievementsHistoryDialog({
               </div>
             )}
           </ScrollArea>
+        </div>
 
-          {!loading && (
+        {!loading && (
+          <div className="border-t px-6 py-3 shrink-0 bg-background">
             <p className="text-xs text-muted-foreground text-right">
               Всего: {filtered.length}
               {filtered.length !== items.length && ` из ${items.length}`}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
