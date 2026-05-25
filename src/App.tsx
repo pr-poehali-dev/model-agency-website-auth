@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import LoadingScreen from "./components/LoadingScreen";
 import AchievementToastWatcher from "./components/AchievementToastWatcher";
+import DailyFinancesBackup from "./components/DailyFinancesBackup";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -37,6 +38,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AchievementToastWatcher />
+          <DailyFinancesBackup />
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               <Route path="/" element={<Login />} />
