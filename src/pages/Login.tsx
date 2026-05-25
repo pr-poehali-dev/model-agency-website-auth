@@ -41,6 +41,11 @@ const Login = () => {
       localStorage.setItem('userRole', data.user.role);
       localStorage.setItem('userName', data.user.fullName);
       if (data.user.createdAt) localStorage.setItem('userCreatedAt', data.user.createdAt);
+      if (data.user.photoUrl) {
+        localStorage.setItem('userPhotoUrl', data.user.photoUrl);
+      } else {
+        localStorage.removeItem('userPhotoUrl');
+      }
       
       addAuditLog(data.user.email, 'Вход в систему', 'Успешная авторизация', 'auth');
       navigate('/dashboard');

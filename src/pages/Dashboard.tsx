@@ -84,7 +84,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
-  const [userPhotoUrl, setUserPhotoUrl] = useState('');
+  const [userPhotoUrl, setUserPhotoUrl] = useState(() => localStorage.getItem('userPhotoUrl') || '');
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
   const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
   const [assignedProducer, setAssignedProducer] = useState('');
@@ -152,7 +152,13 @@ const Dashboard = () => {
           const effectivePermissions = dbPermissions.length > 0 ? dbPermissions : rolePermissions;
 
           setUserPermissions(effectivePermissions);
-          setUserPhotoUrl(currentUser.photoUrl || '');
+          const freshPhotoUrl = currentUser.photoUrl || '';
+          setUserPhotoUrl(freshPhotoUrl);
+          if (freshPhotoUrl) {
+            localStorage.setItem('userPhotoUrl', freshPhotoUrl);
+          } else {
+            localStorage.removeItem('userPhotoUrl');
+          }
 
           if (currentUser.role === 'operator') {
             loadOperatorAssignments(email);

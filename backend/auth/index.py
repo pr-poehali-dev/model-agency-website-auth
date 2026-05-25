@@ -76,7 +76,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 password = body_data.get('password', '')
                 
                 cur.execute(
-                    "SELECT id, email, role, full_name, is_active, permissions, password_hash, created_at FROM users WHERE email = %s",
+                    "SELECT id, email, role, full_name, is_active, permissions, password_hash, created_at, photo_url FROM users WHERE email = %s",
                     (email,)
                 )
                 user = cur.fetchone()
@@ -147,7 +147,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             'role': user['role'],
                             'fullName': user['full_name'],
                             'permissions': permissions,
-                            'createdAt': user['created_at'].isoformat() if user['created_at'] else None
+                            'createdAt': user['created_at'].isoformat() if user['created_at'] else None,
+                            'photoUrl': user.get('photo_url')
                         },
                         'token': token
                     })
