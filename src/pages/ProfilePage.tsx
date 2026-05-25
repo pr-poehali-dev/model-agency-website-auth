@@ -145,7 +145,7 @@ export default function ProfilePage() {
   const viewerIsProducer = currentUserRole === "producer";
   const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
-  const canGrantAchievement = !isOwnProfile && (viewerIsDirector || viewerIsProducer);
+  const canGrantAchievement = viewerIsDirector || viewerIsProducer;
   const showTypesManager = viewerIsDirector && isOwnProfile;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
   const [shiftData, setShiftData] = useState<{
@@ -297,8 +297,8 @@ export default function ProfilePage() {
             <GrantAchievementDialog
               open={grantOpen}
               onOpenChange={setGrantOpen}
-              targetEmail={userEmail}
-              targetName={userName}
+              targetEmail={isOwnProfile ? undefined : userEmail}
+              targetName={isOwnProfile ? undefined : userName}
               actorEmail={currentUserEmail}
               actorRole={currentUserRole}
               onGranted={() => setAchievementsRefresh((x) => x + 1)}
