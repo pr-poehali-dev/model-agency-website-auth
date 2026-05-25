@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import Icon from "@/components/ui/icon";
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
 import ProducerPlansManager from "@/components/ProducerPlansManager";
+import ProfileEditDialog from "@/components/profile/ProfileEditDialog";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
@@ -119,6 +120,8 @@ const ROLE_LABELS: Record<string, string> = {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [ratingOpen, setRatingOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
   const userRole = localStorage.getItem("userRole") || "model";
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
   const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
@@ -203,23 +206,21 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-background shadow-xl">
-                  <AvatarImage src={MOCK_USER.avatar} />
+                  <AvatarImage src={photoUrl || MOCK_USER.avatar} />
                   <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                {/* Медали-бейджи на аватаре */}
-                <div className="absolute -bottom-1 -right-1 flex gap-0.5">
-                  {MOCK_ACHIEVEMENTS.slice(0, 3).map((a) => (
-                    <span
-                      key={a.id}
-                      title={a.title}
-                      className="text-base leading-none cursor-default"
-                    >
-                      {a.emoji}
-                    </span>
-                  ))}
-                </div>
+                {isOwnProfile && (
+                  <button
+                    type="button"
+                    onClick={() => setEditOpen(true)}
+                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground border-2 border-background shadow-md flex items-center justify-center hover:scale-105 transition-transform"
+                    aria-label="Редактировать профиль"
+                  >
+                    <Icon name="Pencil" size={14} />
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 pb-1">
@@ -238,9 +239,30 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-muted-foreground text-sm mt-1">{userEmail}</p>
               </div>
+
+              {isOwnProfile && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                  className="self-start sm:self-end"
+                >
+                  <Icon name="Settings" size={14} className="mr-2" />
+                  Редактировать
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
+
+        <ProfileEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          email={userEmail}
+          currentPhotoUrl={photoUrl}
+          initials={initials}
+          onPhotoUpdated={setPhotoUrl}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
