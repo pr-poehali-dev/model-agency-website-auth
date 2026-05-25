@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Icon from '@/components/ui/icon';
 import { Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
@@ -165,10 +166,30 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
 
   if (loading) {
     return (
-      <Card className="p-8 text-center">
-        <Icon name="Loader2" size={32} className="mx-auto mb-4 text-primary animate-spin" />
-        <p className="text-muted-foreground">Загрузка статистики...</p>
-      </Card>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-3 w-16" />
+            </Card>
+          ))}
+        </div>
+        <Card className="p-6 space-y-3">
+          <Skeleton className="h-5 w-48" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </Card>
+      </div>
     );
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Icon from '@/components/ui/icon';
 import { getCurrentPeriod, getPreviousPeriod } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
@@ -336,9 +337,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
                 Премия: +{Math.round(prevBonus.amount).toLocaleString('ru-RU')} ₽
               </p>
             )}
-            <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
-              {isLoadingPrevSalary ? '...' : prevSalary !== null ? `${Math.round(prevSalary + (prevBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
-            </p>
+            {isLoadingPrevSalary ? (
+              <Skeleton className="h-9 w-40 mb-3" />
+            ) : (
+              <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
+                {prevSalary !== null ? `${Math.round(prevSalary + (prevBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
+              </p>
+            )}
             {!isLoadingPrevSalary && prevSalary !== null && (
               <div className="space-y-1 text-sm">
                 {prevAdvance > 0 && (
@@ -383,9 +388,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
                 Премия: +{Math.round(currentBonus.amount).toLocaleString('ru-RU')} ₽
               </p>
             )}
-            <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
-              {isLoadingSalary ? '...' : mySalary !== null ? `${Math.round(mySalary + (currentBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
-            </p>
+            {isLoadingSalary ? (
+              <Skeleton className="h-9 w-40 mb-3" />
+            ) : (
+              <p className="text-3xl font-serif font-bold text-foreground mb-3 break-words">
+                {mySalary !== null ? `${Math.round(mySalary + (currentBonus?.amount || 0)).toLocaleString('ru-RU')} ₽` : '—'}
+              </p>
+            )}
             {!isLoadingSalary && mySalary !== null && (
               <div className="space-y-1 text-sm">
                 {myAdvance > 0 && (
@@ -493,9 +502,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
                 <Icon name="TrendingUp" size={24} className="text-amber-600" />
               </div>
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Курс доллара (ЦБ - 5₽)</h3>
-              <p className="text-3xl font-serif font-bold text-foreground">
-                {isLoadingRate ? '...' : workingRate ? `${workingRate.toFixed(2)} ₽` : '—'}
-              </p>
+              {isLoadingRate ? (
+                <Skeleton className="h-9 w-28" />
+              ) : (
+                <p className="text-3xl font-serif font-bold text-foreground">
+                  {workingRate ? `${workingRate.toFixed(2)} ₽` : '—'}
+                </p>
+              )}
             </Card>
 
             <Card className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
@@ -506,9 +519,13 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
                 <Badge variant="secondary" className="bg-orange-500/20 text-orange-600">ЦБ РФ</Badge>
               </div>
               <h3 className="text-sm font-medium text-muted-foreground mb-1">Курс доллара ЦБ</h3>
-              <p className="text-3xl font-serif font-bold text-foreground">
-                {isLoadingRate ? '...' : cbrRate ? `${cbrRate.toFixed(2)} ₽` : '—'}
-              </p>
+              {isLoadingRate ? (
+                <Skeleton className="h-9 w-28" />
+              ) : (
+                <p className="text-3xl font-serif font-bold text-foreground">
+                  {cbrRate ? `${cbrRate.toFixed(2)} ₽` : '—'}
+                </p>
+              )}
             </Card>
           </div>
 

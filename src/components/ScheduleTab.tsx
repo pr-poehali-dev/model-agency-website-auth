@@ -9,6 +9,8 @@ import EditTimeSlotDialog from './schedule-components/EditTimeSlotDialog';
 import AddApartmentDialog from './schedule-components/AddApartmentDialog';
 import EditApartmentDialog from './schedule-components/EditApartmentDialog';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 
 interface TeamMember {
@@ -539,8 +541,26 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
       <div className="animate-fade-in space-y-6">
         <div>
           <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Расписание</h2>
-          <p className="text-muted-foreground">Загрузка...</p>
+          <Skeleton className="h-4 w-64" />
         </div>
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-9 w-28" />
+          </div>
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+          {Array.from({ length: 6 }).map((_, row) => (
+            <div key={row} className="grid grid-cols-7 gap-2">
+              {Array.from({ length: 7 }).map((_, col) => (
+                <Skeleton key={col} className="h-14 w-full" />
+              ))}
+            </div>
+          ))}
+        </Card>
       </div>
     );
   }
