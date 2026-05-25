@@ -1,13 +1,31 @@
 # updated
 import json
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple
+
+CACHE_TTL_SECONDS = 3600
+_rate_cache: Dict[str, Tuple[float, float]] = {}
+
+
+def _get_cached_rate() -> Optional[float]:
+    entry = _rate_cache.get('usd')
+    if entry is None:
+        return None
+    cached_at, value = entry
+    if time.time() - cached_at > CACHE_TTL_SECONDS:
+        return None
+    return value
+
+
+def _set_cached_rate(value: float) -> None:
+    _rate_cache['usd'] = (time.time(), value)
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Get current USD/RUB exchange rate from Central Bank of Russia
+    Business: Get current USD/RUB exchange rate from Central Bank of Russia (cached for 1 hour)
     Args: event - dict with httpMethod
           context - object with request_id
     Returns: HTTP response with exchange rate
@@ -42,6 +60,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Method not allowed'})
         }
     
+    cached = _get_cached_rate()
+    if cached is not None:
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true',
+                'Cache-Control': 'public, max-age=3600',
+                'X-Cache': 'HIT'
+            },
+            'isBase64Encoded': False,
+            'body': json.dumps({
+                'rate': cached,
+                'source': 'CBR',
+                'currency': 'USD',
+                'cached': True
+            })
+        }
+
     try:
         url = 'http://www.cbr.ru/scripts/XML_daily.asp'
         
@@ -90,6 +128,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             rate = rate / nominal
         
         rounded_rate = round(rate, 2)
+        _set_cached_rate(rounded_rate)
         print(f'CBR rate fetched: {rounded_rate} (raw: {rate})')
         
         return {
@@ -98,13 +137,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': origin,
                 'Access-Control-Allow-Credentials': 'true',
-                'Cache-Control': 'public, max-age=3600'
+                'Cache-Control': 'public, max-age=3600',
+                'X-Cache': 'MISS'
             },
             'isBase64Encoded': False,
             'body': json.dumps({
                 'rate': rounded_rate,
                 'source': 'CBR',
-                'currency': 'USD'
+                'currency': 'USD',
+                'cached': False
             })
         }
         
