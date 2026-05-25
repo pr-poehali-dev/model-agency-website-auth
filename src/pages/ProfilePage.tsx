@@ -13,6 +13,7 @@ import ProfileEditDialog from "@/components/profile/ProfileEditDialog";
 import AchievementsSection from "@/components/profile/AchievementsSection";
 import AchievementTypesManager from "@/components/profile/AchievementTypesManager";
 import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
+import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
@@ -125,6 +126,7 @@ export default function ProfilePage() {
   const [ratingOpen, setRatingOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [typesManagerOpen, setTypesManagerOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [grantOpen, setGrantOpen] = useState(false);
   const [achievementsRefresh, setAchievementsRefresh] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
@@ -274,6 +276,12 @@ export default function ProfilePage() {
                     Управление достижениями
                   </Button>
                 )}
+                {showTypesManager && (
+                  <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
+                    <Icon name="History" size={14} className="mr-2" />
+                    История
+                  </Button>
+                )}
                 {canGrantAchievement && (
                   <Button size="sm" onClick={() => setGrantOpen(true)}>
                     <Icon name="Award" size={14} className="mr-2" />
@@ -290,6 +298,15 @@ export default function ProfilePage() {
               open={typesManagerOpen}
               onOpenChange={setTypesManagerOpen}
               actorEmail={currentUserEmail}
+            />
+          )}
+
+          {showTypesManager && (
+            <AchievementsHistoryDialog
+              open={historyOpen}
+              onOpenChange={setHistoryOpen}
+              actorEmail={currentUserEmail}
+              onChanged={() => setAchievementsRefresh((x) => x + 1)}
             />
           )}
 

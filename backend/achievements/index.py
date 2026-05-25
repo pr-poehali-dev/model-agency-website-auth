@@ -105,6 +105,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return _resp(200, {'achievements': _list_user_achievements(cur, email)})
             if action == 'allowed_for_producer':
                 return _resp(200, {'allowed_ids': _list_allowed_ids(cur)})
+            if action == 'history':
+                if not is_director:
+                    return _resp(403, {'error': 'forbidden'})
+                try:
+                    limit = min(int(params.get('limit') or 200), 500)
+                except (TypeError, ValueError):
+                    limit = 200
+                cur.execute(
+                    f"""SELECT ua.id, ua.user_email, ua.granted_by_email, ua.granted_by_name,
+                               ua.granted_at, ua.comment,
+                               at.id AS type_id, at.title, at.emoji, at.color,
+                               u.full_name AS user_full_name, u.role AS user_role,
+                               u.photo_url AS user_photo_url
+                        FROM {SCHEMA}.user_achievements ua
+                        JOIN {SCHEMA}.achievement_types at ON ua.achievement_type_id = at.id
+                        LEFT JOIN {SCHEMA}.users u ON LOWER(u.email) = LOWER(ua.user_email)
+                        ORDER BY ua.granted_at DESC
+                        LIMIT {limit}"""
+                )
+                return _resp(200, {'history': [dict(r) for r in cur.fetchall()]})
             return _resp(400, {'error': 'unknown action'})
 
         if method == 'POST':
