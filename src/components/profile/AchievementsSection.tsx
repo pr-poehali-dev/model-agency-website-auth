@@ -25,9 +25,15 @@ interface AchievementsSectionProps {
   refreshKey?: number;
 }
 
+const parseUtc = (iso: string): Date => {
+  let s = iso.replace(' ', 'T');
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += 'Z';
+  return new Date(s);
+};
+
 const formatDate = (iso: string): string => {
   try {
-    const d = new Date(iso.replace(' ', 'T'));
+    const d = parseUtc(iso);
     return d.toLocaleString('ru-RU', {
       day: '2-digit',
       month: 'long',
