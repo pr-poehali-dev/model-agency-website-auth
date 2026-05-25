@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import type { UserRole } from '@/lib/permissions';
+import EmployeeAvatar from '@/components/profile/EmployeeAvatar';
 
 const TASKS_API_URL = 'https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edcb005ce100';
 
@@ -564,11 +565,7 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
                   const isMe = c.authorEmail === userEmail;
                   return (
                     <div key={c.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                      <Avatar className="h-7 w-7 shrink-0">
-                        <AvatarFallback className="text-xs">
-                          {(c.authorName || c.authorEmail).slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <EmployeeAvatar email={c.authorEmail} name={c.authorName} />
                       <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'}`}>
                         <div className={`rounded-xl px-3 py-2 text-sm ${
                           isMe
