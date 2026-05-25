@@ -25,12 +25,20 @@ interface TasksContextValue {
   tasks: Task[];
   loading: boolean;
   refresh: () => void;
+  addOptimistic: (task: Task) => void;
+  updateOptimistic: (id: number, patch: Partial<Task>) => void;
+  removeOptimistic: (id: number) => void;
+  replaceOptimistic: (tempId: number, real: Task) => void;
 }
 
 const TasksContext = createContext<TasksContextValue>({
   tasks: [],
   loading: true,
   refresh: () => {},
+  addOptimistic: () => {},
+  updateOptimistic: () => {},
+  removeOptimistic: () => {},
+  replaceOptimistic: () => {},
 });
 
 export const useTasksContext = () => useContext(TasksContext);
@@ -98,8 +106,34 @@ export const TasksProvider = ({ userEmail, userRole, children }: TasksProviderPr
     };
   }, [userEmail, userRole, fetchTasks]);
 
+  const addOptimistic = useCallback((task: Task) => {
+    setTasks((prev) => [task, ...prev]);
+  }, []);
+
+  const updateOptimistic = useCallback((id: number, patch: Partial<Task>) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  }, []);
+
+  const removeOptimistic = useCallback((id: number) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const replaceOptimistic = useCallback((tempId: number, real: Task) => {
+    setTasks((prev) => prev.map((t) => (t.id === tempId ? real : t)));
+  }, []);
+
   return (
-    <TasksContext.Provider value={{ tasks, loading, refresh: fetchTasks }}>
+    <TasksContext.Provider
+      value={{
+        tasks,
+        loading,
+        refresh: fetchTasks,
+        addOptimistic,
+        updateOptimistic,
+        removeOptimistic,
+        replaceOptimistic,
+      }}
+    >
       {children}
     </TasksContext.Provider>
   );

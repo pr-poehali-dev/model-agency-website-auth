@@ -74,7 +74,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
-  const { tasks, loading } = useTasksContext();
+  const { tasks, loading, addOptimistic, updateOptimistic, removeOptimistic, replaceOptimistic } = useTasksContext();
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -139,29 +139,59 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       toast({ title: 'Заполните название и исполнителя', variant: 'destructive' });
       return;
     }
+    const tempId = -Date.now();
+    const assignee = assignees.find((a) => a.email === newTask.assignedToEmail);
+    const nowIso = new Date().toISOString();
+    const optimistic: Task = {
+      id: tempId,
+      title: newTask.title,
+      description: newTask.description,
+      status: 'pending',
+      priority: newTask.priority,
+      assignedToEmail: newTask.assignedToEmail,
+      assignedByEmail: userEmail,
+      dueDate: newTask.dueDate || null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      completedAt: null,
+      assignedToName: assignee?.fullName ?? null,
+      assignedByName: null,
+      commentCount: 0,
+    };
+
+    const formSnapshot = newTask;
+    addOptimistic(optimistic);
+    setIsCreateOpen(false);
+    setNewTask({ title: '', description: '', priority: 'medium', assignedToEmail: '', dueDate: '' });
     setCreateLoading(true);
+
     try {
       const res = await fetch(TASKS_API_URL, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          priority: newTask.priority,
-          assignedToEmail: newTask.assignedToEmail,
-          dueDate: newTask.dueDate || null,
+          title: formSnapshot.title,
+          description: formSnapshot.description,
+          priority: formSnapshot.priority,
+          assignedToEmail: formSnapshot.assignedToEmail,
+          dueDate: formSnapshot.dueDate || null,
         }),
       });
       if (res.ok) {
+        const created = await res.json().catch(() => null);
+        if (created && typeof created.id === 'number') {
+          replaceOptimistic(tempId, { ...optimistic, ...created });
+        } else {
+          window.dispatchEvent(new Event('task-changed'));
+        }
         toast({ title: 'Задача создана' });
-        setIsCreateOpen(false);
-        setNewTask({ title: '', description: '', priority: 'medium', assignedToEmail: '', dueDate: '' });
-        window.dispatchEvent(new Event('task-changed'));
       } else {
-        const err = await res.json();
+        removeOptimistic(tempId);
+        const err = await res.json().catch(() => ({}));
         toast({ title: err.error || 'Ошибка', variant: 'destructive' });
       }
     } catch {
+      removeOptimistic(tempId);
       toast({ title: 'Ошибка сети', variant: 'destructive' });
     } finally {
       setCreateLoading(false);
@@ -169,6 +199,13 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
   };
 
   const handleStatusChange = async (taskId: number, newStatus: string) => {
+    const prev = tasks.find((t) => t.id === taskId);
+    const patch: Partial<Task> = {
+      status: newStatus,
+      completedAt: newStatus === 'completed' ? new Date().toISOString() : null,
+    };
+    updateOptimistic(taskId, patch);
+
     try {
       const res = await fetch(TASKS_API_URL, {
         method: 'PUT',
@@ -178,13 +215,19 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
       if (res.ok) {
         window.__lastStatusChangeTaskId = taskId;
         window.dispatchEvent(new Event('task-changed'));
+      } else {
+        if (prev) updateOptimistic(taskId, { status: prev.status, completedAt: prev.completedAt });
+        toast({ title: 'Ошибка обновления', variant: 'destructive' });
       }
     } catch {
+      if (prev) updateOptimistic(taskId, { status: prev.status, completedAt: prev.completedAt });
       toast({ title: 'Ошибка обновления', variant: 'destructive' });
     }
   };
 
   const handleDelete = async (taskId: number) => {
+    const prev = tasks.find((t) => t.id === taskId);
+    removeOptimistic(taskId);
     try {
       const res = await fetch(TASKS_API_URL, {
         method: 'DELETE',
@@ -195,10 +238,12 @@ const TasksTab = ({ userRole, userEmail }: TasksTabProps) => {
         toast({ title: 'Задача удалена' });
         window.dispatchEvent(new Event('task-changed'));
       } else {
-        const err = await res.json();
+        if (prev) addOptimistic(prev);
+        const err = await res.json().catch(() => ({}));
         toast({ title: err.error || 'Ошибка', variant: 'destructive' });
       }
     } catch {
+      if (prev) addOptimistic(prev);
       toast({ title: 'Ошибка сети', variant: 'destructive' });
     }
   };
