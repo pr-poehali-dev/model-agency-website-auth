@@ -7,6 +7,7 @@ import { getCurrentPeriod, getPreviousPeriod } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
 import { RATE_OFFSET } from '@/lib/constants';
 import { useEarnedBonus } from '@/hooks/useEarnedBonus';
+import LatestAchievementBadge from '@/components/dashboard/LatestAchievementBadge';
 
 interface Model {
   id: number;
@@ -308,6 +309,10 @@ const DashboardHome = ({ models, userRole, userEmail, onNavigate }: DashboardHom
         <h2 className="text-4xl font-serif font-bold text-foreground mb-2">Главная</h2>
         <p className="text-muted-foreground"></p>
       </div>
+
+      {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
+        <LatestAchievementBadge userEmail={userEmail} onClick={() => onNavigate?.('profile')} />
+      )}
 
       {userRole && ['operator', 'content_maker', 'solo_maker'].includes(userRole) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
