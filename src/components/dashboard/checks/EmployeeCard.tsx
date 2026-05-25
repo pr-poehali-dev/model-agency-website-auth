@@ -1,10 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
 import { Employee } from './types';
 import { useState, useEffect } from 'react';
 import { useEarnedBonus } from '@/hooks/useEarnedBonus';
+import { useEmployeePhoto } from '@/hooks/useEmployeePhotos';
 import { getCurrentPeriod, type Period } from '@/utils/periodUtils';
 
 interface EmployeeCardProps {
@@ -20,6 +22,14 @@ interface EmployeeCardProps {
 const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPercentageUpdate, period }: EmployeeCardProps) => {
   const effectivePeriod = period || getCurrentPeriod();
   const { bonus } = useEarnedBonus(employee.email, effectivePeriod.startDate, effectivePeriod.endDate);
+  const photoUrl = useEmployeePhoto(employee.email);
+  const initials = (employee.name || employee.email || '?')
+    .split(/\s+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
   const bonusAmount = bonus?.amount || 0;
   const [advance, setAdvance] = useState(employee.advance);
   const [penalty, setPenalty] = useState(employee.penalty);
@@ -56,7 +66,13 @@ const EmployeeCard = ({ employee, color, icon, canEdit = false, onUpdate, onPerc
     <Card className={`overflow-hidden border-2 ${colorClasses[color].split(' ')[2]} shadow-lg`}>
       <div className={`bg-gradient-to-r ${colorClasses[color].split(' ').slice(0, 2).join(' ')} p-4 text-center border-b-2 ${colorClasses[color].split(' ')[2]}`}>
         <div className="flex items-center justify-center gap-3">
-          {icon && <Icon name={icon} size={24} className={iconClasses[color]} />}
+          <Avatar className="w-10 h-10 border-2 border-background shadow">
+            <AvatarImage src={photoUrl} />
+            <AvatarFallback className={`text-xs font-bold ${iconClasses[color]} bg-background/60`}>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {icon && <Icon name={icon} size={20} className={iconClasses[color]} />}
           <h3 className="text-xl font-serif font-bold">{employee.name}</h3>
         </div>
       </div>

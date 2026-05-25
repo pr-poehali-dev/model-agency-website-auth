@@ -1,11 +1,13 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
 import { ProducerData } from './types';
 import { Period } from '@/utils/periodUtils';
 import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useEarnedBonus } from '@/hooks/useEarnedBonus';
+import { useEmployeePhoto } from '@/hooks/useEmployeePhotos';
 
 interface ProducerSalaryCardProps {
   producerData: ProducerData;
@@ -59,10 +61,24 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate, s
   const { bonus } = useEarnedBonus(producerData.email, period.startDate, period.endDate);
   const bonusAmount = bonus?.amount || 0;
   const total = producerData.sumRubles + expenses - advance - penalty + bonusAmount;
+  const photoUrl = useEmployeePhoto(producerData.email);
+  const initials = (producerData.name || producerData.email || '?')
+    .split(/\s+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
   return (
     <Card className="overflow-hidden max-w-2xl mx-auto border-2 border-red-500/30 shadow-lg">
       <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 p-4 text-center border-b-2 border-red-500/30">
         <div className="flex items-center justify-center gap-3">
+          <Avatar className="w-12 h-12 border-2 border-background shadow">
+            <AvatarImage src={photoUrl} />
+            <AvatarFallback className="text-sm font-bold text-red-500 bg-background/60">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
           <Icon name="Crown" size={28} className="text-red-500" />
           <h3 className="text-2xl font-serif font-bold">{producerData.name}</h3>
           <Icon name="Crown" size={28} className="text-red-500" />
