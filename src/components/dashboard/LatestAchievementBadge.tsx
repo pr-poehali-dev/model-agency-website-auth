@@ -45,15 +45,21 @@ const LatestAchievementBadge = ({ userEmail, onClick }: Props) => {
   return (
     <Card
       onClick={onClick}
-      className={`p-4 border bg-gradient-to-br ${latest.color} relative overflow-hidden ${
+      className={`p-4 border bg-gradient-to-br ${latest.color} relative overflow-hidden animate-fade-in ${
         onClick ? 'cursor-pointer hover:scale-[1.01] transition-transform' : ''
       }`}
     >
-      <div className="flex items-start gap-4">
-        <div className="text-5xl leading-none shrink-0">{latest.emoji}</div>
+      <div
+        className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 animate-badge-shimmer"
+        aria-hidden
+      />
+      <div className="flex items-start gap-4 relative">
+        <div className="text-5xl leading-none shrink-0 animate-emoji-pulse origin-center">
+          {latest.emoji}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Icon name="Sparkles" size={14} className="text-primary" />
+            <Icon name="Sparkles" size={14} className="text-primary animate-pulse" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Бейдж дня
             </span>
