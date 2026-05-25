@@ -16,8 +16,10 @@ interface ProfileEditDialogProps {
   onOpenChange: (open: boolean) => void;
   email: string;
   currentPhotoUrl?: string;
+  currentCoverUrl?: string;
   initials: string;
   onPhotoUpdated?: (url: string) => void;
+  onCoverUpdated?: (url: string) => void;
 }
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -33,13 +35,18 @@ export default function ProfileEditDialog({
   onOpenChange,
   email,
   currentPhotoUrl,
+  currentCoverUrl,
   initials,
   onPhotoUpdated,
+  onCoverUpdated,
 }: ProfileEditDialogProps) {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(currentPhotoUrl);
+  const [coverPreview, setCoverPreview] = useState<string | undefined>(currentCoverUrl);
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -47,6 +54,43 @@ export default function ProfileEditDialog({
   const [changing, setChanging] = useState(false);
 
   const handlePickFile = () => fileRef.current?.click();
+  const handlePickCover = () => coverRef.current?.click();
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Нужно изображение", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Файл слишком большой", description: "Максимум 5 МБ", variant: "destructive" });
+      return;
+    }
+    setUploadingCover(true);
+    try {
+      const base64 = await fileToBase64(file);
+      setCoverPreview(base64);
+      const res = await fetch(PROFILE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "upload_cover", email, image: base64 }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Не удалось загрузить");
+      setCoverPreview(data.cover_url);
+      localStorage.setItem("userCoverUrl", data.cover_url);
+      onCoverUpdated?.(data.cover_url);
+      toast({ title: "Шапка обновлена" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Не удалось загрузить шапку";
+      toast({ title: "Ошибка", description: message, variant: "destructive" });
+      setCoverPreview(currentCoverUrl);
+    } finally {
+      setUploadingCover(false);
+      if (coverRef.current) coverRef.current.value = "";
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,16 +180,53 @@ export default function ProfileEditDialog({
         </DialogHeader>
 
         <Tabs defaultValue="avatar" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="avatar">
-              <Icon name="ImagePlus" size={16} className="mr-2" />
-              Фото
+              <Icon name="ImagePlus" size={16} className="mr-1" />
+              Аватар
+            </TabsTrigger>
+            <TabsTrigger value="cover">
+              <Icon name="Image" size={16} className="mr-1" />
+              Шапка
             </TabsTrigger>
             <TabsTrigger value="password">
-              <Icon name="KeyRound" size={16} className="mr-2" />
+              <Icon name="KeyRound" size={16} className="mr-1" />
               Пароль
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="cover" className="space-y-4 pt-2">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-full h-32 rounded-lg overflow-hidden border border-border bg-gradient-to-r from-primary/30 via-purple-500/20 to-cyan-500/20">
+                {coverPreview && (
+                  <img src={coverPreview} alt="Шапка" className="w-full h-full object-cover" />
+                )}
+              </div>
+              <input
+                ref={coverRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleCoverChange}
+                className="hidden"
+              />
+              <Button onClick={handlePickCover} disabled={uploadingCover} className="w-full">
+                {uploadingCover ? (
+                  <>
+                    <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                    Загрузка...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Upload" size={16} className="mr-2" />
+                    Выбрать шапку профиля
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Широкое изображение лучше всего. JPG, PNG или WebP. До 5 МБ.
+              </p>
+            </div>
+          </TabsContent>
 
           <TabsContent value="avatar" className="space-y-4 pt-2">
             <div className="flex flex-col items-center gap-4">

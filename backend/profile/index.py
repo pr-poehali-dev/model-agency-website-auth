@@ -42,7 +42,7 @@ def _hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
-def _upload_avatar_to_s3(image_b64: str, user_id: int) -> str:
+def _upload_image_to_s3(image_b64: str, folder: str, user_id: int) -> str:
     if ',' in image_b64:
         image_b64 = image_b64.split(',', 1)[1]
     data = base64.b64decode(image_b64)
@@ -55,7 +55,7 @@ def _upload_avatar_to_s3(image_b64: str, user_id: int) -> str:
     elif data[:4] == b'RIFF':
         ext = 'webp'
 
-    key = f'avatars/{user_id}_{uuid.uuid4().hex}.{ext}'
+    key = f'{folder}/{user_id}_{uuid.uuid4().hex}.{ext}'
 
     s3 = boto3.client(
         's3',
@@ -66,6 +66,10 @@ def _upload_avatar_to_s3(image_b64: str, user_id: int) -> str:
     content_type = {'jpg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp'}[ext]
     s3.put_object(Bucket='files', Key=key, Body=data, ContentType=content_type)
     return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
+def _upload_avatar_to_s3(image_b64: str, user_id: int) -> str:
+    return _upload_image_to_s3(image_b64, 'avatars', user_id)
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -91,12 +95,35 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     try:
         cur.execute(
-            "SELECT id, email, password_hash, photo_url FROM t_p35405502_model_agency_website.users WHERE LOWER(email) = %s",
+            "SELECT id, email, password_hash, photo_url, cover_url FROM t_p35405502_model_agency_website.users WHERE LOWER(email) = %s",
             (email,),
         )
         user = cur.fetchone()
         if not user:
             return _resp(404, {'error': 'User not found'})
+
+        if action == 'get_profile':
+            return _resp(200, {
+                'success': True,
+                'photo_url': user['photo_url'],
+                'cover_url': user['cover_url'],
+            })
+
+        if action == 'upload_cover':
+            image_b64 = body.get('image')
+            if not image_b64:
+                return _resp(400, {'error': 'Image is required'})
+            try:
+                cover_url = _upload_image_to_s3(image_b64, 'covers', user['id'])
+            except Exception as e:
+                return _resp(500, {'error': f'Upload failed: {str(e)}'})
+
+            cur.execute(
+                "UPDATE t_p35405502_model_agency_website.users SET cover_url = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+                (cover_url, user['id']),
+            )
+            conn.commit()
+            return _resp(200, {'success': True, 'cover_url': cover_url})
 
         if action == 'upload_avatar':
             image_b64 = body.get('image')

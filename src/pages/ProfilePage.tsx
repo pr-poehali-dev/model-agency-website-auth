@@ -14,9 +14,11 @@ import AchievementsSection from "@/components/profile/AchievementsSection";
 import AchievementTypesManager from "@/components/profile/AchievementTypesManager";
 import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
 import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
+import ProfileGallery from "@/components/profile/ProfileGallery";
 import funcUrls from "../../backend/func2url.json";
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
+const PROFILE_URL = (funcUrls as Record<string, string>)["profile"];
 
 const formatIsoDate = (d: Date) => {
   const y = d.getFullYear();
@@ -130,6 +132,7 @@ export default function ProfilePage() {
   const [grantOpen, setGrantOpen] = useState(false);
   const [achievementsRefresh, setAchievementsRefresh] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
+  const [coverUrl, setCoverUrl] = useState<string>(() => localStorage.getItem("userCoverUrl") || "");
   const userRole = localStorage.getItem("userRole") || "model";
   const userName = localStorage.getItem("userName") || MOCK_USER.name;
   const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
@@ -146,6 +149,7 @@ export default function ProfilePage() {
   const viewerIsDirector = currentUserRole === "director";
   const viewerIsProducer = currentUserRole === "producer";
   const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
+  const canEditProfile = isOwnProfile || viewerIsDirector;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
   const canGrantAchievement = viewerIsDirector || viewerIsProducer;
   const showTypesManager = viewerIsDirector && isOwnProfile;
@@ -161,6 +165,29 @@ export default function ProfilePage() {
     income_ready?: boolean;
   } | null>(null);
   const [loadingShifts, setLoadingShifts] = useState(false);
+
+  useEffect(() => {
+    if (!userEmail || !PROFILE_URL) return;
+    fetch(PROFILE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get_profile", email: userEmail }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success) {
+          if (data.cover_url) {
+            setCoverUrl(data.cover_url);
+            if (isOwnProfile) localStorage.setItem("userCoverUrl", data.cover_url);
+          }
+          if (data.photo_url && isOwnProfile) {
+            setPhotoUrl(data.photo_url);
+            localStorage.setItem("userPhotoUrl", data.photo_url);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [userEmail, isOwnProfile]);
 
   useEffect(() => {
     const shouldLoad = isShiftTracked || isProducer;
@@ -212,7 +239,20 @@ export default function ProfilePage() {
 
         {/* Шапка профиля */}
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-primary/30 via-purple-500/20 to-cyan-500/20" />
+          <div
+            className="h-32 sm:h-40 bg-gradient-to-r from-primary/30 via-purple-500/20 to-cyan-500/20 bg-cover bg-center relative group"
+            style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
+          >
+            {canEditProfile && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="absolute top-2 right-2 bg-background/80 hover:bg-background text-foreground text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 backdrop-blur-sm border border-border/50"
+              >
+                <Icon name="Camera" size={12} />
+                Сменить шапку
+              </button>
+            )}
+          </div>
           <CardContent className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
               <div className="relative">
@@ -241,7 +281,7 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground text-sm mt-1">{userEmail}</p>
               </div>
 
-              {isOwnProfile && (
+              {canEditProfile && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -261,8 +301,16 @@ export default function ProfilePage() {
           onOpenChange={setEditOpen}
           email={userEmail}
           currentPhotoUrl={photoUrl}
+          currentCoverUrl={coverUrl}
           initials={initials}
           onPhotoUpdated={setPhotoUrl}
+          onCoverUpdated={setCoverUrl}
+        />
+
+        <ProfileGallery
+          targetEmail={userEmail}
+          actorEmail={currentUserEmail}
+          actorRole={currentUserRole}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
