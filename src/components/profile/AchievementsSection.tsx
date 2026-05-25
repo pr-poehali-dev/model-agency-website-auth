@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Icon from '@/components/ui/icon';
+import { formatRelativeTime } from '@/lib/relativeTime';
 import funcUrls from '../../../backend/func2url.json';
 
 const ACHIEVEMENTS_URL = (funcUrls as Record<string, string>)['achievements'];
@@ -114,6 +115,10 @@ export default function AchievementsSection({ userEmail, refreshKey = 0 }: Achie
                       <div className="flex items-center gap-1.5">
                         <Icon name="Calendar" size={12} />
                         <span>{formatDate(a.granted_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Icon name="Clock" size={12} />
+                        <span>{formatRelativeTime(a.granted_at)}</span>
                       </div>
                       {a.comment && (
                         <div className="pt-1 border-t border-border/40">

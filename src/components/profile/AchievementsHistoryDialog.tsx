@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import { formatRelativeTime } from '@/lib/relativeTime';
 import funcUrls from '../../../backend/func2url.json';
 
 const ACHIEVEMENTS_URL = (funcUrls as Record<string, string>)['achievements'];
@@ -209,6 +210,11 @@ export default function AchievementsHistoryDialog({
                         <span className="flex items-center gap-1">
                           <Icon name="Calendar" size={11} />
                           {formatDate(h.granted_at)}
+                        </span>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <Icon name="Clock" size={11} />
+                          {formatRelativeTime(h.granted_at)}
                         </span>
                       </div>
                       {h.comment && (
