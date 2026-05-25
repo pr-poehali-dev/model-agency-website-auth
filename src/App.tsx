@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import LoadingScreen from "./components/LoadingScreen";
+import AchievementToastWatcher from "./components/AchievementToastWatcher";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AchievementToastWatcher />
           <Routes>
             <Route path="/" element={<Login />} />
             <Route 

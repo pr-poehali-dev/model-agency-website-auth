@@ -105,6 +105,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return _resp(200, {'achievements': _list_user_achievements(cur, email)})
             if action == 'allowed_for_producer':
                 return _resp(200, {'allowed_ids': _list_allowed_ids(cur)})
+            if action == 'unseen':
+                email = (params.get('email') or '').strip()
+                if not email:
+                    return _resp(400, {'error': 'email required'})
+                cur.execute(
+                    f"""SELECT ua.id, ua.granted_by_email, ua.granted_by_name, ua.granted_at, ua.comment,
+                               at.id AS type_id, at.title, at.description, at.emoji, at.color
+                        FROM {SCHEMA}.user_achievements ua
+                        JOIN {SCHEMA}.achievement_types at ON ua.achievement_type_id = at.id
+                        WHERE LOWER(ua.user_email) = %s AND ua.seen_at IS NULL
+                        ORDER BY ua.granted_at ASC""",
+                    (email.lower(),),
+                )
+                return _resp(200, {'unseen': [dict(r) for r in cur.fetchall()]})
             if action == 'history':
                 if not is_director:
                     return _resp(403, {'error': 'forbidden'})
@@ -225,6 +239,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 row = cur.fetchone()
                 conn.commit()
                 return _resp(200, {'success': True, 'id': row['id'], 'granted_at': row['granted_at']})
+
+            if action == 'mark_seen':
+                email = (body.get('user_email') or actor.get('email') or '').strip().lower()
+                ids = body.get('ids')
+                if not email:
+                    return _resp(400, {'error': 'user_email required'})
+                if isinstance(ids, list) and ids:
+                    clean_ids = tuple(int(x) for x in ids if str(x).isdigit())
+                    if clean_ids:
+                        cur.execute(
+                            f"UPDATE {SCHEMA}.user_achievements SET seen_at = NOW() WHERE LOWER(user_email) = %s AND seen_at IS NULL AND id IN %s",
+                            (email, clean_ids),
+                        )
+                else:
+                    cur.execute(
+                        f"UPDATE {SCHEMA}.user_achievements SET seen_at = NOW() WHERE LOWER(user_email) = %s AND seen_at IS NULL",
+                        (email,),
+                    )
+                conn.commit()
+                return _resp(200, {'success': True})
 
             if action == 'revoke':
                 if not is_director:
