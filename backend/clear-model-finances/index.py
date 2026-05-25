@@ -55,6 +55,13 @@ def handler(event: dict, context) -> dict:
         # Удаляем все финансовые данные моделей
         cur.execute("DELETE FROM t_p35405502_model_agency_website.model_finances")
         conn.commit()
+
+        try:
+            cur.execute('REFRESH MATERIALIZED VIEW CONCURRENTLY t_p35405502_model_agency_website.mv_model_finances_monthly')
+            conn.commit()
+        except Exception as refresh_err:
+            print(f'MV refresh failed (non-critical): {refresh_err}')
+            conn.rollback()
         
         return {
             'statusCode': 200,

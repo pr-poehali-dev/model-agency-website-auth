@@ -216,7 +216,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     execute_values(cursor, query, values, template='(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)')
     conn.commit()
-    
+
+    try:
+        cursor.execute('REFRESH MATERIALIZED VIEW CONCURRENTLY t_p35405502_model_agency_website.mv_model_finances_monthly')
+        conn.commit()
+    except Exception as refresh_err:
+        print(f'MV refresh failed (non-critical): {refresh_err}')
+        conn.rollback()
+
     cursor.close()
     conn.close()
     

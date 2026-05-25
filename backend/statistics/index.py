@@ -62,13 +62,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         cur.execute("""
             SELECT 
-                TO_CHAR(DATE_TRUNC('month', mf.date), 'Mon') as month,
-                COALESCE(SUM((mf.cb_income::numeric + mf.sp_income::numeric + mf.soda_income::numeric + mf.cam4_income::numeric)), 0) as revenue,
-                COUNT(DISTINCT CASE WHEN mf.has_shift THEN mf.id END) as bookings
-            FROM t_p35405502_model_agency_website.model_finances mf
-            WHERE mf.date >= CURRENT_DATE - INTERVAL '6 months'
-            GROUP BY DATE_TRUNC('month', mf.date)
-            ORDER BY DATE_TRUNC('month', mf.date) ASC
+                TO_CHAR(month_start, 'Mon') as month,
+                COALESCE(total_revenue, 0) as revenue,
+                COALESCE(shift_count, 0) as bookings
+            FROM t_p35405502_model_agency_website.mv_model_finances_monthly
+            WHERE month_start >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 months')
+            ORDER BY month_start ASC
         """)
         monthly_revenue = [dict(row) for row in cur.fetchall()]
         
