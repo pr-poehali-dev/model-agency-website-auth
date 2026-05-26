@@ -2,6 +2,7 @@
 Business: CRUD-операции с графиком уборки + список новых назначений для оператора.
          GET без параметров — список всех записей.
          GET ?pending_for=email — список ещё не показанных оператору назначений (для toast-уведомления).
+         GET ?operators_for=producer_email — список email'ов операторов, закреплённых за продюсером.
          POST {action: 'create'|'update'|'delete'|'mark_notified', ...}
 Args: event с httpMethod, body (JSON), queryStringParameters
 Returns: HTTP response с данными записей
@@ -68,15 +69,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if method == 'GET':
             qs = event.get('queryStringParameters') or {}
             pending_for = (qs.get('pending_for') or '').strip().lower()
+            operators_for = (qs.get('operators_for') or '').strip().lower()
 
             cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            if operators_for:
+                safe_email = _esc(operators_for)
+                cur.execute(f'''
+                    SELECT DISTINCT operator_email
+                    FROM {SCHEMA}.producer_assignments
+                    WHERE LOWER(producer_email) = '{safe_email}'
+                      AND operator_email IS NOT NULL
+                      AND operator_email <> ''
+                ''')
+                rows = cur.fetchall()
+                emails = [r['operator_email'] for r in rows if r.get('operator_email')]
+                cur.close()
+                return _resp(200, {'operator_emails': emails})
 
             if pending_for:
                 safe_email = _esc(pending_for)
                 cur.execute(f'''
                     SELECT id, cleaning_date::text AS cleaning_date,
                            apartment_name, comment, operator_emails,
-                           created_by_email, notified_emails
+                           created_by_email, notified_emails,
+                           is_general, producer_emails
                     FROM {SCHEMA}.cleaning_schedule
                     WHERE cleaning_date >= CURRENT_DATE
                       AND LOWER(operator_emails) LIKE '%{safe_email}%'
@@ -97,6 +114,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 SELECT id, cleaning_date::text AS cleaning_date,
                        apartment_name, comment, operator_emails,
                        created_by_email, notified_emails,
+                       is_general, producer_emails,
                        created_at::text AS created_at,
                        updated_at::text AS updated_at
                 FROM {SCHEMA}.cleaning_schedule
@@ -120,30 +138,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             apartment_name = body.get('apartment_name', '') or ''
             comment = body.get('comment', '') or ''
             operator_emails = body.get('operator_emails') or []
+            producer_emails = body.get('producer_emails') or []
+            is_general = bool(body.get('is_general', False))
             if isinstance(operator_emails, str):
                 operator_emails = _emails_to_list(operator_emails)
+            if isinstance(producer_emails, str):
+                producer_emails = _emails_to_list(producer_emails)
             created_by = body.get('created_by_email', '') or ''
 
             if not cleaning_date or not created_by:
                 return _resp(400, {'error': 'cleaning_date and created_by_email required'})
 
             emails_str = _list_to_emails(operator_emails)
+            producers_str = _list_to_emails(producer_emails)
             cur.execute(f'''
                 INSERT INTO {SCHEMA}.cleaning_schedule
-                    (cleaning_date, apartment_name, comment, operator_emails, created_by_email)
+                    (cleaning_date, apartment_name, comment, operator_emails,
+                     created_by_email, is_general, producer_emails)
                 VALUES ('{_esc(cleaning_date)}', '{_esc(apartment_name)}', '{_esc(comment)}',
-                        '{_esc(emails_str)}', '{_esc(created_by)}')
+                        '{_esc(emails_str)}', '{_esc(created_by)}',
+                        {str(is_general).upper()}, '{_esc(producers_str)}')
                 RETURNING id
             ''')
             new_id = cur.fetchone()[0]
 
+            prefix = 'Генеральная уборка' if is_general else 'Уборка'
             for email in _emails_to_list(emails_str):
-                title = f"Уборка {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
-                desc = comment or 'Назначена уборка'
+                title = f"{prefix} {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
+                desc = comment or ('Назначена генеральная уборка' if is_general else 'Назначена уборка')
                 cur.execute(f'''
                     INSERT INTO {SCHEMA}.tasks
                         (title, description, status, priority, assigned_to_email, assigned_by_email, due_date)
-                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending', 'medium',
+                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending',
+                            '{"high" if is_general else "medium"}',
                             '{_esc(email)}', '{_esc(created_by)}', '{_esc(cleaning_date)}'::timestamp)
                 ''')
 
@@ -158,9 +185,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             apartment_name = body.get('apartment_name', '') or ''
             comment = body.get('comment', '') or ''
             operator_emails = body.get('operator_emails') or []
+            producer_emails = body.get('producer_emails') or []
+            is_general = bool(body.get('is_general', False))
             if isinstance(operator_emails, str):
                 operator_emails = _emails_to_list(operator_emails)
+            if isinstance(producer_emails, str):
+                producer_emails = _emails_to_list(producer_emails)
             emails_str = _list_to_emails(operator_emails)
+            producers_str = _list_to_emails(producer_emails)
 
             cur.execute(f'''
                 SELECT operator_emails, notified_emails, created_by_email
@@ -186,17 +218,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     comment='{_esc(comment)}',
                     operator_emails='{_esc(emails_str)}',
                     notified_emails='{_esc(notified_str)}',
+                    is_general={str(is_general).upper()},
+                    producer_emails='{_esc(producers_str)}',
                     updated_at=CURRENT_TIMESTAMP
                 WHERE id = {int(rec_id)}
             ''')
 
+            prefix = 'Генеральная уборка' if is_general else 'Уборка'
             for email in added:
-                title = f"Уборка {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
-                desc = comment or 'Назначена уборка'
+                title = f"{prefix} {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
+                desc = comment or ('Назначена генеральная уборка' if is_general else 'Назначена уборка')
                 cur.execute(f'''
                     INSERT INTO {SCHEMA}.tasks
                         (title, description, status, priority, assigned_to_email, assigned_by_email, due_date)
-                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending', 'medium',
+                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending',
+                            '{"high" if is_general else "medium"}',
                             '{_esc(email)}', '{_esc(created_by)}', '{_esc(cleaning_date)}'::timestamp)
                 ''')
 

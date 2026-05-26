@@ -27,6 +27,8 @@ interface CleaningItem {
   comment: string;
   operator_emails: string;
   created_by_email: string;
+  is_general?: boolean;
+  producer_emails?: string;
 }
 
 interface OperatorUser {
@@ -61,6 +63,8 @@ const emailsToArr = (s: string) =>
 const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps) => {
   const [items, setItems] = useState<CleaningItem[]>([]);
   const [operators, setOperators] = useState<OperatorUser[]>([]);
+  const [producers, setProducers] = useState<OperatorUser[]>([]);
+  const [allowedOperatorEmails, setAllowedOperatorEmails] = useState<string[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -70,10 +74,20 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
   const [formApartment, setFormApartment] = useState('');
   const [formComment, setFormComment] = useState('');
   const [formOperators, setFormOperators] = useState<string[]>([]);
+  const [formProducers, setFormProducers] = useState<string[]>([]);
+  const [formIsGeneral, setFormIsGeneral] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const canEdit = userRole === 'producer' || userRole === 'director';
+  const isDirector = userRole === 'director';
+  const isProducer = userRole === 'producer';
+  const canEdit = isProducer || isDirector;
+
+  const visibleOperators = useMemo(() => {
+    if (!allowedOperatorEmails) return operators;
+    const allow = new Set(allowedOperatorEmails.map((e) => e.toLowerCase()));
+    return operators.filter((o) => allow.has(o.email.toLowerCase()));
+  }, [operators, allowedOperatorEmails]);
 
   const weekDates = useMemo(() => {
     const today = new Date();
@@ -110,7 +124,7 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
     }
   };
 
-  const loadOperators = async () => {
+  const loadUsers = async () => {
     try {
       const res = await fetch(USERS_API_URL, {
         method: 'GET',
@@ -120,16 +134,35 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
       const data = await res.json();
       if (Array.isArray(data)) {
         setOperators(data.filter((u: OperatorUser) => u.role === 'operator'));
+        setProducers(data.filter((u: OperatorUser) => u.role === 'producer'));
       }
     } catch (err) {
       console.error(err);
     }
   };
 
+  const loadAllowedOperators = async () => {
+    if (!isProducer || !userEmail) {
+      setAllowedOperatorEmails(null);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `${CLEANING_URL}?operators_for=${encodeURIComponent(userEmail)}`,
+      );
+      const data = await res.json();
+      setAllowedOperatorEmails(data.operator_emails || []);
+    } catch (err) {
+      console.error(err);
+      setAllowedOperatorEmails([]);
+    }
+  };
+
   useEffect(() => {
     load();
-    loadOperators();
-  }, []);
+    loadUsers();
+    loadAllowedOperators();
+  }, [userEmail, userRole]);
 
   const itemsByDate = useMemo(() => {
     const map: Record<string, CleaningItem[]> = {};
@@ -147,6 +180,8 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
     setFormApartment('');
     setFormComment('');
     setFormOperators([]);
+    setFormProducers([]);
+    setFormIsGeneral(false);
     setIsDialogOpen(true);
   };
 
@@ -156,11 +191,19 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
     setFormApartment(item.apartment_name || '');
     setFormComment(item.comment || '');
     setFormOperators(emailsToArr(item.operator_emails));
+    setFormProducers(emailsToArr(item.producer_emails || ''));
+    setFormIsGeneral(!!item.is_general);
     setIsDialogOpen(true);
   };
 
   const toggleOperator = (email: string) => {
     setFormOperators((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email],
+    );
+  };
+
+  const toggleProducer = (email: string) => {
+    setFormProducers((prev) =>
       prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email],
     );
   };
@@ -183,6 +226,8 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
         apartment_name: formApartment,
         comment: formComment,
         operator_emails: formOperators,
+        producer_emails: isDirector ? formProducers : [],
+        is_general: isDirector ? formIsGeneral : false,
         created_by_email: userEmail,
       };
       const res = await fetch(CLEANING_URL, {
@@ -222,6 +267,11 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
 
   const operatorName = (email: string) => {
     const u = operators.find((o) => o.email === email);
+    return u?.fullName || email;
+  };
+
+  const producerName = (email: string) => {
+    const u = producers.find((p) => p.email === email);
     return u?.fullName || email;
   };
 
@@ -280,15 +330,31 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
                     rows={3}
                   />
                 </div>
+                {isDirector && (
+                  <label className="flex items-center gap-2 rounded-md border p-3 cursor-pointer">
+                    <Checkbox
+                      checked={formIsGeneral}
+                      onCheckedChange={(v) => setFormIsGeneral(!!v)}
+                    />
+                    <div>
+                      <div className="text-sm font-medium">Генеральная уборка</div>
+                      <div className="text-xs text-muted-foreground">
+                        Повышенный приоритет в задачах
+                      </div>
+                    </div>
+                  </label>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Операторы</label>
                   <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-1">
-                    {operators.length === 0 ? (
+                    {visibleOperators.length === 0 ? (
                       <p className="text-xs text-muted-foreground p-2">
-                        Нет доступных операторов
+                        {isProducer
+                          ? 'У вас нет закреплённых операторов'
+                          : 'Нет доступных операторов'}
                       </p>
                     ) : (
-                      operators.map((op) => (
+                      visibleOperators.map((op) => (
                         <label
                           key={op.email}
                           className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer"
@@ -305,6 +371,31 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
                     )}
                   </div>
                 </div>
+                {isDirector && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Продюсеры (необязательно)</label>
+                    <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-1">
+                      {producers.length === 0 ? (
+                        <p className="text-xs text-muted-foreground p-2">
+                          Нет доступных продюсеров
+                        </p>
+                      ) : (
+                        producers.map((p) => (
+                          <label
+                            key={p.email}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={formProducers.includes(p.email)}
+                              onCheckedChange={() => toggleProducer(p.email)}
+                            />
+                            <span className="text-sm">{p.fullName || p.email}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -376,11 +467,22 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
                   ) : (
                     dayItems.map((it) => {
                       const ops = emailsToArr(it.operator_emails);
+                      const prods = emailsToArr(it.producer_emails || '');
                       return (
                         <div
                           key={it.id}
-                          className="rounded-md border p-2 text-xs space-y-1 bg-muted/30"
+                          className={`rounded-md border p-2 text-xs space-y-1 ${
+                            it.is_general
+                              ? 'bg-amber-500/10 border-amber-500/40'
+                              : 'bg-muted/30'
+                          }`}
                         >
+                          {it.is_general && (
+                            <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px] gap-1">
+                              <Icon name="Sparkles" size={10} />
+                              Генеральная
+                            </Badge>
+                          )}
                           {it.apartment_name && (
                             <div className="font-semibold">{it.apartment_name}</div>
                           )}
@@ -396,6 +498,20 @@ const CleaningSchedule = ({ userRole, userEmail, onBack }: CleaningScheduleProps
                               </Badge>
                             ))}
                           </div>
+                          {prods.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {prods.map((e) => (
+                                <Badge
+                                  key={e}
+                                  variant="outline"
+                                  className="text-[10px] gap-1"
+                                >
+                                  <Icon name="UserCog" size={10} />
+                                  {producerName(e)}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                           {canEdit && (
                             <div className="flex gap-1 pt-1">
                               <Button
