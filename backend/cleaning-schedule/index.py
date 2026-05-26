@@ -178,6 +178,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             '{_esc(email)}', '{_esc(created_by)}', '{_esc(cleaning_date)}'::timestamp)
                 ''')
 
+            for email in _emails_to_list(producers_str):
+                title = f"{prefix} (контроль) {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
+                desc = comment or 'Назначены ответственным продюсером за уборку'
+                cur.execute(f'''
+                    INSERT INTO {SCHEMA}.tasks
+                        (title, description, status, priority, assigned_to_email, assigned_by_email, due_date)
+                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending',
+                            '{"high" if is_general else "medium"}',
+                            '{_esc(email)}', '{_esc(created_by)}', '{_esc(cleaning_date)}'::timestamp)
+                ''')
+
             conn.commit()
             return _resp(200, {'id': new_id, 'status': 'created'})
 
@@ -199,7 +210,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             producers_str = _list_to_emails(producer_emails)
 
             cur.execute(f'''
-                SELECT operator_emails, notified_emails, created_by_email
+                SELECT operator_emails, notified_emails, created_by_email, producer_emails
                 FROM {SCHEMA}.cleaning_schedule WHERE id = {int(rec_id)}
             ''')
             row = cur.fetchone()
@@ -208,6 +219,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             old_emails = set([e.lower() for e in _emails_to_list(row[0] or '')])
             notified = set([e.lower() for e in _emails_to_list(row[1] or '')])
             created_by = row[2] or ''
+            old_producers = set([e.lower() for e in _emails_to_list(row[3] or '')])
 
             new_set = set([e.lower() for e in _emails_to_list(emails_str)])
             added = new_set - old_emails
@@ -232,6 +244,19 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for email in added:
                 title = f"{prefix} {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
                 desc = comment or ('Назначена генеральная уборка' if is_general else 'Назначена уборка')
+                cur.execute(f'''
+                    INSERT INTO {SCHEMA}.tasks
+                        (title, description, status, priority, assigned_to_email, assigned_by_email, due_date)
+                    VALUES ('{_esc(title)}', '{_esc(desc)}', 'pending',
+                            '{"high" if is_general else "medium"}',
+                            '{_esc(email)}', '{_esc(created_by)}', '{_esc(cleaning_date)}'::timestamp)
+                ''')
+
+            new_producers_set = set([e.lower() for e in _emails_to_list(producers_str)])
+            added_producers = new_producers_set - old_producers
+            for email in added_producers:
+                title = f"{prefix} (контроль) {cleaning_date}" + (f" — {apartment_name}" if apartment_name else '')
+                desc = comment or 'Назначены ответственным продюсером за уборку'
                 cur.execute(f'''
                     INSERT INTO {SCHEMA}.tasks
                         (title, description, status, priority, assigned_to_email, assigned_by_email, due_date)
