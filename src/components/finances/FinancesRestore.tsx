@@ -35,6 +35,7 @@ const FinancesRestore = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isSnapshotting, setIsSnapshotting] = useState(false);
   const { toast } = useToast();
 
   const loadSnapshots = async () => {
@@ -62,6 +63,33 @@ const FinancesRestore = () => {
   useEffect(() => {
     loadSnapshots();
   }, []);
+
+  const handleSnapshotNow = async () => {
+    setIsSnapshotting(true);
+    try {
+      const res = await fetch(BACKUP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'snapshot', force: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Snapshot failed');
+      toast({
+        title: 'Снимок создан',
+        description: `Сохранено записей: ${data.rows_copied ?? data.rows ?? 0}`,
+      });
+      await loadSnapshots();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      toast({
+        title: 'Ошибка снимка',
+        description: msg,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSnapshotting(false);
+    }
+  };
 
   const handleRestore = async () => {
     if (!selectedDate) return;
@@ -110,9 +138,21 @@ const FinancesRestore = () => {
             Снимки делаются автоматически каждый день. Хранятся 90 дней.
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={loadSnapshots} disabled={isLoading}>
-          <Icon name="RefreshCw" size={16} className={isLoading ? 'animate-spin' : ''} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleSnapshotNow}
+            disabled={isSnapshotting}
+          >
+            <Icon name="Camera" size={16} className={isSnapshotting ? 'animate-pulse' : ''} />
+            {isSnapshotting ? 'Сохранение...' : 'Снимок сейчас'}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={loadSnapshots} disabled={isLoading}>
+            <Icon name="RefreshCw" size={16} className={isLoading ? 'animate-spin' : ''} />
+          </Button>
+        </div>
       </div>
 
       {snapshots.length === 0 && !isLoading ? (

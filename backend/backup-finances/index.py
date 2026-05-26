@@ -128,6 +128,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }),
             }
 
+        force = bool(body.get('force', False))
+
         cur.execute('''
             SELECT COUNT(*)
             FROM t_p35405502_model_agency_website.model_finances_archive
@@ -135,7 +137,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         ''')
         already = cur.fetchone()[0]
 
-        if already > 0:
+        if already > 0 and not force:
             return {
                 'statusCode': 200,
                 'headers': {**cors_headers, 'Content-Type': 'application/json'},
@@ -145,6 +147,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'rows': already,
                 }),
             }
+
+        if already > 0 and force:
+            cur.execute('''
+                DELETE FROM t_p35405502_model_agency_website.model_finances_archive
+                WHERE snapshot_date = CURRENT_DATE
+            ''')
+            conn.commit()
 
         cur.execute('''
             INSERT INTO t_p35405502_model_agency_website.model_finances_archive (
