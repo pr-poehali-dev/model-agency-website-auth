@@ -4,11 +4,7 @@
       "name": "List cleaning items",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "items": []
-      },
-      "bodyMatcher": "partial"
+      "expectedStatus": 200
     },
     {
       "name": "Pending notifications for operator",

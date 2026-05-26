@@ -96,17 +96,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                            is_general, producer_emails
                     FROM {SCHEMA}.cleaning_schedule
                     WHERE cleaning_date >= CURRENT_DATE
-                      AND LOWER(operator_emails) LIKE '%{safe_email}%'
+                      AND (LOWER(operator_emails) LIKE '%{safe_email}%'
+                           OR LOWER(producer_emails) LIKE '%{safe_email}%')
                       AND (notified_emails IS NULL OR LOWER(notified_emails) NOT LIKE '%{safe_email}%')
                     ORDER BY cleaning_date ASC
                 ''')
                 rows = cur.fetchall()
                 pending = []
                 for r in rows:
-                    emails = [e.lower() for e in _emails_to_list(r['operator_emails'])]
+                    ops = [e.lower() for e in _emails_to_list(r['operator_emails'])]
+                    prods = [e.lower() for e in _emails_to_list(r.get('producer_emails') or '')]
                     notified = [e.lower() for e in _emails_to_list(r.get('notified_emails') or '')]
-                    if pending_for in emails and pending_for not in notified:
-                        pending.append(dict(r))
+                    if (pending_for in ops or pending_for in prods) and pending_for not in notified:
+                        item = dict(r)
+                        item['role_match'] = 'producer' if pending_for in prods and pending_for not in ops else 'operator'
+                        pending.append(item)
                 cur.close()
                 return _resp(200, {'pending': pending})
 

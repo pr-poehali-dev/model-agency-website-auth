@@ -8,6 +8,8 @@ interface PendingCleaning {
   cleaning_date: string;
   apartment_name: string;
   comment: string;
+  is_general?: boolean;
+  role_match?: 'operator' | 'producer';
 }
 
 const formatDate = (iso: string) => {
@@ -24,8 +26,8 @@ export const useCleaningNotifications = (userEmail: string, userRole: string | n
 
   useEffect(() => {
     if (!userEmail || !userRole) return;
-    const operatorRoles = ['operator', 'content_maker', 'solo_maker'];
-    if (!operatorRoles.includes(userRole)) return;
+    const allowedRoles = ['operator', 'content_maker', 'solo_maker', 'producer'];
+    if (!allowedRoles.includes(userRole)) return;
 
     const showNotifications = async () => {
       try {
@@ -38,8 +40,16 @@ export const useCleaningNotifications = (userEmail: string, userRole: string | n
 
         for (const item of pending) {
           const apt = item.apartment_name ? ` (${item.apartment_name})` : '';
+          const isProducerMatch = item.role_match === 'producer' || userRole === 'producer';
+          const title = item.is_general
+            ? isProducerMatch
+              ? 'Назначена генеральная уборка (вы — продюсер)'
+              : 'Назначена генеральная уборка'
+            : isProducerMatch
+              ? 'Назначена уборка (вы — продюсер)'
+              : 'Назначена уборка';
           toast({
-            title: 'Назначена уборка',
+            title,
             description: `${formatDate(item.cleaning_date)}${apt}${
               item.comment ? ` — ${item.comment}` : ''
             }`,
