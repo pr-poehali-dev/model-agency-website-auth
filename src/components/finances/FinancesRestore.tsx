@@ -52,7 +52,7 @@ const FinancesRestore = () => {
       console.error(err);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить список снимков',
+        description: 'Не удалось загрузить список сохранений',
         variant: 'destructive',
       });
     } finally {
@@ -75,14 +75,14 @@ const FinancesRestore = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Snapshot failed');
       toast({
-        title: 'Снимок создан',
+        title: 'Сохранение создано',
         description: `Сохранено записей: ${data.rows_copied ?? data.rows ?? 0}`,
       });
       await loadSnapshots();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
       toast({
-        title: 'Ошибка снимка',
+        title: 'Ошибка сохранения',
         description: msg,
         variant: 'destructive',
       });
@@ -104,7 +104,7 @@ const FinancesRestore = () => {
       if (!res.ok) throw new Error(data.error || 'Restore failed');
       toast({
         title: 'Восстановлено',
-        description: `Загружено строк: ${data.rows_restored} из снимка ${selectedDate}`,
+        description: `Загружено строк: ${data.rows_restored} из сохранения ${selectedDate}`,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
@@ -135,7 +135,7 @@ const FinancesRestore = () => {
         <div>
           <h3 className="text-xl font-semibold mb-1">Восстановление финансов из архива</h3>
           <p className="text-sm text-muted-foreground">
-            Снимки делаются автоматически каждый день. Хранятся 90 дней.
+            Сохранения делаются автоматически каждый день. Хранятся 90 дней.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -146,8 +146,8 @@ const FinancesRestore = () => {
             onClick={handleSnapshotNow}
             disabled={isSnapshotting}
           >
-            <Icon name="Camera" size={16} className={isSnapshotting ? 'animate-pulse' : ''} />
-            {isSnapshotting ? 'Сохранение...' : 'Снимок сейчас'}
+            <Icon name="Save" size={16} className={isSnapshotting ? 'animate-pulse' : ''} />
+            {isSnapshotting ? 'Сохранение...' : 'Сохранить сейчас'}
           </Button>
           <Button variant="ghost" size="sm" onClick={loadSnapshots} disabled={isLoading}>
             <Icon name="RefreshCw" size={16} className={isLoading ? 'animate-spin' : ''} />
@@ -156,14 +156,14 @@ const FinancesRestore = () => {
       </div>
 
       {snapshots.length === 0 && !isLoading ? (
-        <p className="text-sm text-muted-foreground">Архивных снимков ещё нет.</p>
+        <p className="text-sm text-muted-foreground">Архивных сохранений ещё нет.</p>
       ) : (
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Выберите дату снимка</label>
+            <label className="text-sm font-medium">Выберите дату сохранения</label>
             <Select value={selectedDate} onValueChange={setSelectedDate}>
               <SelectTrigger>
-                <SelectValue placeholder="Дата снимка" />
+                <SelectValue placeholder="Дата сохранения" />
               </SelectTrigger>
               <SelectContent>
                 {snapshots.map((s) => (
@@ -183,14 +183,14 @@ const FinancesRestore = () => {
                 disabled={!selectedDate || isRestoring}
               >
                 <Icon name="RotateCcw" size={16} />
-                {isRestoring ? 'Восстановление...' : 'Восстановить выбранный снимок'}
+                {isRestoring ? 'Восстановление...' : 'Восстановить выбранное сохранение'}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Восстановить финансы?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Текущие данные таблицы финансов будут полностью заменены данными из снимка
+                  Текущие данные таблицы финансов будут полностью заменены данными из сохранения
                   от <b>{selected ? formatDate(selected.snapshot_date) : ''}</b>
                   {selected ? ` (${selected.rows_count} записей).` : '.'} Это действие нельзя отменить.
                 </AlertDialogDescription>
