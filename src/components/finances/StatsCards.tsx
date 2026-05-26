@@ -11,41 +11,44 @@ interface StatsCardsProps {
 const StatsCards = ({ totalRevenue, monthlyRevenue, pendingPayments }: StatsCardsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 bg-primary/20 rounded-lg">
+      <Card className="relative overflow-hidden p-6 hover:glow-primary group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/30 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-4">
+          <div className="p-3 bg-primary/15 rounded-xl border border-primary/30 backdrop-blur-sm">
             <Icon name="DollarSign" size={24} className="text-primary" />
           </div>
-          <Badge variant="secondary" className="bg-primary/20 text-primary">+12%</Badge>
+          <Badge variant="secondary" className="bg-primary/20 text-primary border border-primary/30">+12%</Badge>
         </div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Общая выручка</h3>
-        <p className="text-3xl font-serif font-bold text-foreground">
+        <h3 className="relative text-sm font-medium text-muted-foreground mb-1">Общая выручка</h3>
+        <p className="relative text-3xl font-display font-bold text-gradient">
           ₽{totalRevenue.toLocaleString()}
         </p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-accent/10 to-primary/10 border-accent/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 bg-accent/20 rounded-lg">
+      <Card className="relative overflow-hidden p-6 hover:glow-accent group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-accent/30 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-4">
+          <div className="p-3 bg-accent/15 rounded-xl border border-accent/30 backdrop-blur-sm">
             <Icon name="TrendingUp" size={24} className="text-accent" />
           </div>
-          <Badge variant="secondary" className="bg-accent/20 text-accent">Октябрь</Badge>
+          <Badge variant="secondary" className="bg-accent/20 text-accent border border-accent/30">Октябрь</Badge>
         </div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Выручка за месяц</h3>
-        <p className="text-3xl font-serif font-bold text-foreground">
+        <h3 className="relative text-sm font-medium text-muted-foreground mb-1">Выручка за месяц</h3>
+        <p className="relative text-3xl font-display font-bold text-gradient">
           ₽{monthlyRevenue.toLocaleString()}
         </p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 bg-orange-500/20 rounded-lg">
-            <Icon name="Clock" size={24} className="text-orange-500" />
+      <Card className="relative overflow-hidden p-6 group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-orange-500/30 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-4">
+          <div className="p-3 bg-orange-500/15 rounded-xl border border-orange-500/30 backdrop-blur-sm">
+            <Icon name="Clock" size={24} className="text-orange-400" />
           </div>
-          <Badge variant="secondary" className="bg-orange-500/20 text-orange-500">Требуется внимание</Badge>
+          <Badge variant="secondary" className="bg-orange-500/20 text-orange-400 border border-orange-500/30">Требуется внимание</Badge>
         </div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Ожидают оплаты</h3>
-        <p className="text-3xl font-serif font-bold text-foreground">{pendingPayments}</p>
+        <h3 className="relative text-sm font-medium text-muted-foreground mb-1">Ожидают оплаты</h3>
+        <p className="relative text-3xl font-display font-bold text-foreground">{pendingPayments}</p>
       </Card>
     </div>
   );

@@ -26,31 +26,40 @@ const StatsCards = ({ onlineData }: StatsCardsProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-        <div className="flex items-center justify-between mb-2">
+      <Card className="relative overflow-hidden p-6 group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-green-500/25 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground">Всего за период</p>
-          <Icon name="DollarSign" size={20} className="text-green-600" />
+          <div className="p-2 rounded-xl bg-green-500/15 border border-green-500/30">
+            <Icon name="DollarSign" size={18} className="text-green-400" />
+          </div>
         </div>
-        <p className="text-3xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
-        <p className="text-xs text-muted-foreground mt-1">{totalShifts} смен</p>
+        <p className="relative text-3xl font-display font-bold text-green-400">${totalIncome.toFixed(2)}</p>
+        <p className="relative text-xs text-muted-foreground mt-1">{totalShifts} смен</p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
-        <div className="flex items-center justify-between mb-2">
+      <Card className="relative overflow-hidden p-6 group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-emerald-500/25 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground">Средний доход</p>
-          <Icon name="TrendingUp" size={20} className="text-emerald-600" />
+          <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+            <Icon name="TrendingUp" size={18} className="text-emerald-400" />
+          </div>
         </div>
-        <p className="text-3xl font-bold text-emerald-600">${averageDaily.toFixed(2)}</p>
-        <p className="text-xs text-muted-foreground mt-1">за смену</p>
+        <p className="relative text-3xl font-display font-bold text-emerald-400">${averageDaily.toFixed(2)}</p>
+        <p className="relative text-xs text-muted-foreground mt-1">за смену</p>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
-        <div className="flex items-center justify-between mb-2">
+      <Card className="relative overflow-hidden p-6 group">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-amber-500/25 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
+        <div className="relative flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground">Лучший день</p>
-          <Icon name="Star" size={20} className="text-amber-600" />
+          <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30">
+            <Icon name="Star" size={18} className="text-amber-400" />
+          </div>
         </div>
-        <p className="text-3xl font-bold text-amber-600">${bestDayIncome.toFixed(2)}</p>
-        <p className="text-xs text-muted-foreground mt-1">{bestDay ? formatDate(bestDay.date) : '-'}</p>
+        <p className="relative text-3xl font-display font-bold text-amber-400">${bestDayIncome.toFixed(2)}</p>
+        <p className="relative text-xs text-muted-foreground mt-1">{bestDay ? formatDate(bestDay.date) : '-'}</p>
       </Card>
     </div>
   );
