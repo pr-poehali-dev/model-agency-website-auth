@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import BlockedDatesManager from './finances/BlockedDatesManager';
+import FinancesRestore from './finances/FinancesRestore';
 
 interface SettingsTabProps {
   userEmail?: string;
@@ -82,6 +83,8 @@ const SettingsTab = ({ userEmail = '', userRole = '' }: SettingsTabProps) => {
       {userRole === 'director' && (
         <BlockedDatesManager userEmail={userEmail} />
       )}
+
+      {userRole === 'director' && <FinancesRestore />}
     </div>
   );
 };

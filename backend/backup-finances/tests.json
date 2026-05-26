@@ -1,6 +1,16 @@
 {
   "tests": [
     {
+      "name": "List snapshots",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "snapshots": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "Backup finances snapshot",
       "method": "POST",
       "path": "/",
