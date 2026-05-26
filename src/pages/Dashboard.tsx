@@ -13,6 +13,8 @@ import ModelAssignmentManager from '@/components/ModelAssignmentManager';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
+import CleaningSchedule from '@/components/CleaningSchedule';
+import useCleaningNotifications from '@/hooks/useCleaningNotifications';
 import ModelFinances from '@/components/ModelFinances';
 import PairFinances from '@/components/PairFinances';
 import SettingsTab from '@/components/SettingsTab';
@@ -115,6 +117,8 @@ const Dashboard = () => {
   const [modelPerformance, setModelPerformance] = useState<StatRow[]>([]);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+
+  useCleaningNotifications(userEmail, userRole);
 
   useEffect(() => {
     const email = localStorage.getItem('userEmail') || '';
@@ -346,7 +350,17 @@ const Dashboard = () => {
       case 'checks':
         return <ChecksTab />;
       case 'schedule':
-        return <ScheduleTab userRole={userRole || undefined} userPermissions={userPermissions} />;
+        return <ScheduleTab
+          userRole={userRole || undefined}
+          userPermissions={userPermissions}
+          onOpenCleaning={() => setActiveTab('cleaning-schedule')}
+        />;
+      case 'cleaning-schedule':
+        return <CleaningSchedule
+          userRole={userRole || undefined}
+          userEmail={userEmail}
+          onBack={() => setActiveTab('schedule')}
+        />;
       case 'tasks':
         return <TasksTab userRole={userRole || undefined} userEmail={userEmail} />;
       case 'settings':

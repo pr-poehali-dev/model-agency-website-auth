@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "List cleaning items",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "items": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Pending notifications for operator",
+      "method": "GET",
+      "path": "/?pending_for=test@example.com",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "pending": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create requires fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "create"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "cleaning_date and created_by_email required"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

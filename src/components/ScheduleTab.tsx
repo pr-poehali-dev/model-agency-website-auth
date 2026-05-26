@@ -31,6 +31,7 @@ interface Team {
 interface ScheduleTabProps {
   userRole?: string;
   userPermissions?: string[];
+  onOpenCleaning?: () => void;
 }
 
 const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-1f7374a94184';
@@ -39,7 +40,7 @@ const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-99
 
 const emptySchedule = { apartments: [] as Array<{ name: string; address: string; visibility?: string; shifts: { morning: string; day: string; night: string }; weeks: Array<{ weekNumber: string; timeLabels: string[]; dates: Array<{ day: string; date: string; times: Record<string, string> }> }> }> };
 
-const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
+const ScheduleTab = ({ userRole, userPermissions, onOpenCleaning }: ScheduleTabProps) => {
   const [scheduleData, setScheduleData] = useState(emptySchedule);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -565,6 +566,8 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
     );
   }
 
+  const canSeeCleaning = userRole === 'operator' || userRole === 'producer' || userRole === 'director';
+
   return (
     <div className="animate-fade-in space-y-6">
       <ScheduleHeader
@@ -575,6 +578,17 @@ const ScheduleTab = ({ userRole, userPermissions }: ScheduleTabProps) => {
         teams={teams}
         canEdit={canEdit}
       />
+
+      {canSeeCleaning && onOpenCleaning && (
+        <Button
+          onClick={onOpenCleaning}
+          variant="outline"
+          className="gap-2"
+        >
+          <Icon name="Sparkles" size={16} />
+          График уборки
+        </Button>
+      )}
 
       {scheduleData.apartments.map((apartment, aptIndex) => (
         <ScheduleTable
