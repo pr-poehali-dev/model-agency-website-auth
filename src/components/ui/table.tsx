@@ -6,7 +6,7 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  <div className="relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_4px_24px_-8px_hsl(232_47%_4%/0.4)]">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+  <thead ref={ref} className={cn("bg-white/[0.04] [&_tr]:border-b [&_tr]:border-white/10 backdrop-blur-md", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -43,7 +43,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      "border-t border-white/10 bg-white/[0.04] backdrop-blur-md font-medium [&>tr]:last:border-b-0",
       className
     )}
     {...props}
@@ -58,7 +58,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "border-b border-white/5 transition-all duration-200 hover:bg-gradient-to-r hover:from-primary/[0.08] hover:to-accent/[0.04] hover:shadow-[inset_2px_0_0_0_hsl(var(--primary))] data-[state=selected]:bg-primary/15 data-[state=selected]:shadow-[inset_2px_0_0_0_hsl(var(--primary))]",
       className
     )}
     {...props}
@@ -73,7 +73,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "h-12 px-4 text-left align-middle font-semibold text-xs uppercase tracking-wider text-muted-foreground/80 [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}
