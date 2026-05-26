@@ -67,6 +67,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         return cur.fetchone() is not None
 
+    def unlock_bonus(email: str):
+        try:
+            cur.execute(
+                f"""DELETE FROM {schema}.earned_bonuses
+                    WHERE user_email = %s AND period_start = %s AND period_end = %s""",
+                (email, period_start, period_end)
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+
     shifts_count = 0
     models_assigned = 1
 
@@ -162,6 +173,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         bonus_ready = income_ready
 
         bonus_locked = check_locked(user_email)
+        if not income_ready and bonus_locked:
+            unlock_bonus(user_email)
+            bonus_locked = False
         if bonus_ready and not bonus_locked:
             lock_bonus(user_email, 'producer', 5000, 'Премия продюсера за выполнение плана')
             bonus_locked = True
