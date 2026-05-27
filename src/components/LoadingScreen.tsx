@@ -36,11 +36,16 @@ const LoadingScreen = () => {
         <div className="relative w-32 h-32 mx-auto mb-6 animate-scale-in">
           <div className="absolute inset-0 rounded-full border-4 border-border/40 animate-pulse" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="https://cdn.poehali.dev/projects/25df84be-2a57-474f-bb58-132a6c9f8811/files/25a217aa-0e77-43ca-953f-816ac4922ceb.jpg"
-              alt="MBA Corp"
-              className="w-24 h-24 rounded-2xl animate-float ring-1 ring-border/60 shadow-[0_8px_32px_-8px_hsl(var(--glow-primary)/0.35)]"
-            />
+            <div
+              className="w-24 h-24 rounded-2xl animate-float ring-1 ring-border/60 shadow-[0_8px_32px_-8px_hsl(var(--glow-primary)/0.35)] flex items-center justify-center bg-gradient-to-br from-card via-muted to-background"
+            >
+              <span
+                className="text-2xl font-bold tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-br from-foreground via-primary to-accent"
+                style={{ fontFamily: '"Space Grotesk", sans-serif' }}
+              >
+                MBA
+              </span>
+            </div>
           </div>
           <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin-slow" />
         </div>
