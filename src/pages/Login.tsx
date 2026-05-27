@@ -56,61 +56,73 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-amber-950 to-slate-900 relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-amber-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 15% 20%, hsl(var(--glow-primary) / 0.22), transparent 50%), radial-gradient(circle at 85% 80%, hsl(var(--glow-accent) / 0.18), transparent 55%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(hsl(var(--border) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.08) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+        }}
+      />
 
-      <Card className="w-full max-w-md p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative z-10 rounded-3xl">
+      <Card className="glass-strong w-full max-w-md p-10 relative z-10 rounded-3xl border-border/40">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 mb-6 shadow-lg shadow-amber-500/50">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/90 to-accent/70 mb-6 ring-1 ring-border/60 shadow-[0_8px_32px_-8px_hsl(var(--glow-primary)/0.45)]">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 36V12L16 24L24 12L32 24L40 12V36H36V20L32 26L24 16L16 26L12 20V36H8Z" fill="white"/>
+              <path d="M8 36V12L16 24L24 12L32 24L40 12V36H36V20L32 26L24 16L16 26L12 20V36H8Z" fill="hsl(var(--primary-foreground))"/>
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-3 text-white tracking-tight">MBA Corporation</h1>
-          <p className="text-sm tracking-[0.3em] text-amber-200 uppercase font-light">Professional Models Agency</p>
+          <h1 className="text-4xl font-bold mb-3 text-foreground tracking-tight">MBA Corporation</h1>
+          <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase font-light">Professional Models Agency</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white/90 font-medium text-sm">Email</Label>
+            <Label htmlFor="email" className="text-foreground/90 font-medium text-sm">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-amber-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
+              className="bg-background/40 border-border/60 text-foreground placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-ring focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="example@mba-corp.com"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white/90 font-medium text-sm">Password</Label>
+            <Label htmlFor="password" className="text-foreground/90 font-medium text-sm">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-amber-500 focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
+              className="bg-background/40 border-border/60 text-foreground placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-ring focus:border-transparent h-12 rounded-xl backdrop-blur-sm"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-200 text-sm text-center bg-red-500/20 p-3 rounded-xl border border-red-400/30 backdrop-blur-sm">
+            <div className="text-destructive text-sm text-center bg-destructive/10 p-3 rounded-xl border border-destructive/30 backdrop-blur-sm">
               {error}
             </div>
           )}
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-semibold h-12 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-12 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg ring-1 ring-border/40"
           >
             {loading ? 'Вход...' : 'Sign In'}
           </Button>
