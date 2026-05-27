@@ -14,21 +14,38 @@ const LoadingScreen = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 animate-fade-out">
-      <div className="text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background animate-fade-out overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none opacity-80"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 20% 20%, hsl(var(--glow-primary) / 0.18), transparent 50%), radial-gradient(circle at 80% 80%, hsl(var(--glow-accent) / 0.14), transparent 55%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(hsl(var(--border) / 0.08) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.08) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+        }}
+      />
+      <div className="relative text-center">
         <div className="relative w-32 h-32 mx-auto mb-6 animate-scale-in">
-          <div className="absolute inset-0 rounded-full border-4 border-slate-600/30 animate-pulse"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-border/40 animate-pulse" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <img 
+            <img
               src="https://cdn.poehali.dev/projects/25df84be-2a57-474f-bb58-132a6c9f8811/files/25a217aa-0e77-43ca-953f-816ac4922ceb.jpg"
               alt="MBA Corp"
-              className="w-24 h-24 rounded-lg animate-float"
+              className="w-24 h-24 rounded-2xl animate-float ring-1 ring-border/60 shadow-[0_8px_32px_-8px_hsl(var(--glow-primary)/0.35)]"
             />
           </div>
-          <div className="absolute inset-0 rounded-full border-t-4 border-slate-400 animate-spin-slow"></div>
+          <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin-slow" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2 animate-fade-in-up">MBA Corp.</h2>
-        <p className="text-slate-400 animate-fade-in-up-delay">Professional Models Agency</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight animate-fade-in-up">MBA Corp.</h2>
+        <p className="text-muted-foreground animate-fade-in-up-delay">Professional Models Agency</p>
       </div>
     </div>
   );
