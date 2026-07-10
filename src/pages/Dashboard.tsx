@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
 import { getAuthHeaders } from '@/lib/api';
+import { API_URLS } from '@/lib/apiUrls';
 import { useTheme } from '@/hooks/useTheme';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
 import ModelsTab from '@/components/dashboard/ModelsTab';
@@ -72,10 +73,10 @@ const models = [
   }
 ];
 
-const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
-const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
-const STATISTICS_API_URL = 'https://functions.poehali.dev/a154a7bf-592e-48d3-b0ce-6724de856af0';
+const API_URL = API_URLS.auth;
+const ASSIGNMENTS_API_URL = API_URLS.operatorAssignments;
+const PRODUCER_API_URL = API_URLS.producerAssignments;
+const STATISTICS_API_URL = API_URLS.statistics;
 
 interface ApiUser {
   id: number;

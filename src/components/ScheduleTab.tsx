@@ -1,6 +1,7 @@
 import { useState, useEffect, memo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { authenticatedFetch } from '@/lib/api';
+import { API_URLS } from '@/lib/apiUrls';
 import ScheduleHeader from './schedule-components/ScheduleHeader';
 import ScheduleTable from './schedule-components/ScheduleTable';
 import EditDialog from './schedule-components/EditDialog';
@@ -34,9 +35,9 @@ interface ScheduleTabProps {
   onOpenCleaning?: () => void;
 }
 
-const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-1f7374a94184';
-const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+const SCHEDULE_API_URL = API_URLS.schedule;
+const USERS_API_URL = API_URLS.auth;
+const ASSIGNMENTS_API_URL = API_URLS.operatorAssignments;
 
 const emptySchedule = { apartments: [] as Array<{ name: string; address: string; visibility?: string; shifts: { morning: string; day: string; night: string }; weeks: Array<{ weekNumber: string; timeLabels: string[]; dates: Array<{ day: string; date: string; times: Record<string, string> }> }> }> };
 
@@ -278,7 +279,7 @@ const ScheduleTab = ({ userRole, userPermissions, onOpenCleaning }: ScheduleTabP
       const [usersResponse, assignmentsResponse, producerAssignmentsResponse] = await Promise.all([
         authenticatedFetch(USERS_API_URL),
         authenticatedFetch(ASSIGNMENTS_API_URL),
-        authenticatedFetch(`https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6?producer=${encodeURIComponent(currentUserEmail)}&type=model`)
+        authenticatedFetch(`${API_URLS.producerAssignments}?producer=${encodeURIComponent(currentUserEmail)}&type=model`)
       ]);
       
       const users = await usersResponse.json();
