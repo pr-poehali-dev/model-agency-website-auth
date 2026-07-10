@@ -1,4 +1,5 @@
 import { Period, getDatesInPeriod } from '@/utils/periodUtils';
+import { API_URLS } from '@/lib/apiUrls';
 import { DayData } from './types';
 
 export const generateInitialData = (period: Period): DayData[] => {
@@ -51,7 +52,7 @@ export const calculatePlatformSummary = (data: DayData[]) => {
   ];
 };
 
-export const API_URL = 'https://functions.poehali.dev/99ec6654-50ec-4d09-8bfc-cdc60c8fec1e';
-export const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
-export const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-export const PRODUCER_API_URL = 'https://functions.poehali.dev/a480fde5-8cc8-42e8-a535-626e393f6fa6';
+export const API_URL = API_URLS.saveFinances;
+export const ASSIGNMENTS_API_URL = API_URLS.operatorAssignments;
+export const USERS_API_URL = API_URLS.auth;
+export const PRODUCER_API_URL = API_URLS.producerAssignments;

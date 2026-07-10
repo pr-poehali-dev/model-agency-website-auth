@@ -1,4 +1,6 @@
-const API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
+import { API_URLS } from '@/lib/apiUrls';
+
+const API_URL = API_URLS.auth;
 
 function getAuthToken(): string | null {
   const localToken = localStorage.getItem('authToken');

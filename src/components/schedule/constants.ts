@@ -1,6 +1,8 @@
-export const SCHEDULE_API_URL = 'https://functions.poehali.dev/c792d156-9cde-432c-9dbf-1f7374a94184';
-export const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
-export const ASSIGNMENTS_API_URL = 'https://functions.poehali.dev/b7d8dd69-ab09-460d-999b-c0a1002ced30';
+import { API_URLS } from '@/lib/apiUrls';
+
+export const SCHEDULE_API_URL = API_URLS.schedule;
+export const USERS_API_URL = API_URLS.auth;
+export const ASSIGNMENTS_API_URL = API_URLS.operatorAssignments;
 
 export const defaultSchedule = {
   apartments: [
