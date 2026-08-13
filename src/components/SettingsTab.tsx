@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import BlockedDatesManager from './finances/BlockedDatesManager';
 import FinancesRestore from './finances/FinancesRestore';
+import IdleTimeoutSetting from './settings/IdleTimeoutSetting';
 
 interface SettingsTabProps {
   userEmail?: string;
@@ -79,6 +80,8 @@ const SettingsTab = ({ userEmail = '', userRole = '' }: SettingsTabProps) => {
           </div>
         </div>
       </Card>
+
+      {userRole === 'director' && <IdleTimeoutSetting />}
 
       {userRole === 'director' && (
         <BlockedDatesManager userEmail={userEmail} />

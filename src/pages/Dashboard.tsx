@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
-import { getAuthHeaders } from '@/lib/api';
+import { getAuthHeaders, authenticatedFetch } from '@/lib/api';
 import { API_URLS } from '@/lib/apiUrls';
 import { useTheme } from '@/hooks/useTheme';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
@@ -274,8 +274,32 @@ const Dashboard = () => {
     navigate('/?reason=idle');
   }, [navigate]);
 
+  const [idleMinutes, setIdleMinutes] = useState(() => {
+    const cached = Number(localStorage.getItem('idle_timeout_minutes'));
+    return cached > 0 ? cached : 10;
+  });
+
+  useEffect(() => {
+    const loadIdleSetting = async () => {
+      try {
+        const res = await authenticatedFetch(API_URLS.appSettings);
+        const data = await res.json();
+        if (res.ok) {
+          const minutes = Number(data.settings?.idle_timeout_minutes);
+          if (minutes > 0) {
+            setIdleMinutes(minutes);
+            localStorage.setItem('idle_timeout_minutes', String(minutes));
+          }
+        }
+      } catch {
+        // используется значение по умолчанию
+      }
+    };
+    loadIdleSetting();
+  }, []);
+
   const { isWarning, secondsLeft, reset: resetIdle } = useIdleTimeout({
-    timeoutMs: 10 * 60 * 1000,
+    timeoutMs: idleMinutes * 60 * 1000,
     warningMs: 60 * 1000,
     onTimeout: handleIdleLogout,
   });

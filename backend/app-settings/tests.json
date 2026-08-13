@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get settings without token returns 401",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save setting without token returns 401",
+      "method": "POST",
+      "path": "/",
+      "body": {"key": "idle_timeout_minutes", "value": 30},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Fake director role header is rejected",
+      "method": "POST",
+      "path": "/",
+      "headers": {"X-User-Role": "director", "X-User-Email": "hacker@test.com"},
+      "body": {"key": "idle_timeout_minutes", "value": 480},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

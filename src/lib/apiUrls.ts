@@ -32,6 +32,7 @@ export const API_URLS = {
   auth: 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066',
   loginHistory: 'https://functions.poehali.dev/7b74ec4b-6e3b-448a-8d33-fd0eaa45d064',
   activeSessions: 'https://functions.poehali.dev/7516a4eb-ac3f-4b1e-8d5e-e80ddc77ef5d',
+  appSettings: 'https://functions.poehali.dev/e1220f2e-17a1-4636-a358-1b65cd675cce',
 } as const;
 
 export type ApiUrlKey = keyof typeof API_URLS;
