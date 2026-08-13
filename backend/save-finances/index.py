@@ -12,6 +12,48 @@ from decimal import Decimal
 import psycopg2
 from psycopg2.extras import execute_values, RealDictCursor
 
+SCHEMA = 't_p35405502_model_agency_website'
+ALLOWED_ROLES = ('director', 'producer', 'operator', 'solo_maker')
+
+
+def extract_token(headers):
+    h = {k.lower(): v for k, v in headers.items()}
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def get_user_info(database_url, headers):
+    '''Определяет email и роль пользователя ТОЛЬКО по токену из базы данных'''
+    token = extract_token(headers)
+    if not token:
+        return '', ''
+
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    try:
+        cur.execute(f"""
+            SELECT u.email, u.role
+            FROM {SCHEMA}.auth_tokens at
+            JOIN {SCHEMA}.users u ON at.user_id = u.id
+            WHERE at.token = %s
+              AND at.expires_at > NOW()
+              AND at.is_active = true
+              AND u.is_active = true
+        """, (token,))
+        row = cur.fetchone()
+        if not row:
+            return '', ''
+        return row[0], row[1]
+    finally:
+        cur.close()
+        conn.close()
+
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
@@ -45,7 +87,33 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Database configuration missing'}),
             'isBase64Encoded': False
         }
-    
+
+    user_email, user_role = get_user_info(database_url, headers)
+
+    if not user_email:
+        return {
+            'statusCode': 401,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true'
+            },
+            'body': json.dumps({'error': 'Требуется авторизация'}),
+            'isBase64Encoded': False
+        }
+
+    if user_role not in ALLOWED_ROLES:
+        return {
+            'statusCode': 403,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true'
+            },
+            'body': json.dumps({'error': 'Недостаточно прав'}),
+            'isBase64Encoded': False
+        }
+
     # GET: Load financial data for a model
     if method == 'GET':
         params = event.get('queryStringParameters', {}) or {}

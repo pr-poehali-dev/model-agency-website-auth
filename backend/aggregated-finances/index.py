@@ -9,6 +9,42 @@ from typing import Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+SCHEMA = 't_p35405502_model_agency_website'
+ALLOWED_ROLES = ('director', 'producer')
+
+
+def extract_token(headers):
+    h = {k.lower(): v for k, v in headers.items()}
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def get_user_info(cur, headers):
+    '''Определяет email и роль пользователя ТОЛЬКО по токену из базы данных'''
+    token = extract_token(headers)
+    if not token:
+        return '', ''
+
+    cur.execute(f"""
+        SELECT u.email, u.role
+        FROM {SCHEMA}.auth_tokens at
+        JOIN {SCHEMA}.users u ON at.user_id = u.id
+        WHERE at.token = %s
+          AND at.expires_at > NOW()
+          AND at.is_active = true
+          AND u.is_active = true
+    """, (token,))
+    row = cur.fetchone()
+    if not row:
+        return '', ''
+    return row['email'], row['role']
+
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
     
@@ -72,8 +108,38 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     conn = psycopg2.connect(database_url)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    
-    daily_query = f'''
+
+    user_email, user_role = get_user_info(cursor, headers)
+
+    if not user_email:
+        cursor.close()
+        conn.close()
+        return {
+            'statusCode': 401,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true'
+            },
+            'body': json.dumps({'error': 'Требуется авторизация'}),
+            'isBase64Encoded': False
+        }
+
+    if user_role not in ALLOWED_ROLES:
+        cursor.close()
+        conn.close()
+        return {
+            'statusCode': 403,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Allow-Credentials': 'true'
+            },
+            'body': json.dumps({'error': 'Недостаточно прав'}),
+            'isBase64Encoded': False
+        }
+
+    daily_query = '''
         SELECT 
             date,
             SUM(cb_tokens) as cb_total,
@@ -86,15 +152,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             SUM(cam4_income) as cam4_income_total,
             SUM(transfers) as transfers_total
         FROM t_p35405502_model_agency_website.model_finances
-        WHERE date BETWEEN '{period_start}' AND '{period_end}'
+        WHERE date BETWEEN %s AND %s
         GROUP BY date
         ORDER BY date ASC
     '''
     
-    cursor.execute(daily_query)
+    cursor.execute(daily_query, (period_start, period_end))
     daily_rows = cursor.fetchall()
     
-    summary_query = f'''
+    summary_query = '''
         SELECT 
             SUM(cb_tokens) as cb_tokens,
             SUM(stripchat_tokens) as sp_tokens,
@@ -106,10 +172,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             SUM(cam4_income) as cam4_income,
             SUM(transfers) as transfers
         FROM t_p35405502_model_agency_website.model_finances
-        WHERE date BETWEEN '{period_start}' AND '{period_end}'
+        WHERE date BETWEEN %s AND %s
     '''
     
-    cursor.execute(summary_query)
+    cursor.execute(summary_query, (period_start, period_end))
     summary_row = cursor.fetchone()
     
     cursor.close()

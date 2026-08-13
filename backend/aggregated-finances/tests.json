@@ -17,15 +17,20 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "GET with valid period returns data",
+      "name": "GET aggregated finances without token returns 401",
       "method": "GET",
       "path": "/?period_start=2025-10-16&period_end=2025-10-31",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "dailyData": "array",
-        "platformSummary": "array",
-        "graphOnlineData": "array"
-      },
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Invalid token returns 401",
+      "method": "GET",
+      "path": "/?period_start=2025-10-16&period_end=2025-10-31",
+      "headers": {"X-Auth-Token": "invalid-token-12345"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]

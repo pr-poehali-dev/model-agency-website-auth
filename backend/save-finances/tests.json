@@ -1,50 +1,35 @@
 {
   "tests": [
     {
-      "name": "Save financial data for model",
-      "method": "POST",
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
       "path": "/",
-      "body": {
-        "modelId": 1,
-        "data": [
-          {
-            "date": "2024-10-16",
-            "cbTokens": 1200,
-            "spTokens": 800,
-            "sodaTokens": 0,
-            "cam4": 0,
-            "cbIncome": 36.0,
-            "spIncome": 24.0,
-            "sodaIncome": 0,
-            "cam4Income": 0,
-            "stripchatTokens": 0,
-            "transfers": 0,
-            "operator": "Женя",
-            "shift": true
-          }
-        ]
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "success": true
-      },
-      "bodyMatcher": "partial"
+      "expectedStatus": 200
     },
     {
-      "name": "Load financial data for model",
+      "name": "Load finances without token returns 401",
       "method": "GET",
       "path": "/?modelId=1",
-      "expectedStatus": 200,
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {
-      "name": "Handle missing modelId in GET",
-      "method": "GET",
+      "name": "Save finances without token returns 401",
+      "method": "POST",
       "path": "/",
-      "expectedStatus": 400,
-      "expectedBody": {
-        "error": "string"
-      },
+      "body": {"modelId": 1, "data": []},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Invalid token returns 401",
+      "method": "GET",
+      "path": "/?modelId=1",
+      "headers": {"X-Auth-Token": "invalid-token-12345"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]

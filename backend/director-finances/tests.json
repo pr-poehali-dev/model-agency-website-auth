@@ -1,7 +1,21 @@
 {
   "tests": [
     {
-      "name": "Save director finances",
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get director finances without token returns 401",
+      "method": "GET",
+      "path": "/?period_start=2026-01-01&period_end=2026-01-07",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save director finances without token returns 401",
       "method": "POST",
       "path": "/",
       "body": {
@@ -10,23 +24,17 @@
         "expenses": 50000,
         "issued_funds": 30000
       },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "success": true,
-        "expenses": 50000,
-        "issued_funds": 30000
-      },
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {
-      "name": "Get director finances",
+      "name": "Invalid token returns 401",
       "method": "GET",
       "path": "/?period_start=2026-01-01&period_end=2026-01-07",
-      "expectedStatus": 200,
-      "expectedBody": {
-        "expenses": 50000,
-        "issued_funds": 30000
-      },
+      "headers": {"X-Auth-Token": "invalid-token-12345"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]
