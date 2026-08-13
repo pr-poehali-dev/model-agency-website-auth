@@ -42,6 +42,36 @@ def _hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
+def _extract_token(headers: Dict[str, str]) -> str:
+    h = {k.lower(): v for k, v in headers.items()}
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def _get_user_by_token(cur, headers: Dict[str, str]):
+    '''Определяет текущего пользователя ТОЛЬКО по токену из базы данных'''
+    token = _extract_token(headers)
+    if not token:
+        return None
+
+    cur.execute(
+        """SELECT u.id, u.email, u.password_hash, u.photo_url, u.cover_url
+           FROM t_p35405502_model_agency_website.auth_tokens at
+           JOIN t_p35405502_model_agency_website.users u ON at.user_id = u.id
+           WHERE at.token = %s
+             AND at.expires_at > NOW()
+             AND at.is_active = true
+             AND u.is_active = true""",
+        (token,),
+    )
+    return cur.fetchone()
+
+
 def _upload_image_to_s3(image_b64: str, folder: str, user_id: int) -> str:
     if ',' in image_b64:
         image_b64 = image_b64.split(',', 1)[1]
@@ -85,22 +115,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return _resp(400, {'error': 'Invalid JSON'})
 
     action = body.get('action')
-    email = (body.get('email') or '').strip().lower()
-    if not email:
-        return _resp(400, {'error': 'Email is required'})
 
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn, cursor_factory=RealDictCursor)
     cur = conn.cursor()
 
     try:
-        cur.execute(
-            "SELECT id, email, password_hash, photo_url, cover_url FROM t_p35405502_model_agency_website.users WHERE LOWER(email) = %s",
-            (email,),
-        )
-        user = cur.fetchone()
+        user = _get_user_by_token(cur, event.get('headers', {}))
         if not user:
-            return _resp(404, {'error': 'User not found'})
+            return _resp(401, {'error': 'Требуется авторизация'})
 
         if action == 'get_profile':
             return _resp(200, {

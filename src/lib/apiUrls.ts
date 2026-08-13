@@ -13,7 +13,6 @@ export const API_URLS = {
   shiftProgress: 'https://functions.poehali.dev/48f9d5f3-5462-4755-bcac-cfc68a0546af',
   modelPairs: 'https://functions.poehali.dev/cdf24c81-2f72-4f88-bddc-77533a2d119f',
   tasks: 'https://functions.poehali.dev/7de9b994-871a-4c9d-9260-edcb005ce100',
-  updatePassword: 'https://functions.poehali.dev/42c72b89-8952-49f8-be8f-ea3834487a01',
   migratePasswords: 'https://functions.poehali.dev/2bb7593a-a13f-433a-b83b-f2202e90abaa',
   blockedDates: 'https://functions.poehali.dev/b37e0422-df3c-42f3-9e5c-04d8f1eedd5c',
   directorFinances: 'https://functions.poehali.dev/32834f55-221d-44d6-b7a6-544c4ac155ec',

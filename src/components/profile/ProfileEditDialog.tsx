@@ -11,6 +11,13 @@ import funcUrls from "../../../backend/func2url.json";
 
 const PROFILE_URL = (funcUrls as Record<string, string>)["profile"];
 
+const authHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem("authToken");
+  return token
+    ? { "Content-Type": "application/json", "X-Auth-Token": token }
+    : { "Content-Type": "application/json" };
+};
+
 interface ProfileEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -73,7 +80,7 @@ export default function ProfileEditDialog({
       setCoverPreview(base64);
       const res = await fetch(PROFILE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ action: "upload_cover", email, image: base64 }),
       });
       const data = await res.json();
@@ -109,7 +116,7 @@ export default function ProfileEditDialog({
       setPreview(base64);
       const res = await fetch(PROFILE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ action: "upload_avatar", email, image: base64 }),
       });
       const data = await res.json();
@@ -147,7 +154,7 @@ export default function ProfileEditDialog({
     try {
       const res = await fetch(PROFILE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({
           action: "change_password",
           email,
