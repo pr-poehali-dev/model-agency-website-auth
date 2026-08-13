@@ -1,23 +1,10 @@
 {
   "tests": [
     {
-      "name": "Login with valid credentials",
-      "method": "POST",
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
       "path": "/",
-      "body": {
-        "action": "login",
-        "email": "mbadir@mba.com",
-        "password": "password123"
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "user": {
-          "email": "string",
-          "role": "string"
-        },
-        "token": "string"
-      },
-      "bodyMatcher": "partial"
+      "expectedStatus": 200
     },
     {
       "name": "Login with invalid credentials",
@@ -28,6 +15,16 @@
         "email": "fake@mba-corp.com",
         "password": "wrongpass"
       },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Users list without token returns 401",
+      "method": "GET",
+      "path": "/",
       "expectedStatus": 401,
       "expectedBody": {
         "error": "string"

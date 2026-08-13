@@ -27,6 +27,57 @@ def verify_password(password: str, password_hash: str) -> bool:
 def generate_token() -> str:
     return secrets.token_urlsafe(32)
 
+def parse_user_agent(ua: str) -> tuple:
+    """Определяет устройство и браузер по User-Agent"""
+    ua_low = (ua or '').lower()
+
+    if 'ipad' in ua_low or 'tablet' in ua_low:
+        device = 'Планшет'
+    elif 'mobile' in ua_low or 'iphone' in ua_low or 'android' in ua_low:
+        device = 'Телефон'
+    elif ua_low:
+        device = 'Компьютер'
+    else:
+        device = 'Неизвестно'
+
+    if 'edg/' in ua_low:
+        browser = 'Edge'
+    elif 'yabrowser' in ua_low:
+        browser = 'Yandex'
+    elif 'opr/' in ua_low or 'opera' in ua_low:
+        browser = 'Opera'
+    elif 'firefox' in ua_low:
+        browser = 'Firefox'
+    elif 'chrome' in ua_low:
+        browser = 'Chrome'
+    elif 'safari' in ua_low:
+        browser = 'Safari'
+    else:
+        browser = 'Неизвестно'
+
+    return device, browser
+
+def log_login(conn, event: Dict[str, Any], user_id: int, email: str, success: bool) -> None:
+    """Записывает попытку входа в историю"""
+    headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
+    ua = headers.get('user-agent', '')
+    ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp', '')
+    device, browser = parse_user_agent(ua)
+
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """INSERT INTO t_p35405502_model_agency_website.login_history
+               (user_id, email, ip_address, user_agent, device, browser, success)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (user_id, email, ip, ua[:500], device, browser, success)
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        cur.close()
+
 def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
     """Проверяет токен и возвращает данные пользователя"""
     if not token:
@@ -99,6 +150,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         user = cur.fetchone()
                 
                 if not user or not verify_password(password, user['password_hash']):
+                    if user:
+                        log_login(conn, event, user['id'], user['email'], False)
                     return {
                         'statusCode': 401,
                         'headers': {
@@ -131,6 +184,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     (user['id'], token, expires_at, True)
                 )
                 conn.commit()
+
+                log_login(conn, event, user['id'], user['email'], True)
                 
                 return {
                     'statusCode': 200,

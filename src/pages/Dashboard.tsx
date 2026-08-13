@@ -11,6 +11,7 @@ import DashboardTab from '@/components/dashboard/DashboardTab';
 import DashboardHome from '@/components/dashboard/DashboardHome';
 import UserManagement from './UserManagement';
 import ModelAssignmentManager from '@/components/ModelAssignmentManager';
+import LoginHistoryTab from '@/components/LoginHistoryTab';
 import ProducerAssignmentManager from '@/components/ProducerAssignmentManager';
 import FinancesTab from '@/components/FinancesTab';
 import ScheduleTab from '@/components/ScheduleTab';
@@ -279,6 +280,7 @@ const Dashboard = () => {
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
     { id: 'assignments', label: 'Назначения', icon: 'GitBranch', permission: PERMISSIONS.MANAGE_ASSIGNMENTS },
     { id: 'producer-assignments', label: 'Продюсеры', icon: 'UserCheck', permission: PERMISSIONS.MANAGE_PRODUCERS },
+    { id: 'login-history', label: 'История входов', icon: 'History', permission: PERMISSIONS.VIEW_AUDIT },
 
   ];
 
@@ -381,6 +383,8 @@ const Dashboard = () => {
         />;
       case 'producer-assignments':
         return <ProducerAssignmentManager currentUserEmail={userEmail} currentUserRole={userRole || 'director'} />;
+      case 'login-history':
+        return <LoginHistoryTab />;
 
       default:
         return <DashboardHome 

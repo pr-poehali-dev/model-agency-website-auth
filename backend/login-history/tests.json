@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Without token returns 401",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Invalid token returns 401",
+      "method": "GET",
+      "path": "/",
+      "headers": {"X-Auth-Token": "invalid-token-12345"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Fake director role header is rejected",
+      "method": "GET",
+      "path": "/?email=all",
+      "headers": {"X-User-Role": "director", "X-User-Email": "hacker@test.com"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
