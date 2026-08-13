@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,11 +26,13 @@ const ActiveSessionsTab = () => {
   const [terminatingId, setTerminatingId] = useState<number | null>(null);
   const [target, setTarget] = useState<SessionRecord | null>(null);
   const [allDevices, setAllDevices] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const { toast } = useToast();
 
-  const load = useCallback(async () => {
-    setIsLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const res = await authenticatedFetch(API_URLS.activeSessions);
       const data = await res.json();
@@ -39,17 +42,32 @@ const ActiveSessionsTab = () => {
       }
 
       setItems(data.items || []);
+      setLastUpdated(new Date());
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
-      toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
+      if (!silent) {
+        const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
+        toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [toast]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible' && !target) {
+        load(true);
+      }
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, [autoRefresh, load, target]);
 
   const handleConfirm = async () => {
     if (!target) return;
@@ -98,12 +116,27 @@ const ActiveSessionsTab = () => {
           <h2 className="text-2xl font-bold">Активные сессии</h2>
           <p className="text-sm text-muted-foreground">
             Кто сейчас в системе и с какого устройства
+            {lastUpdated && (
+              <span className="ml-1">
+                · обновлено в{' '}
+                {lastUpdated.toLocaleTimeString('ru-RU', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            )}
           </p>
         </div>
-        <Button variant="outline" onClick={load} className="gap-2">
-          <Icon name="RefreshCw" size={16} />
-          Обновить
-        </Button>
+        <div className="flex items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+            Автообновление
+          </label>
+          <Button variant="outline" onClick={() => load()} className="gap-2">
+            <Icon name="RefreshCw" size={16} />
+            Обновить
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
