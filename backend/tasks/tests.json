@@ -1,24 +1,29 @@
 {
   "tests": [
     {
-      "name": "GET tasks list",
+      "name": "GET tasks without token returns 401",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Fake director role header is rejected",
       "method": "GET",
       "path": "/",
       "headers": {
-        "X-User-Email": "director@test.com",
+        "X-User-Email": "hacker@test.com",
         "X-User-Role": "director"
       },
-      "expectedStatus": 200
+      "expectedStatus": 401
     },
     {
-      "name": "GET assignees list",
+      "name": "Invalid token returns 401",
       "method": "GET",
-      "path": "/?action=assignees",
+      "path": "/",
       "headers": {
-        "X-User-Email": "director@test.com",
-        "X-User-Role": "director"
+        "X-Auth-Token": "invalid-token-12345"
       },
-      "expectedStatus": 200
+      "expectedStatus": 401
     },
     {
       "name": "OPTIONS CORS preflight",

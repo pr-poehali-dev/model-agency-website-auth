@@ -10,6 +10,39 @@ import os
 import psycopg2
 from typing import Dict, Any
 
+SCHEMA = 't_p35405502_model_agency_website'
+
+
+def extract_token(headers):
+    h = {k.lower(): v for k, v in headers.items()}
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def get_user_info(cur, headers):
+    '''Определяет email и роль пользователя ТОЛЬКО по токену из базы данных'''
+    token = extract_token(headers)
+    if not token:
+        return '', ''
+
+    cur.execute(f"""
+        SELECT u.email, u.role
+        FROM {SCHEMA}.auth_tokens at
+        JOIN {SCHEMA}.users u ON at.user_id = u.id
+        WHERE at.token = %s
+          AND at.expires_at > NOW()
+          AND at.is_active = true
+          AND u.is_active = true
+    """, (token,))
+    row = cur.fetchone()
+    if not row:
+        return '', ''
+    return row[0], row[1]
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -33,14 +66,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     headers = event.get('headers', {})
-    user_email = headers.get('x-user-email') or headers.get('X-User-Email', '')
-    user_role = headers.get('x-user-role') or headers.get('X-User-Role', '')
-    
+
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn)
     cur = conn.cursor()
     
     try:
+        user_email, user_role = get_user_info(cur, headers)
+
+        if not user_email or not user_role:
+            return {
+                'statusCode': 401,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true'
+                },
+                'body': json.dumps({'error': 'Требуется авторизация'})
+            }
+
         if method == 'GET':
             # Получить назначения (все или для конкретного оператора)
             query_params = event.get('queryStringParameters', {})

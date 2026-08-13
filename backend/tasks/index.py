@@ -29,9 +29,36 @@ def resp(event, status, body):
     }
 
 
-def get_user_info(headers):
+def extract_token(headers):
     h = {k.lower(): v for k, v in headers.items()}
-    return h.get('x-user-email', ''), h.get('x-user-role', '')
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def get_user_info(cur, headers):
+    '''Определяет email и роль пользователя ТОЛЬКО по токену из базы данных'''
+    token = extract_token(headers)
+    if not token:
+        return '', ''
+
+    cur.execute(f"""
+        SELECT u.email, u.role
+        FROM {SCHEMA}.auth_tokens at
+        JOIN {SCHEMA}.users u ON at.user_id = u.id
+        WHERE at.token = %s
+          AND at.expires_at > NOW()
+          AND at.is_active = true
+          AND u.is_active = true
+    """, (token,))
+    row = cur.fetchone()
+    if not row:
+        return '', ''
+    return row[0], row[1]
 
 
 def get_producer_operators(cur, producer_email):
@@ -53,13 +80,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
     headers = event.get('headers', {})
-    user_email, user_role = get_user_info(headers)
 
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn)
     cur = conn.cursor()
 
     try:
+        user_email, user_role = get_user_info(cur, headers)
+
+        if not user_email or not user_role:
+            return resp(event, 401, {'error': 'Требуется авторизация'})
+
         if method == 'GET':
             return handle_get(event, cur, user_email, user_role)
         elif method == 'POST':

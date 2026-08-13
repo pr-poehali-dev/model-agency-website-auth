@@ -1,15 +1,29 @@
 {
   "tests": [
     {
-      "name": "Get all assignments",
+      "name": "Get assignments without token returns 401",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200
+      "expectedStatus": 401
     },
     {
-      "name": "Get assignments for operator",
-      "method": "GET",
-      "path": "/?operator=test@test.com",
+      "name": "Fake director role header is rejected",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-User-Email": "hacker@test.com",
+        "X-User-Role": "director"
+      },
+      "body": {
+        "operatorEmail": "a@test.com",
+        "modelEmail": "b@test.com"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
       "expectedStatus": 200
     }
   ]

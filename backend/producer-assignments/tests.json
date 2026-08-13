@@ -1,11 +1,26 @@
 {
   "tests": [
     {
-      "name": "Get producer assignments",
+      "name": "Get producer assignments without token returns 401",
       "method": "GET",
       "path": "/",
-      "expectedStatus": 200,
-      "bodyMatcher": "partial"
+      "expectedStatus": 401
+    },
+    {
+      "name": "Fake director role header is rejected",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Email": "hacker@test.com",
+        "X-User-Role": "director"
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
     }
   ]
 }
