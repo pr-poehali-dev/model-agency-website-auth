@@ -16,19 +16,23 @@ ALLOWED_KEYS = {
     'idle_timeout_minutes': {'min': 1, 'max': 480, 'default': '10'},
 }
 
-CORS_HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
-    'Access-Control-Max-Age': '86400',
-}
+def cors_headers(event: Dict[str, Any]) -> Dict[str, str]:
+    headers = event.get('headers') or {}
+    origin = headers.get('origin') or headers.get('Origin') or '*'
+    return {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+    }
 
 
-def _resp(status: int, body: Dict[str, Any]) -> Dict[str, Any]:
+def _resp(event: Dict[str, Any], status: int, body: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'statusCode': status,
-        'headers': CORS_HEADERS,
+        'headers': cors_headers(event),
         'body': json.dumps(body, default=str),
         'isBase64Encoded': False,
     }
@@ -67,10 +71,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
-        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
+        return {'statusCode': 200, 'headers': cors_headers(event), 'body': ''}
 
     if method not in ('GET', 'POST'):
-        return _resp(405, {'error': 'Method not allowed'})
+        return _resp(event, 405, {'error': 'Method not allowed'})
 
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn, cursor_factory=RealDictCursor)
@@ -80,7 +84,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         user = get_current_user(cur, event.get('headers') or {})
 
         if not user:
-            return _resp(401, {'error': 'Требуется авторизация'})
+            return _resp(event, 401, {'error': 'Требуется авторизация'})
 
         if method == 'GET':
             cur.execute(f"SELECT key, value FROM {SCHEMA}.app_settings")
@@ -90,27 +94,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for key, rules in ALLOWED_KEYS.items():
                 settings.setdefault(key, rules['default'])
 
-            return _resp(200, {'settings': settings})
+            return _resp(event, 200, {'settings': settings})
 
         if user['role'] != 'director':
-            return _resp(403, {'error': 'Недостаточно прав'})
+            return _resp(event, 403, {'error': 'Недостаточно прав'})
 
         body = json.loads(event.get('body') or '{}')
         key = body.get('key')
         value = body.get('value')
 
         if key not in ALLOWED_KEYS:
-            return _resp(400, {'error': 'Неизвестный параметр'})
+            return _resp(event, 400, {'error': 'Неизвестный параметр'})
 
         rules = ALLOWED_KEYS[key]
 
         try:
             numeric = int(value)
         except (TypeError, ValueError):
-            return _resp(400, {'error': 'Значение должно быть числом'})
+            return _resp(event, 400, {'error': 'Значение должно быть числом'})
 
         if numeric < rules['min'] or numeric > rules['max']:
-            return _resp(400, {
+            return _resp(event, 400, {
                 'error': f"Значение должно быть от {rules['min']} до {rules['max']}"
             })
 
@@ -124,7 +128,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """, (key, str(numeric), user['email']))
         conn.commit()
 
-        return _resp(200, {'success': True, 'key': key, 'value': str(numeric)})
+        return _resp(event, 200, {'success': True, 'key': key, 'value': str(numeric)})
 
     finally:
         cur.close()

@@ -12,19 +12,23 @@ from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p35405502_model_agency_website'
 
-CORS_HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
-    'Access-Control-Max-Age': '86400',
-}
+def cors_headers(event: Dict[str, Any]) -> Dict[str, str]:
+    headers = event.get('headers') or {}
+    origin = headers.get('origin') or headers.get('Origin') or '*'
+    return {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+    }
 
 
-def _resp(status: int, body: Dict[str, Any]) -> Dict[str, Any]:
+def _resp(event: Dict[str, Any], status: int, body: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'statusCode': status,
-        'headers': CORS_HEADERS,
+        'headers': cors_headers(event),
         'body': json.dumps(body, default=str),
         'isBase64Encoded': False,
     }
@@ -66,10 +70,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
-        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
+        return {'statusCode': 200, 'headers': cors_headers(event), 'body': ''}
 
     if method != 'GET':
-        return _resp(405, {'error': 'Method not allowed'})
+        return _resp(event, 405, {'error': 'Method not allowed'})
 
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn, cursor_factory=RealDictCursor)
@@ -79,10 +83,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         user_email, user_role = get_user_info(cur, event.get('headers') or {})
 
         if not user_email:
-            return _resp(401, {'error': 'Требуется авторизация'})
+            return _resp(event, 401, {'error': 'Требуется авторизация'})
 
         if user_role != 'director':
-            return _resp(403, {'error': 'Недостаточно прав'})
+            return _resp(event, 403, {'error': 'Недостаточно прав'})
 
         params = event.get('queryStringParameters') or {}
         filter_email = (params.get('email') or '').strip().lower()
@@ -154,7 +158,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """)
         users = [{'email': r['email'], 'fullName': r['full_name']} for r in cur.fetchall()]
 
-        return _resp(200, {'items': items, 'total': total, 'users': users})
+        return _resp(event, 200, {'items': items, 'total': total, 'users': users})
 
     finally:
         cur.close()

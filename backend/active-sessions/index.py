@@ -12,19 +12,23 @@ from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p35405502_model_agency_website'
 
-CORS_HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
-    'Access-Control-Max-Age': '86400',
-}
+def cors_headers(event: Dict[str, Any]) -> Dict[str, str]:
+    headers = event.get('headers') or {}
+    origin = headers.get('origin') or headers.get('Origin') or '*'
+    return {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+    }
 
 
-def _resp(status: int, body: Dict[str, Any]) -> Dict[str, Any]:
+def _resp(event: Dict[str, Any], status: int, body: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'statusCode': status,
-        'headers': CORS_HEADERS,
+        'headers': cors_headers(event),
         'body': json.dumps(body, default=str),
         'isBase64Encoded': False,
     }
@@ -63,10 +67,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
-        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
+        return {'statusCode': 200, 'headers': cors_headers(event), 'body': ''}
 
     if method not in ('GET', 'POST'):
-        return _resp(405, {'error': 'Method not allowed'})
+        return _resp(event, 405, {'error': 'Method not allowed'})
 
     dsn = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(dsn, cursor_factory=RealDictCursor)
@@ -76,10 +80,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         current = get_current_user(cur, event.get('headers') or {})
 
         if not current:
-            return _resp(401, {'error': 'Требуется авторизация'})
+            return _resp(event, 401, {'error': 'Требуется авторизация'})
 
         if current['role'] != 'director':
-            return _resp(403, {'error': 'Недостаточно прав'})
+            return _resp(event, 403, {'error': 'Недостаточно прав'})
 
         if method == 'GET':
             cur.execute(f"""
@@ -110,7 +114,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isCurrent': r['id'] == current['token_id'],
             } for r in rows]
 
-            return _resp(200, {'items': items, 'total': len(items)})
+            return _resp(event, 200, {'items': items, 'total': len(items)})
 
         body = json.loads(event.get('body') or '{}')
         action = body.get('action')
@@ -118,10 +122,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if action == 'terminate_session':
             session_id = body.get('sessionId')
             if not session_id:
-                return _resp(400, {'error': 'sessionId is required'})
+                return _resp(event, 400, {'error': 'sessionId is required'})
 
             if session_id == current['token_id']:
-                return _resp(400, {'error': 'Нельзя завершить свою текущую сессию'})
+                return _resp(event, 400, {'error': 'Нельзя завершить свою текущую сессию'})
 
             cur.execute(f"""
                 UPDATE {SCHEMA}.auth_tokens
@@ -131,15 +135,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             affected = cur.rowcount
             conn.commit()
 
-            return _resp(200, {'success': True, 'terminated': affected})
+            return _resp(event, 200, {'success': True, 'terminated': affected})
 
         if action == 'terminate_user':
             user_id = body.get('userId')
             if not user_id:
-                return _resp(400, {'error': 'userId is required'})
+                return _resp(event, 400, {'error': 'userId is required'})
 
             if user_id == current['id']:
-                return _resp(400, {'error': 'Нельзя завершить свои сессии'})
+                return _resp(event, 400, {'error': 'Нельзя завершить свои сессии'})
 
             cur.execute(f"""
                 UPDATE {SCHEMA}.auth_tokens
@@ -149,9 +153,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             affected = cur.rowcount
             conn.commit()
 
-            return _resp(200, {'success': True, 'terminated': affected})
+            return _resp(event, 200, {'success': True, 'terminated': affected})
 
-        return _resp(400, {'error': 'Unknown action'})
+        return _resp(event, 400, {'error': 'Unknown action'})
 
     finally:
         cur.close()
