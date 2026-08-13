@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const idleLogout = searchParams.get('reason') === 'idle';
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -112,6 +114,12 @@ const Login = () => {
               required
             />
           </div>
+
+          {idleLogout && !error && (
+            <div className="text-sm text-center bg-muted p-3 rounded-xl border backdrop-blur-sm">
+              Вы вышли из системы из-за бездействия. Войдите снова.
+            </div>
+          )}
 
           {error && (
             <div className="text-destructive text-sm text-center bg-destructive/10 p-3 rounded-xl border border-destructive/30 backdrop-blur-sm">

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PERMISSIONS, ROLE_PERMISSIONS, type UserRole } from '@/lib/permissions';
 import { getAuthHeaders } from '@/lib/api';
 import { API_URLS } from '@/lib/apiUrls';
 import { useTheme } from '@/hooks/useTheme';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import IdleWarningDialog from '@/components/IdleWarningDialog';
 import DashboardNavigation from '@/components/dashboard/DashboardNavigation';
 import ModelsTab from '@/components/dashboard/ModelsTab';
 import ChecksTab from '@/components/dashboard/ChecksTab';
@@ -265,6 +267,19 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const handleIdleLogout = useCallback(() => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('authToken');
+    navigate('/?reason=idle');
+  }, [navigate]);
+
+  const { isWarning, secondsLeft, reset: resetIdle } = useIdleTimeout({
+    timeoutMs: 10 * 60 * 1000,
+    warningMs: 60 * 1000,
+    onTimeout: handleIdleLogout,
+  });
+
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
   };
@@ -424,6 +439,13 @@ const Dashboard = () => {
           {renderTabContent()}
         </div>
       </main>
+
+      <IdleWarningDialog
+        open={isWarning}
+        secondsLeft={secondsLeft}
+        onStay={resetIdle}
+        onLogout={handleIdleLogout}
+      />
     </div>
     </TasksProvider>
   );
