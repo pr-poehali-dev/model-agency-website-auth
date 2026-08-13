@@ -92,6 +92,17 @@ def verify_token(conn, token: str) -> Optional[Dict[str, Any]]:
         (token,)
     )
     user = cur.fetchone()
+
+    if user:
+        try:
+            cur.execute(
+                "UPDATE auth_tokens SET last_seen_at = CURRENT_TIMESTAMP WHERE token = %s",
+                (token,)
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+
     cur.close()
     return dict(user) if user else None
 
@@ -179,9 +190,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 # Сохраняем токен в базу
                 expires_at = datetime.now() + timedelta(days=7)
                 
+                login_headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
+                login_ua = login_headers.get('user-agent', '')
+                login_ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp', '')
+                login_device, login_browser = parse_user_agent(login_ua)
+
                 cur.execute(
-                    "INSERT INTO auth_tokens (user_id, token, expires_at, is_active) VALUES (%s, %s, %s, %s)",
-                    (user['id'], token, expires_at, True)
+                    """INSERT INTO auth_tokens
+                       (user_id, token, expires_at, is_active, ip_address, user_agent, device, browser, last_seen_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)""",
+                    (user['id'], token, expires_at, True, login_ip, login_ua[:500], login_device, login_browser)
                 )
                 conn.commit()
 
