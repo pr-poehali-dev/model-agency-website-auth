@@ -5,6 +5,8 @@ from psycopg2.extras import RealDictCursor
 from typing import Dict, Any, List
 from datetime import datetime
 
+MAX_COMBINED_PCT = 35.0
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Business: Calculate salaries for operators, models, and producers based on financial data
@@ -208,6 +210,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if model_producer_assignment and model_producer_assignment.get('producer_percentage') is not None:
                 custom_producer_pct = float(model_producer_assignment['producer_percentage'])
 
+            # Продюсер сам сидит оператором на этой модели?
+            producer_works_as_operator = False
+            if operator_name:
+                op_user_early = next(
+                    (u for u in users if u['email'] == operator_name or u['full_name'] == operator_name),
+                    None
+                )
+                if op_user_early and op_user_early['role'] == 'producer':
+                    producer_works_as_operator = True
+
+            # Итоговый процент продюсера с учётом лимита 35% на связку оператор+продюсер
+            effective_producer_pct = None
+            if custom_producer_pct is not None:
+                effective_producer_pct = custom_producer_pct
+                if producer_works_as_operator:
+                    max_producer_pct = max(0.0, MAX_COMBINED_PCT - operator_percentage)
+                    if effective_producer_pct > max_producer_pct:
+                        print(f"DEBUG CAP: model_id={model_id} producer {custom_producer_pct}% + operator {operator_percentage}% > {MAX_COMBINED_PCT}%, producer capped to {max_producer_pct}%")
+                        effective_producer_pct = max_producer_pct
+
             if pair:
                 # PAIR LOGIC: use percentages from model_pairs table
                 pair_model_pct = float(pair['model_percentage'] or 17.5)
@@ -304,10 +326,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             else:
                 # For regular content makers, use 30%; directors get the rest
                 model_salary = total_check * 0.3
-                if custom_producer_pct is not None:
-                    director_pct_regular = max(0.0, 100.0 - 30.0 - operator_percentage - custom_producer_pct)
+                if effective_producer_pct is not None:
+                    director_pct_regular = max(0.0, 100.0 - 30.0 - operator_percentage - effective_producer_pct)
                     director_amount = total_check * (director_pct_regular / 100)
-                    print(f"DEBUG: model_id={model_id} custom split — model 30%, operator {operator_percentage}%, producer {custom_producer_pct}%, directors {director_pct_regular}%")
+                    print(f"DEBUG: model_id={model_id} custom split — model 30%, operator {operator_percentage}%, producer {effective_producer_pct}%, directors {director_pct_regular}%")
                 else:
                     director_amount = total_check * 0.4
             
@@ -346,8 +368,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
                 if producer_operator_email:
                     op_sal = total_check * (operator_percentage / 100)
-                    if custom_producer_pct is not None:
-                        producer_percentage = custom_producer_pct
+                    if effective_producer_pct is not None:
+                        producer_percentage = effective_producer_pct
                     else:
                         producer_percentage = 30 - operator_percentage
                     prod_sal = total_check * (producer_percentage / 100)
@@ -397,8 +419,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
 
-                        if custom_producer_pct is not None:
-                            producer_percentage = float(custom_producer_pct)
+                        if effective_producer_pct is not None:
+                            producer_percentage = float(effective_producer_pct)
                             print(f"DEBUG: Custom producer percentage for model_id={model_id}: {producer_percentage}%")
                         elif operator_email or producer_operator_email:
                             producer_percentage = 30 - operator_percentage
