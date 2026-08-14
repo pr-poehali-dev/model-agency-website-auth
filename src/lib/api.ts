@@ -41,6 +41,18 @@ export function getAuthHeaders(): Record<string, string> {
   return token ? { 'X-Auth-Token': token } : {};
 }
 
+export const DATA_LOAD_FAILED_EVENT = 'app:data-load-failed';
+
+function notifyDataLoadFailed(method: string, status?: number) {
+  const isReadRequest = !method || method.toUpperCase() === 'GET';
+  if (!isReadRequest) return;
+
+  const isServerError = status === undefined || status >= 500;
+  if (!isServerError) return;
+
+  window.dispatchEvent(new CustomEvent(DATA_LOAD_FAILED_EVENT));
+}
+
 export async function authenticatedFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem('authToken');
   
@@ -55,10 +67,15 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       headers,
       credentials: 'include'
     });
+
+    if (!response.ok) {
+      notifyDataLoadFailed(options.method || 'GET', response.status);
+    }
     
     return response;
   } catch (error) {
     console.error('Fetch error:', error);
+    notifyDataLoadFailed(options.method || 'GET');
     throw error;
   }
 }

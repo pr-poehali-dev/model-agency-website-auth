@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import LoadingScreen from "./components/LoadingScreen";
 import AchievementToastWatcher from "./components/AchievementToastWatcher";
 import DailyFinancesBackup from "./components/DailyFinancesBackup";
+import DataLoadErrorBanner from "./components/DataLoadErrorBanner";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -39,6 +40,7 @@ const App = () => (
         <BrowserRouter>
           <AchievementToastWatcher />
           <DailyFinancesBackup />
+          <DataLoadErrorBanner />
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               <Route path="/" element={<Login />} />
