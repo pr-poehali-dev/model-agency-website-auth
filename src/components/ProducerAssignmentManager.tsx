@@ -19,6 +19,7 @@ interface ProducerAssignment {
   modelEmail: string | null;
   operatorEmail: string | null;
   assignmentType: string;
+  producerPercentage?: number | null;
 }
 
 interface ModelFromDB {
@@ -104,6 +105,80 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
     return assignments.some(
       a => a.producerEmail === producerEmail && a.operatorEmail === operatorEmail && a.assignmentType === 'operator'
     );
+  };
+
+  const getProducerPercentage = (producerEmail: string, modelEmail: string) => {
+    const found = assignments.find(
+      (a) =>
+        a.assignmentType === 'model' &&
+        a.producerEmail === producerEmail &&
+        a.modelEmail === modelEmail,
+    );
+    if (!found || found.producerPercentage === null || found.producerPercentage === undefined) {
+      return 'auto';
+    }
+    return String(found.producerPercentage);
+  };
+
+  const handleProducerPercentageChange = async (
+    producerEmail: string,
+    modelEmail: string,
+    rawValue: string,
+  ) => {
+    const newValue = rawValue === 'auto' ? null : parseFloat(rawValue);
+
+    if (newValue !== null && (newValue < 0 || newValue > 15)) {
+      toast({
+        title: 'Ошибка',
+        description: 'Процент продюсера должен быть от 0 до 15',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAssignments((prev) =>
+      prev.map((a) =>
+        a.assignmentType === 'model' &&
+        a.producerEmail === producerEmail &&
+        a.modelEmail === modelEmail
+          ? { ...a, producerPercentage: newValue }
+          : a,
+      ),
+    );
+
+    try {
+      const response = await authenticatedFetch(PRODUCER_API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Email': currentUserEmail,
+          'X-User-Role': currentUserRole,
+        },
+        body: JSON.stringify({ producerEmail, modelEmail, producerPercentage: newValue }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Не удалось обновить процент');
+      }
+
+      toast({
+        title: 'Процент обновлён',
+        description:
+          newValue === null
+            ? 'Возвращён прежний способ расчёта'
+            : `Продюсер получает ${newValue}% с этой модели`,
+      });
+
+      await loadAssignments();
+    } catch (err) {
+      toast({
+        title: 'Ошибка',
+        description: err instanceof Error ? err.message : 'Не удалось обновить процент',
+        variant: 'destructive',
+      });
+      await loadAssignments();
+    }
   };
 
   const handleToggleModel = async (producerEmail: string, modelEmail: string) => {
@@ -251,12 +326,40 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
                 {models.map(model => {
                   const assigned = isModelAssigned(selectedProducer, model.email);
                   return (
-                    <div key={`${model.email}-${refreshKey}`} className="flex items-center justify-between p-4 border border-border rounded-lg bg-card/50">
-                      <span className="text-foreground font-medium">{model.email}</span>
+                    <div key={`${model.email}-${refreshKey}`} className="flex items-center justify-between gap-4 p-4 border border-border rounded-lg bg-card/50">
+                      <div className="min-w-0">
+                        <span className="text-foreground font-medium block truncate">{model.email}</span>
+                        {assigned && currentUserRole === 'director' && (
+                          <div className="mt-2">
+                            <label className="text-xs text-muted-foreground mb-1 block">
+                              Процент продюсера
+                            </label>
+                            <select
+                              value={getProducerPercentage(selectedProducer, model.email)}
+                              onChange={(e) =>
+                                handleProducerPercentageChange(
+                                  selectedProducer,
+                                  model.email,
+                                  e.target.value,
+                                )
+                              }
+                              className="px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-sm font-medium"
+                            >
+                              <option value="auto">По умолчанию</option>
+                              <option value="5">5%</option>
+                              <option value="7.5">7,5%</option>
+                              <option value="10">10%</option>
+                              <option value="12.5">12,5%</option>
+                              <option value="15">15%</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
                       <Button
                         onClick={() => handleToggleModel(selectedProducer, model.email)}
                         variant={assigned ? 'destructive' : 'default'}
                         size="sm"
+                        className="shrink-0"
                       >
                         <Icon name={assigned ? 'UserMinus' : 'UserPlus'} size={16} className="mr-2" />
                         {assigned ? 'Открепить' : 'Назначить'}

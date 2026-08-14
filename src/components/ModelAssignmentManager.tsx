@@ -220,71 +220,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     }
   };
 
-  const getProducerForModel = (modelEmail: string) => {
-    const found = allProducerAssignments.find((a) => a.modelEmail === modelEmail);
-    return found ? found.producerEmail : null;
-  };
-
-  const handleProducerPercentageChange = async (
-    modelEmail: string,
-    rawValue: string,
-  ) => {
-    const producerEmail = getProducerForModel(modelEmail);
-    if (!producerEmail) return;
-
-    const newValue = rawValue === 'auto' ? null : parseFloat(rawValue);
-
-    if (newValue !== null && (newValue < 0 || newValue > 15)) {
-      toast({
-        title: 'Ошибка',
-        description: 'Процент продюсера должен быть от 0 до 15',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setProducerPercentages((prev) => ({ ...prev, [modelEmail]: newValue }));
-
-    try {
-      const response = await authenticatedFetch(PRODUCER_API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Email': currentUserEmail,
-          'X-User-Role': currentUserRole,
-        },
-        body: JSON.stringify({
-          producerEmail,
-          modelEmail,
-          producerPercentage: newValue,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось обновить процент');
-      }
-
-      toast({
-        title: 'Процент продюсера обновлён',
-        description:
-          newValue === null
-            ? 'Возвращён прежний способ расчёта'
-            : `Продюсер получает ${newValue}%`,
-      });
-
-      await loadAllProducerAssignments();
-    } catch (err) {
-      console.error('Producer percentage update error:', err);
-      toast({
-        title: 'Ошибка',
-        description: err instanceof Error ? err.message : 'Не удалось обновить процент',
-        variant: 'destructive',
-      });
-      await loadAllProducerAssignments();
-    }
-  };
-
   const isAssigned = (operatorEmail: string, modelEmail: string) => {
     return assignments.some(a => a.operatorEmail === operatorEmail && a.modelEmail === modelEmail);
   };
@@ -439,7 +374,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
                 customProducerPct !== null && customProducerPct !== undefined
                   ? customProducerPct
                   : 30 - currentPercentage;
-              const modelProducer = getProducerForModel(model.email);
               const directorsPercentage = Math.max(
                 0,
                 100 - 30 - currentPercentage - producerPercentage,
@@ -480,38 +414,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
                             <option value={25}>25%</option>
                           </select>
                         </div>
-
-                        {currentUserRole === 'director' && (
-                          <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">
-                              Процент продюсера
-                            </label>
-                            {modelProducer ? (
-                              <select
-                                value={
-                                  customProducerPct === null || customProducerPct === undefined
-                                    ? 'auto'
-                                    : String(customProducerPct)
-                                }
-                                onChange={(e) =>
-                                  handleProducerPercentageChange(model.email, e.target.value)
-                                }
-                                className="px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-sm font-medium"
-                              >
-                                <option value="auto">Как раньше ({30 - currentPercentage}%)</option>
-                                <option value="5">5%</option>
-                                <option value="7.5">7,5%</option>
-                                <option value="10">10%</option>
-                                <option value="12.5">12,5%</option>
-                                <option value="15">15%</option>
-                              </select>
-                            ) : (
-                              <div className="text-xs text-muted-foreground py-2">
-                                Продюсер не назначен
-                              </div>
-                            )}
-                          </div>
-                        )}
 
                         <div className="ml-auto text-right">
                           <div className="text-xs text-muted-foreground">Распределение:</div>
