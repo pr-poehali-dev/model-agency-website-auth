@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Icon from '@/components/ui/icon';
 import { Period } from '@/utils/periodUtils';
 import { authenticatedFetch } from '@/lib/api';
+import { API_URLS } from '@/lib/apiUrls';
 
 interface ModelStats {
   name: string;
@@ -74,6 +75,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
   const [data, setData] = useState<ProducerData | null>(null);
   const [producersData, setProducersData] = useState<ProducerData[]>([]);
   const [pairs, setPairs] = useState<ModelPairFinance[]>([]);
+  const [producerRates, setProducerRates] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
   const API_URL = 'https://functions.poehali.dev/d82439a1-a9ac-4798-a02a-8874ce48e24b';
 
@@ -87,7 +89,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
     const periodEnd = formatDate(period.endDate);
 
     try {
-      const [statsResponse, pairsResponse] = await Promise.all([
+      const [statsResponse, pairsResponse, producerAssignmentsResponse] = await Promise.all([
         authenticatedFetch(
           `${API_URL}?user_email=${encodeURIComponent(userEmail)}&role=${userRole}&period_start=${periodStart}&period_end=${periodEnd}`
         ),
@@ -97,12 +99,29 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
             'X-User-Role': userRole,
             'X-Auth-Token': localStorage.getItem('authToken') || ''
           }
-        })
+        }),
+        authenticatedFetch(`${API_URLS.producerAssignments}?type=model`)
       ]);
 
       const result = await statsResponse.json();
       const pairsData = await pairsResponse.json();
       setPairs(pairsData.pairs || []);
+
+      if (producerAssignmentsResponse.ok) {
+        const assignmentsData = await producerAssignmentsResponse.json();
+        if (Array.isArray(assignmentsData)) {
+          const rates: Record<string, number | null> = {};
+          assignmentsData.forEach((a: { modelEmail?: string; producerPercentage?: number | null }) => {
+            if (a.modelEmail) {
+              rates[a.modelEmail] =
+                a.producerPercentage === null || a.producerPercentage === undefined
+                  ? null
+                  : Number(a.producerPercentage);
+            }
+          });
+          setProducerRates(rates);
+        }
+      }
 
       if (userRole === 'director') {
         const producers = result.producers || [];
@@ -289,6 +308,7 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
                   <th className="text-right p-4 font-medium">Разница</th>
                   <th className="text-center p-4 font-medium">Смены (тек.)</th>
                   <th className="text-center p-4 font-medium">Смены (пр.)</th>
+                  <th className="text-center p-4 font-medium">% продюсера</th>
                 </tr>
               </thead>
               <tbody>
@@ -332,9 +352,12 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
                         <td className="p-4 text-center">
                           <Badge variant="outline">{prevShifts}</Badge>
                         </td>
+                        <td className="p-4 text-center">
+                          <Badge>{pair.producer_percentage}%</Badge>
+                        </td>
                       </tr>
                       <tr key={`pair-${pair.id}-breakdown`} className="border-b bg-muted/10">
-                        <td colSpan={6} className="px-4 pb-3 pt-0">
+                        <td colSpan={7} className="px-4 pb-3 pt-0">
                           <div className="ml-16 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
                             <span>
                               <span className="font-medium text-foreground">{pair.model1_name}:</span>{' '}
@@ -379,11 +402,18 @@ const ProductionMonitoring = ({ userEmail, userRole, period, onPreviousPeriod, o
                     <td className="p-4 text-center">
                       <Badge variant="outline">{model.previous_shifts}</Badge>
                     </td>
+                    <td className="p-4 text-center">
+                      {producerRates[model.email] !== null && producerRates[model.email] !== undefined ? (
+                        <Badge>{producerRates[model.email]}%</Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">по умолчанию</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {producerData.models.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
                       Нет назначенных моделей
                     </td>
                   </tr>
