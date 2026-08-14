@@ -22,13 +22,21 @@ const ChecksTab = () => {
     producerOperators,
     allAssignments,
     users,
-    salaries,
-    adjustments,
+    salaries: rawSalaries,
+    adjustments: rawAdjustments,
     modelPairs,
     loadExchangeRate,
     handleUpdateProducer: updateProducer,
     handleUpdateEmployee: updateEmployee
   } = useChecksData(currentPeriod);
+
+  const salaries = {
+    operators: rawSalaries?.operators || {},
+    models: rawSalaries?.models || {},
+    producers: rawSalaries?.producers || {},
+    directors: rawSalaries?.directors || {}
+  };
+  const adjustments = rawAdjustments || {};
 
   const handleUpdateProducer = async (email: string, field: 'expenses' | 'advance' | 'penalty', value: number) => {
     try {

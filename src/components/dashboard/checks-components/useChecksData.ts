@@ -160,7 +160,7 @@ export const useChecksData = (currentPeriod: Period) => {
       const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
-        setSalaries(Array.isArray(data) ? data : []);
+        setSalaries(data && typeof data === 'object' && !Array.isArray(data) ? data : { operators: {}, models: {}, producers: {}, directors: {} });
       }
     } catch (err) {
       console.error('Failed to load salaries', err);
@@ -182,7 +182,7 @@ export const useChecksData = (currentPeriod: Period) => {
       const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
       if (response.ok) {
         const data = await response.json();
-        setAdjustments(Array.isArray(data) ? data : []);
+        setAdjustments(data && typeof data === 'object' ? data : {});
       }
     } catch (err) {
       console.error('Failed to load adjustments', err);
