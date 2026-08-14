@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { authenticatedFetch } from '@/lib/api';
 import ModelAccountsDialog from '@/components/ModelAccountsDialog';
 import PairAccountsDialog from '@/components/PairAccountsDialog';
 import {
@@ -238,11 +239,19 @@ const ModelsTab = ({
       const url = userRole === 'producer' 
         ? `${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`
         : `${PRODUCER_API_URL}?type=model`;
-      const response = await fetch(url);
+      const response = await authenticatedFetch(url);
+
+      if (!response.ok) {
+        console.error('Failed to load producer assignments: HTTP', response.status);
+        setProducerAssignmentsData([]);
+        return;
+      }
+
       const data = await response.json();
-      setProducerAssignmentsData(data);
+      setProducerAssignmentsData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading producer assignments:', error);
+      setProducerAssignmentsData([]);
     }
   };
 
@@ -269,13 +278,16 @@ const ModelsTab = ({
   };
 
   const getProducerName = (modelEmail: string): string => {
-    const assignment = producerAssignmentsData.find(a => a.modelEmail === modelEmail);
+    const assignment = getProducerAssignment(modelEmail);
     if (!assignment) return 'MBA Production';
-    const producer = users.find(u => u.email === assignment.producerEmail);
+    const producer = Array.isArray(users)
+      ? users.find(u => u.email === assignment.producerEmail)
+      : undefined;
     return producer?.fullName || assignment.producerEmail;
   };
 
   const getProducerAssignment = (modelEmail: string): ProducerAssignment | undefined => {
+    if (!Array.isArray(producerAssignmentsData)) return undefined;
     return producerAssignmentsData.find(a => a.modelEmail === modelEmail);
   };
 
