@@ -21,6 +21,32 @@
       "method": "OPTIONS",
       "path": "/",
       "expectedStatus": 200
+    },
+    {
+      "name": "Update producer percentage without token returns 401",
+      "method": "PUT",
+      "path": "/",
+      "body": {
+        "producerEmail": "p@test.com",
+        "modelEmail": "m@test.com",
+        "producerPercentage": 15
+      },
+      "expectedStatus": 401
+    },
+    {
+      "name": "Fake director cannot change percentage",
+      "method": "PUT",
+      "path": "/",
+      "headers": {
+        "X-User-Email": "hacker@test.com",
+        "X-User-Role": "director"
+      },
+      "body": {
+        "producerEmail": "p@test.com",
+        "modelEmail": "m@test.com",
+        "producerPercentage": 99
+      },
+      "expectedStatus": 401
     }
   ]
 }

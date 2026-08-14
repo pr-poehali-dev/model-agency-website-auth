@@ -57,7 +57,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Email, X-User-Role, X-Auth-Token',
                 'Access-Control-Allow-Credentials': 'true',
                 'Access-Control-Max-Age': '86400'
@@ -92,25 +92,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             if producer_email and assignment_type:
                 cur.execute("""
-                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
+                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type, producer_percentage 
                     FROM t_p35405502_model_agency_website.producer_assignments 
                     WHERE producer_email = %s AND assignment_type = %s
                 """, (producer_email, assignment_type))
             elif assignment_type:
                 cur.execute("""
-                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
+                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type, producer_percentage 
                     FROM t_p35405502_model_agency_website.producer_assignments 
                     WHERE assignment_type = %s
                 """, (assignment_type,))
             elif producer_email:
                 cur.execute("""
-                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
+                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type, producer_percentage 
                     FROM t_p35405502_model_agency_website.producer_assignments 
                     WHERE producer_email = %s
                 """, (producer_email,))
             else:
                 cur.execute("""
-                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type 
+                    SELECT id, producer_email, model_email, operator_email, assigned_by, assigned_at, assignment_type, producer_percentage 
                     FROM t_p35405502_model_agency_website.producer_assignments
                 """)
             
@@ -122,7 +122,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'operatorEmail': r[3],
                 'assignedBy': r[4],
                 'assignedAt': r[5].isoformat() if r[5] else None,
-                'assignmentType': r[6]
+                'assignmentType': r[6],
+                'producerPercentage': float(r[7]) if r[7] is not None else None
             } for r in rows]
             
             return {
@@ -201,6 +202,90 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps({'id': assignment_id, 'message': 'Assigned successfully'})
             }
         
+        elif method == 'PUT':
+            if user_role != 'director':
+                return {
+                    'statusCode': 403,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
+                    'body': json.dumps({'error': 'Только директор может менять процент продюсера'})
+                }
+
+            body = json.loads(event.get('body') or '{}')
+            producer_email = body.get('producerEmail')
+            model_email = body.get('modelEmail')
+            percentage = body.get('producerPercentage')
+
+            if not producer_email or not model_email:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
+                    'body': json.dumps({'error': 'producerEmail и modelEmail обязательны'})
+                }
+
+            if percentage is not None:
+                try:
+                    percentage = float(percentage)
+                except (TypeError, ValueError):
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
+                        'body': json.dumps({'error': 'Процент должен быть числом'})
+                    }
+
+                if percentage < 0 or percentage > 15:
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
+                        'body': json.dumps({'error': 'Процент продюсера должен быть от 0 до 15'})
+                    }
+
+            cur.execute("""
+                UPDATE t_p35405502_model_agency_website.producer_assignments
+                SET producer_percentage = %s
+                WHERE producer_email = %s
+                  AND model_email = %s
+                  AND assignment_type = 'model'
+            """, (percentage, producer_email, model_email))
+            updated = cur.rowcount
+            conn.commit()
+
+            if updated == 0:
+                return {
+                    'statusCode': 404,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': origin,
+                        'Access-Control-Allow-Credentials': 'true'
+                    },
+                    'body': json.dumps({'error': 'Назначение не найдено'})
+                }
+
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true'
+                },
+                'body': json.dumps({'success': True, 'producerPercentage': percentage})
+            }
+
         elif method == 'DELETE':
             print(f'DELETE request received')
             if user_role != 'director':

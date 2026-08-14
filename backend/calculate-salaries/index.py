@@ -89,7 +89,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cur.execute(f"""
             SELECT 
                 pma.producer_email,
-                pma.model_email
+                pma.model_email,
+                pma.producer_percentage
             FROM {schema}.producer_assignments pma
             WHERE pma.assignment_type = 'model' AND pma.model_email IS NOT NULL
         """)
@@ -199,6 +200,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Check if this model is a solo_maker
             model_user = next((u for u in users if u['user_id'] == model_id), None)
 
+            model_producer_assignment = next(
+                (pa for pa in producer_assignments if pa['model_email'] == model_email),
+                None
+            ) if model_email else None
+            custom_producer_pct = None
+            if model_producer_assignment and model_producer_assignment.get('producer_percentage') is not None:
+                custom_producer_pct = float(model_producer_assignment['producer_percentage'])
+
             if pair:
                 # PAIR LOGIC: use percentages from model_pairs table
                 pair_model_pct = float(pair['model_percentage'] or 17.5)
@@ -293,9 +302,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 director_amount = total_check * ((100 - solo_percentage) / 100)
                 print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}% = ${model_salary}, directors get {100 - solo_percentage}% = ${director_amount}")
             else:
-                # For regular content makers, use 30%; directors get 40%
+                # For regular content makers, use 30%; directors get the rest
                 model_salary = total_check * 0.3
-                director_amount = total_check * 0.4
+                if custom_producer_pct is not None:
+                    director_pct_regular = max(0.0, 100.0 - 30.0 - operator_percentage - custom_producer_pct)
+                    director_amount = total_check * (director_pct_regular / 100)
+                    print(f"DEBUG: model_id={model_id} custom split — model 30%, operator {operator_percentage}%, producer {custom_producer_pct}%, directors {director_pct_regular}%")
+                else:
+                    director_amount = total_check * 0.4
             
             director_pool += director_amount
             director_pool_details.append({
@@ -332,7 +346,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
                 if producer_operator_email:
                     op_sal = total_check * (operator_percentage / 100)
-                    producer_percentage = 30 - operator_percentage
+                    if custom_producer_pct is not None:
+                        producer_percentage = custom_producer_pct
+                    else:
+                        producer_percentage = 30 - operator_percentage
                     prod_sal = total_check * (producer_percentage / 100)
                     combined_salary = op_sal + prod_sal
                     if producer_operator_email not in producer_salaries:
@@ -380,7 +397,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
 
-                        if operator_email or producer_operator_email:
+                        if custom_producer_pct is not None:
+                            producer_percentage = float(custom_producer_pct)
+                            print(f"DEBUG: Custom producer percentage for model_id={model_id}: {producer_percentage}%")
+                        elif operator_email or producer_operator_email:
                             producer_percentage = 30 - operator_percentage
                         else:
                             producer_percentage = 30
