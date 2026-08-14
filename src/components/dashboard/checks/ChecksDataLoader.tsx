@@ -127,7 +127,7 @@ export const loadSalaries = async (
     const response = await authenticatedFetch(`${SALARIES_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
     if (response.ok) {
       const data = await response.json();
-      setSalaries(data);
+      setSalaries(Array.isArray(data) ? data : []);
     }
   } catch (err) {
     console.error('Failed to load salaries', err);
@@ -152,7 +152,7 @@ export const loadAdjustments = async (
     const response = await authenticatedFetch(`${ADJUSTMENTS_API_URL}?period_start=${periodStart}&period_end=${periodEnd}`);
     if (response.ok) {
       const data = await response.json();
-      setAdjustments(data);
+      setAdjustments(Array.isArray(data) ? data : []);
     }
   } catch (err) {
     console.error('Failed to load adjustments', err);

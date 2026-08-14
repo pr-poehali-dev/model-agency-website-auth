@@ -221,8 +221,16 @@ const Dashboard = () => {
 
   const loadOperatorAssignments = async (email: string) => {
     try {
-      const response = await fetch(`${ASSIGNMENTS_API_URL}?operator=${encodeURIComponent(email)}`);
+      const response = await authenticatedFetch(`${ASSIGNMENTS_API_URL}?operator=${encodeURIComponent(email)}`);
+      if (!response.ok) {
+        setOperatorAssignments([]);
+        return;
+      }
       const assignments = await response.json();
+      if (!Array.isArray(assignments)) {
+        setOperatorAssignments([]);
+        return;
+      }
       const modelIds = assignments.map((a: OperatorAssignment) => a.modelId);
       setOperatorAssignments(modelIds);
     } catch (err) {
@@ -232,8 +240,16 @@ const Dashboard = () => {
 
   const loadProducerAssignments = async (email: string) => {
     try {
-      const response = await fetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
+      const response = await authenticatedFetch(`${PRODUCER_API_URL}?producer=${encodeURIComponent(email)}&type=model`);
+      if (!response.ok) {
+        setProducerAssignments([]);
+        return;
+      }
       const assignments = await response.json();
+      if (!Array.isArray(assignments)) {
+        setProducerAssignments([]);
+        return;
+      }
       const modelEmails = assignments.map((a: ProducerAssignment) => a.modelEmail);
       setProducerAssignments(modelEmails);
     } catch (err) {
@@ -243,17 +259,27 @@ const Dashboard = () => {
 
   const loadAssignedProducer = async (operatorEmail: string) => {
     try {
-      const response = await fetch(`${PRODUCER_API_URL}?type=operator`);
+      const response = await authenticatedFetch(`${PRODUCER_API_URL}?type=operator`);
+      if (!response.ok) return;
+
       const assignments = await response.json();
+      if (!Array.isArray(assignments)) return;
+
       const assignment = assignments.find((a: ProducerAssignment) => a.operatorEmail === operatorEmail);
       if (assignment) {
-        const usersResponse = await fetch(API_URL, {
+        const usersResponse = await authenticatedFetch(API_URL, {
           method: 'GET',
           headers: getAuthHeaders(),
           credentials: 'include'
         });
+        if (!usersResponse.ok) {
+          setAssignedProducer(assignment.producerEmail);
+          return;
+        }
         const users = await usersResponse.json();
-        const producer = users.find((u: ApiUser) => u.email === assignment.producerEmail);
+        const producer = Array.isArray(users)
+          ? users.find((u: ApiUser) => u.email === assignment.producerEmail)
+          : undefined;
         setAssignedProducer(producer?.fullName || assignment.producerEmail);
       }
     } catch (err) {

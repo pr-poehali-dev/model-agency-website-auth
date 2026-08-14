@@ -3,6 +3,7 @@ import { SCHEDULE_API_URL, USERS_API_URL, ASSIGNMENTS_API_URL, defaultSchedule }
 import { getWeekDates } from './utils';
 import { ScheduleData, TeamMember, Team } from './types';
 import { useToast } from '@/hooks/use-toast';
+import { authenticatedFetch } from '@/lib/api';
 
 export const useScheduleData = (currentWeekOffset: number) => {
   const [scheduleData, setScheduleData] = useState<ScheduleData>(defaultSchedule);
@@ -93,18 +94,28 @@ export const useTeamData = () => {
 
   const loadTeamMembers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const response = await authenticatedFetch(USERS_API_URL);
+      if (!response.ok) {
+        setTeamMembers([]);
+        return;
+      }
       const data = await response.json();
-      setTeamMembers(data);
+      setTeamMembers(Array.isArray(data) ? data : []);
     } catch (err) {
+      setTeamMembers([]);
       console.error('Failed to load team members', err);
     }
   };
 
   const loadTeams = async () => {
     try {
-      const response = await fetch(ASSIGNMENTS_API_URL);
-      const data = await response.json();
+      const response = await authenticatedFetch(ASSIGNMENTS_API_URL);
+      if (!response.ok) {
+        setTeams([]);
+        return;
+      }
+      const rawData = await response.json();
+      const data = Array.isArray(rawData) ? rawData : [];
       
       const uniqueTeams = new Map<string, Team>();
       

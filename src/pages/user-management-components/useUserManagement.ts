@@ -72,8 +72,12 @@ export const useUserManagement = () => {
   const loadUsers = async () => {
     try {
       const response = await authenticatedFetch(API_URL, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+      if (!response.ok) {
+        setUsers([]);
+        return;
+      }
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       toast({
         title: 'Ошибка',
