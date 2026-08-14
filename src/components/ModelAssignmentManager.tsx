@@ -39,8 +39,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
   const [producerAssignments, setProducerAssignments] = useState<any[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [percentages, setPercentages] = useState<{ [key: string]: number }>({});
-  const [producerPercentages, setProducerPercentages] = useState<{ [key: string]: number | null }>({});
-  const [allProducerAssignments, setAllProducerAssignments] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,7 +52,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
         await loadModels();
       }
       await loadAssignments();
-      await loadAllProducerAssignments();
     };
     init();
     
@@ -192,31 +189,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
     } catch (err) {
       console.error('Failed to load producer assignments', err);
       return [];
-    }
-  };
-
-  const loadAllProducerAssignments = async () => {
-    try {
-      const response = await authenticatedFetch(`${PRODUCER_API_URL}?type=model`);
-      if (!response.ok) return;
-
-      const data = await response.json();
-      if (!Array.isArray(data)) return;
-
-      setAllProducerAssignments(data);
-
-      const map: { [key: string]: number | null } = {};
-      data.forEach((a: any) => {
-        if (a.modelEmail) {
-          map[a.modelEmail] =
-            a.producerPercentage === null || a.producerPercentage === undefined
-              ? null
-              : Number(a.producerPercentage);
-        }
-      });
-      setProducerPercentages(map);
-    } catch (err) {
-      console.error('Failed to load producer model assignments', err);
     }
   };
 
@@ -369,15 +341,6 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
               const assigned = isAssigned(selectedOperator, model.email);
               const percentageKey = getPercentageKey(selectedOperator, model.email);
               const currentPercentage = percentages[percentageKey] || 20;
-              const customProducerPct = producerPercentages[model.email];
-              const producerPercentage =
-                customProducerPct !== null && customProducerPct !== undefined
-                  ? customProducerPct
-                  : 30 - currentPercentage;
-              const directorsPercentage = Math.max(
-                0,
-                100 - 30 - currentPercentage - producerPercentage,
-              );
               
               return (
                 <div key={model.email} className="p-4 border border-border rounded-lg bg-card/50">
@@ -418,10 +381,7 @@ const ModelAssignmentManager = ({ currentUserEmail, currentUserRole, onModelAssi
                         <div className="ml-auto text-right">
                           <div className="text-xs text-muted-foreground">Распределение:</div>
                           <div className="text-sm font-medium text-foreground">
-                            Модель: 30% | Оператор: {currentPercentage}% | Продюсер: {producerPercentage}%
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Директорам остаётся: {directorsPercentage}%
+                            Модель: 30% | Оператор: {currentPercentage}%
                           </div>
                         </div>
                       </div>
