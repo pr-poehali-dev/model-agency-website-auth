@@ -307,7 +307,6 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     list: EmployeeRow[],
     emptyText: string,
     countLabel: string,
-    withPeriodNav: boolean,
   ) => {
     const readyCount = list.filter((r) => r.bonus_ready).length;
     const bonusSum = sumBonus(list);
@@ -315,35 +314,10 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     return (
       <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-foreground font-heading">
-              <Icon name={iconName} size={20} className="text-primary" />
-              {title}
-            </CardTitle>
-            {withPeriodNav && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setPeriod(getPreviousPeriod(period))}
-                >
-                  <Icon name="ChevronLeft" size={16} />
-                </Button>
-                <span className="text-sm text-muted-foreground min-w-[120px] text-center">
-                  {period.label}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setPeriod(getNextPeriod(period))}
-                >
-                  <Icon name="ChevronRight" size={16} />
-                </Button>
-              </div>
-            )}
-          </div>
+          <CardTitle className="flex items-center gap-2 text-foreground font-heading">
+            <Icon name={iconName} size={20} className="text-primary" />
+            {title}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {!loading && list.length > 0 && (
@@ -353,7 +327,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                   <Icon name="Users" size={14} />
                   {countLabel}
                 </div>
-                <div className="text-2xl font-bold text-foreground">{list.length}</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">{list.length}</div>
               </div>
 
               <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
@@ -361,7 +335,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                   <Icon name="TrendingUp" size={14} className="text-purple-500" />
                   Выполнили план
                 </div>
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {readyCount} / {list.length}
                 </div>
               </div>
@@ -371,7 +345,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                   <Icon name="Gift" size={14} className="text-amber-500" />
                   Премий к выплате
                 </div>
-                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                <div className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {bonusSum.toLocaleString('ru-RU')} ₽
                 </div>
               </div>
@@ -392,22 +366,47 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
 
   return (
     <div className="animate-fade-in space-y-4">
-      {renderSection(
-        'Планы продюсеров и премии',
-        'Target',
-        producerRows,
-        'Продюсеров нет',
-        'Всего продюсеров',
-        true,
-      )}
-      {renderSection(
-        'Планы сотрудников и премии',
-        'UserCheck',
-        staffRows,
-        'Сотрудников нет',
-        'Всего сотрудников',
-        false,
-      )}
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-secondary/30 backdrop-blur-sm px-4 py-2.5">
+        <span className="text-sm font-medium text-foreground">Период</span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setPeriod(getPreviousPeriod(period))}
+          >
+            <Icon name="ChevronLeft" size={16} />
+          </Button>
+          <span className="text-sm text-muted-foreground min-w-[120px] text-center">
+            {period.label}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setPeriod(getNextPeriod(period))}
+          >
+            <Icon name="ChevronRight" size={16} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+        {renderSection(
+          'Планы продюсеров и премии',
+          'Target',
+          producerRows,
+          'Продюсеров нет',
+          'Всего продюсеров',
+        )}
+        {renderSection(
+          'Планы сотрудников и премии',
+          'UserCheck',
+          staffRows,
+          'Сотрудников нет',
+          'Всего сотрудников',
+        )}
+      </div>
     </div>
   );
 };
