@@ -143,28 +143,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         shifts_count = int(cur.fetchone()['c'] or 0)
 
-    elif user_role == 'content_maker':
-        cur.execute(
-            f"""SELECT DISTINCT model_email
-                FROM {schema}.producer_assignments
-                WHERE producer_email = %s AND assignment_type = 'model'""",
-            (user_email,)
-        )
-        model_emails = [r['model_email'] for r in cur.fetchall()]
-        models_assigned = max(1, len(model_emails))
+    elif user_role in ('content_maker', 'model', 'solo_maker'):
+        # Модель считает СВОИ смены: оператор отметил галочку в её финансах
+        model_emails = [user_email]
+        models_assigned = 1
 
-        if model_emails:
-            cur.execute(
-                f"""SELECT COUNT(*) AS c
-                    FROM {schema}.model_finances mf
-                    JOIN {schema}.users u ON u.id = mf.model_id
-                    WHERE mf.has_shift = true
-                      AND u.email = ANY(%s)
-                      AND mf.operator_name IS NOT NULL AND mf.operator_name <> ''
-                      AND mf.date >= %s AND mf.date <= %s""",
-                (model_emails, period_start, period_end)
-            )
-            shifts_count = int(cur.fetchone()['c'] or 0)
+        cur.execute(
+            f"""SELECT COUNT(*) AS c
+                FROM {schema}.model_finances mf
+                JOIN {schema}.users u ON u.id = mf.model_id
+                WHERE mf.has_shift = true
+                  AND LOWER(u.email) = LOWER(%s)
+                  AND mf.date >= %s AND mf.date <= %s""",
+            (user_email, period_start, period_end)
+        )
+        shifts_count = int(cur.fetchone()['c'] or 0)
 
     elif user_role == 'director':
         cur.execute(

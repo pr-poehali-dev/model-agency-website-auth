@@ -77,7 +77,11 @@ export default function ProfilePage() {
       ? null
       : MOCK_USER.joinedAt;
   const isProducer = userRole === "producer";
-  const isShiftTracked = userRole === "operator" || userRole === "content_maker";
+  const isShiftTracked =
+    userRole === "operator" ||
+    userRole === "content_maker" ||
+    userRole === "model" ||
+    userRole === "solo_maker";
   const isDirectorProfile = userRole === "director";
   const viewerIsDirector = currentUserRole === "director";
   const viewerIsProducer = currentUserRole === "producer";
