@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import funcUrls from '../../../backend/func2url.json';
+import { authenticatedFetchNoCreds } from '@/lib/api';
 
 const ACHIEVEMENTS_URL = (funcUrls as Record<string, string>)['achievements'];
 const AUTH_URL = (funcUrls as Record<string, string>)['auth'];
@@ -92,18 +93,17 @@ export default function GrantAchievementDialog({
     setComment('');
     setSearch('');
 
-    const token = localStorage.getItem('authToken') || '';
     const requests: Array<Promise<unknown>> = [
-      fetch(`${ACHIEVEMENTS_URL}?action=types`).then((r) => r.json()),
+      authenticatedFetchNoCreds(`${ACHIEVEMENTS_URL}?action=types`).then((r) => r.json()),
       isProducer
-        ? fetch(`${ACHIEVEMENTS_URL}?action=allowed_for_producer`).then((r) => r.json())
+        ? authenticatedFetchNoCreds(`${ACHIEVEMENTS_URL}?action=allowed_for_producer`).then((r) => r.json())
         : Promise.resolve({ allowed_ids: [] }),
     ];
     if (needsUserPicker) {
       requests.push(
-        fetch(AUTH_URL, {
+        authenticatedFetchNoCreds(AUTH_URL, {
           method: 'GET',
-          headers: { 'X-Auth-Token': token, 'X-User-Email': actorEmail },
+          headers: { 'X-User-Email': actorEmail },
         }).then((r) => r.json()),
       );
     }
@@ -136,7 +136,7 @@ export default function GrantAchievementDialog({
     const q = search.trim().toLowerCase();
     let list = users;
     if (isProducer) {
-      list = list.filter((u) => ['operator', 'content_maker', 'solo_maker'].includes(u.role));
+      list = list.filter((u) => ['operator', 'content_maker', 'solo_maker', 'model'].includes(u.role));
     }
     if (!q) return list;
     return list.filter(
@@ -159,12 +159,10 @@ export default function GrantAchievementDialog({
     }
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('authToken') || '';
-      const res = await fetch(ACHIEVEMENTS_URL, {
+      const res = await authenticatedFetchNoCreds(ACHIEVEMENTS_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Token': token,
           'X-User-Email': actorEmail,
         },
         body: JSON.stringify({
