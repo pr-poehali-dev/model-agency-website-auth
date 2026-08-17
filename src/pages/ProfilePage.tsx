@@ -105,20 +105,35 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (viewingOther) {
+      setPhotoUrl("");
+      setCoverUrl("");
+    } else {
+      setPhotoUrl(localStorage.getItem("userPhotoUrl") || "");
+      setCoverUrl(localStorage.getItem("userCoverUrl") || "");
+    }
+  }, [userEmail, viewingOther]);
+
+  useEffect(() => {
+    if (viewingOther) {
+      if (profileData?.email && profileData.email.toLowerCase() !== userEmail.toLowerCase()) return;
       setCoverUrl(profileData?.cover_url || "");
       setPhotoUrl(profileData?.photo_url || "");
       return;
     }
     if (!profileData?.success) return;
+    setCoverUrl(profileData.cover_url || "");
+    setPhotoUrl(profileData.photo_url || "");
     if (profileData.cover_url) {
-      setCoverUrl(profileData.cover_url);
       localStorage.setItem("userCoverUrl", profileData.cover_url);
+    } else {
+      localStorage.removeItem("userCoverUrl");
     }
     if (profileData.photo_url) {
-      setPhotoUrl(profileData.photo_url);
       localStorage.setItem("userPhotoUrl", profileData.photo_url);
+    } else {
+      localStorage.removeItem("userPhotoUrl");
     }
-  }, [profileData, viewingOther]);
+  }, [profileData, viewingOther, userEmail]);
 
 
 
