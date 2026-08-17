@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Icon from "@/components/ui/icon";
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from "@/utils/periodUtils";
 import ProducerPlansManager from "@/components/ProducerPlansManager";
@@ -27,81 +26,6 @@ const MOCK_USER = {
   location: "Москва",
 };
 
-const MOCK_ACHIEVEMENTS = [
-  {
-    id: 1,
-    emoji: "🥇",
-    title: "Лучший месяц",
-    description: "Наивысший результат по продажам за Март 2024",
-    grantedBy: "Директор",
-    date: "01.04.2024",
-    color: "from-yellow-500/20 to-amber-500/10 border-yellow-500/30",
-  },
-  {
-    id: 2,
-    emoji: "⭐",
-    title: "Звезда команды",
-    description: "Отмечена коллегами за помощь и поддержку",
-    grantedBy: "Продюсер Иван",
-    date: "15.03.2024",
-    color: "from-purple-500/20 to-violet-500/10 border-purple-500/30",
-  },
-  {
-    id: 3,
-    emoji: "🔥",
-    title: "Стабильность",
-    description: "30 дней без пропусков и опозданий",
-    grantedBy: "Продюсер Иван",
-    date: "01.03.2024",
-    color: "from-orange-500/20 to-red-500/10 border-orange-500/30",
-  },
-  {
-    id: 4,
-    emoji: "💎",
-    title: "Топ-профиль",
-    description: "Один из самых посещаемых профилей платформы",
-    grantedBy: "Директор",
-    date: "20.02.2024",
-    color: "from-cyan-500/20 to-blue-500/10 border-cyan-500/30",
-  },
-];
-
-const MOCK_COMMENTS = [
-  {
-    id: 1,
-    author: "Иван Петров",
-    role: "Продюсер",
-    text: "Отличная работа в этом месяце! Настя показывает стабильный рост и всегда вовремя выполняет задачи.",
-    date: "18.04.2024",
-    avatar: "ИП",
-  },
-  {
-    id: 2,
-    author: "Мария Соколова",
-    role: "Оператор",
-    text: "Приятно работать в паре, всегда на связи и готова к изменениям графика.",
-    date: "12.04.2024",
-    avatar: "МС",
-  },
-  {
-    id: 3,
-    author: "Директор",
-    role: "Директор",
-    text: "Продолжай в том же духе, результаты говорят сами за себя.",
-    date: "05.04.2024",
-    avatar: "Д",
-  },
-];
-
-const MOCK_RATING = [
-  { place: 1, name: "Анастасия Волкова", role: "Модель", score: 97, emoji: "🥇", achievements: 4 },
-  { place: 2, name: "Иван Петров", role: "Продюсер", score: 91, emoji: "🥈", achievements: 3 },
-  { place: 3, name: "Мария Соколова", role: "Оператор", score: 85, emoji: "🥉", achievements: 2 },
-  { place: 4, name: "Дмитрий Козлов", role: "Оператор", score: 78, emoji: null, achievements: 1 },
-  { place: 5, name: "Елена Новикова", role: "Модель", score: 72, emoji: null, achievements: 1 },
-  { place: 6, name: "Алексей Смирнов", role: "Контент-мейкер", score: 65, emoji: null, achievements: 0 },
-];
-
 const ROLE_LABELS: Record<string, string> = {
   director: "Директор",
   producer: "Продюсер",
@@ -112,7 +36,6 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [ratingOpen, setRatingOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [typesManagerOpen, setTypesManagerOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -549,43 +472,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Комментарии */}
-          <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground flex items-center gap-2 font-heading">
-                  <Icon name="MessageSquare" size={20} className="text-primary" />
-                  Отзывы коллег
-                </CardTitle>
-                <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" onClick={() => setRatingOpen(true)}>
-                  <Icon name="BarChart2" size={15} className="mr-1.5" />
-                  Рейтинг сотрудников
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {MOCK_COMMENTS.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                    {comment.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold text-foreground">
-                        {comment.author}
-                      </span>
-                      <Badge variant="outline" className="text-xs py-0 px-1.5 border-border/50 text-muted-foreground">
-                        {comment.role}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-snug">{comment.text}</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">{comment.date}</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
           {/* Блок управления планами продюсеров (только для директора в своём профиле) */}
           {showProducerPlansSection && (
             <ProducerPlansManager
@@ -596,42 +482,6 @@ export default function ProfilePage() {
 
         </div>
       </div>
-
-      {/* Диалог рейтинга */}
-      <Dialog open={ratingOpen} onOpenChange={setRatingOpen}>
-        <DialogContent className="max-w-md bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-heading text-foreground">
-              <Icon name="BarChart2" size={20} className="text-primary" />
-              Рейтинг сотрудников
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 mt-2">
-            {MOCK_RATING.map((person) => (
-              <div
-                key={person.place}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors ${
-                  person.name === (localStorage.getItem("userName") || "")
-                    ? "bg-primary/10 border-primary/30"
-                    : "bg-secondary/30 border-border/40"
-                }`}
-              >
-                <span className="w-7 text-center text-lg font-bold">
-                  {person.emoji ?? <span className="text-sm text-muted-foreground">{person.place}</span>}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{person.name}</p>
-                  <p className="text-xs text-muted-foreground">{person.role}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold text-primary">{person.score}</p>
-                  <p className="text-xs text-muted-foreground">{person.achievements} 🏅</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
     </div>
   );
