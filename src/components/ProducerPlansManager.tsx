@@ -188,53 +188,172 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     return r.income_plan > 0 ? Math.min(100, (r.income_fact / r.income_plan) * 100) : 0;
   };
 
-  const totalEmployees = rows.length;
-  const bonusReadyCount = rows.filter((r) => r.bonus_ready).length;
-  const totalBonusRub = rows
-    .filter((r) => r.bonus_ready)
-    .reduce((sum, r) => sum + (parseFloat(r.bonusInput) || 0), 0);
+  const producerRows = rows.filter((r) => r.role === 'producer');
+  const staffRows = rows.filter((r) => r.role !== 'producer');
 
-  return (
-    <div className="animate-fade-in space-y-4">
+  const sumBonus = (list: EmployeeRow[]) =>
+    list.filter((r) => r.bonus_ready).reduce((sum, r) => sum + (parseFloat(r.bonusInput) || 0), 0);
+
+  const renderCard = (row: EmployeeRow) => (
+    <div
+      key={row.email}
+      className={`rounded-lg border p-4 transition-colors ${
+        row.bonus_ready ? 'border-green-500/40 bg-green-500/5' : 'border-border/50 bg-background/40'
+      }`}
+    >
+      <div className="flex flex-col gap-3 mb-3">
+        <div className="min-w-0">
+          <div className="font-semibold text-foreground truncate">{row.name}</div>
+          <div className="text-xs text-muted-foreground truncate">
+            {ROLE_LABELS[row.role] || row.role}
+            {row.models_assigned > 0 && ` · ${row.models_assigned} моделей`}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Тип плана</span>
+            <div className="flex rounded-md border border-border/60 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => updateRow(row.email, { planType: 'income' })}
+                className={`px-3 h-9 text-xs font-medium transition-colors ${
+                  row.planType === 'income'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Доход $
+              </button>
+              <button
+                type="button"
+                onClick={() => updateRow(row.email, { planType: 'shifts' })}
+                className={`px-3 h-9 text-xs font-medium transition-colors ${
+                  row.planType === 'shifts'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Смены
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">
+              {row.planType === 'income' ? 'План, $' : 'План, смен'}
+            </span>
+            <Input
+              type="number"
+              min="0"
+              step="1"
+              value={row.planInput}
+              onChange={(e) => updateRow(row.email, { planInput: e.target.value })}
+              className="w-28 h-9"
+              placeholder="0"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Премия, ₽</span>
+            <Input
+              type="number"
+              min="0"
+              step="100"
+              value={row.bonusInput}
+              onChange={(e) => updateRow(row.email, { bonusInput: e.target.value })}
+              className="w-28 h-9"
+              placeholder="5000"
+            />
+          </div>
+
+          <Button size="sm" className="h-9" onClick={() => savePlan(row)} disabled={row.saving}>
+            {row.saving ? '...' : 'Сохранить'}
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-muted-foreground">
+            {row.planType === 'income' ? 'Доход за период' : 'Отработано смен'}
+          </span>
+          <span className="font-semibold text-foreground">
+            {row.planType === 'income'
+              ? `$${row.income_fact.toFixed(0)} / $${row.income_plan.toFixed(0)}`
+              : `${row.shifts_count} / ${row.shifts_target}`}
+          </span>
+        </div>
+        <Progress
+          value={progressPct(row)}
+          className={row.bonus_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
+        />
+      </div>
+
+      <p
+        className={`text-xs mt-2 font-semibold ${
+          row.bonus_ready ? 'text-green-500' : 'text-muted-foreground/60'
+        }`}
+      >
+        {row.bonus_ready ? 'Премия заработана: ' : 'Премия: '}
+        {(parseFloat(row.bonusInput) || 0).toLocaleString('ru-RU')} ₽
+      </p>
+    </div>
+  );
+
+  const renderSection = (
+    title: string,
+    iconName: string,
+    list: EmployeeRow[],
+    emptyText: string,
+    countLabel: string,
+    withPeriodNav: boolean,
+  ) => {
+    const readyCount = list.filter((r) => r.bonus_ready).length;
+    const bonusSum = sumBonus(list);
+
+    return (
       <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-foreground font-heading">
-              <Icon name="Target" size={20} className="text-primary" />
-              Планы сотрудников и премии
+              <Icon name={iconName} size={20} className="text-primary" />
+              {title}
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setPeriod(getPreviousPeriod(period))}
-              >
-                <Icon name="ChevronLeft" size={16} />
-              </Button>
-              <span className="text-sm text-muted-foreground min-w-[120px] text-center">
-                {period.label}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setPeriod(getNextPeriod(period))}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </Button>
-            </div>
+            {withPeriodNav && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setPeriod(getPreviousPeriod(period))}
+                >
+                  <Icon name="ChevronLeft" size={16} />
+                </Button>
+                <span className="text-sm text-muted-foreground min-w-[120px] text-center">
+                  {period.label}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setPeriod(getNextPeriod(period))}
+                >
+                  <Icon name="ChevronRight" size={16} />
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          {!loading && rows.length > 0 && (
+          {!loading && list.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <div className="rounded-lg border border-border/50 bg-background/40 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Icon name="Users" size={14} />
-                  Всего сотрудников
+                  {countLabel}
                 </div>
-                <div className="text-2xl font-bold text-foreground">{totalEmployees}</div>
+                <div className="text-2xl font-bold text-foreground">{list.length}</div>
               </div>
 
               <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
@@ -243,7 +362,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                   Выполнили план
                 </div>
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {bonusReadyCount} / {totalEmployees}
+                  {readyCount} / {list.length}
                 </div>
               </div>
 
@@ -253,7 +372,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                   Премий к выплате
                 </div>
                 <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {totalBonusRub.toLocaleString('ru-RU')} ₽
+                  {bonusSum.toLocaleString('ru-RU')} ₽
                 </div>
               </div>
             </div>
@@ -261,122 +380,34 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
 
           {loading ? (
             <div className="py-10 text-center text-muted-foreground">Загрузка...</div>
-          ) : rows.length === 0 ? (
-            <div className="py-10 text-center text-muted-foreground">Сотрудников нет</div>
+          ) : list.length === 0 ? (
+            <div className="py-10 text-center text-muted-foreground">{emptyText}</div>
           ) : (
-            <div className="space-y-3">
-              {rows.map((row) => (
-                <div
-                  key={row.email}
-                  className={`rounded-lg border p-4 transition-colors ${
-                    row.bonus_ready
-                      ? 'border-green-500/40 bg-green-500/5'
-                      : 'border-border/50 bg-background/40'
-                  }`}
-                >
-                  <div className="flex flex-col gap-3 mb-3">
-                    <div className="min-w-0">
-                      <div className="font-semibold text-foreground truncate">{row.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {ROLE_LABELS[row.role] || row.role}
-                        {row.models_assigned > 0 && ` · ${row.models_assigned} моделей`}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-end gap-2">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs text-muted-foreground">Тип плана</span>
-                        <div className="flex rounded-md border border-border/60 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => updateRow(row.email, { planType: 'income' })}
-                            className={`px-3 h-9 text-xs font-medium transition-colors ${
-                              row.planType === 'income'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-background text-muted-foreground hover:bg-muted'
-                            }`}
-                          >
-                            Доход $
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => updateRow(row.email, { planType: 'shifts' })}
-                            className={`px-3 h-9 text-xs font-medium transition-colors ${
-                              row.planType === 'shifts'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-background text-muted-foreground hover:bg-muted'
-                            }`}
-                          >
-                            Смены
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs text-muted-foreground">
-                          {row.planType === 'income' ? 'План, $' : 'План, смен'}
-                        </span>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={row.planInput}
-                          onChange={(e) => updateRow(row.email, { planInput: e.target.value })}
-                          className="w-28 h-9"
-                          placeholder="0"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs text-muted-foreground">Премия, ₽</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="100"
-                          value={row.bonusInput}
-                          onChange={(e) => updateRow(row.email, { bonusInput: e.target.value })}
-                          className="w-28 h-9"
-                          placeholder="5000"
-                        />
-                      </div>
-
-                      <Button size="sm" className="h-9" onClick={() => savePlan(row)} disabled={row.saving}>
-                        {row.saving ? '...' : 'Сохранить'}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">
-                        {row.planType === 'income' ? 'Доход за период' : 'Отработано смен'}
-                      </span>
-                      <span className="font-semibold text-foreground">
-                        {row.planType === 'income'
-                          ? `$${row.income_fact.toFixed(0)} / $${row.income_plan.toFixed(0)}`
-                          : `${row.shifts_count} / ${row.shifts_target}`}
-                      </span>
-                    </div>
-                    <Progress
-                      value={progressPct(row)}
-                      className={row.bonus_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
-                    />
-                  </div>
-
-                  <p
-                    className={`text-xs mt-2 font-semibold ${
-                      row.bonus_ready ? 'text-green-500' : 'text-muted-foreground/60'
-                    }`}
-                  >
-                    {row.bonus_ready ? 'Премия заработана: ' : 'Премия: '}
-                    {(parseFloat(row.bonusInput) || 0).toLocaleString('ru-RU')} ₽
-                  </p>
-                </div>
-              ))}
-            </div>
+            <div className="space-y-3">{list.map(renderCard)}</div>
           )}
         </CardContent>
       </Card>
+    );
+  };
+
+  return (
+    <div className="animate-fade-in space-y-4">
+      {renderSection(
+        'Планы продюсеров и премии',
+        'Target',
+        producerRows,
+        'Продюсеров нет',
+        'Всего продюсеров',
+        true,
+      )}
+      {renderSection(
+        'Планы сотрудников и премии',
+        'UserCheck',
+        staffRows,
+        'Сотрудников нет',
+        'Всего сотрудников',
+        false,
+      )}
     </div>
   );
 };
