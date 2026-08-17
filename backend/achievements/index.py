@@ -76,6 +76,25 @@ def _list_allowed_ids(cur) -> List[int]:
     return [r['achievement_type_id'] for r in cur.fetchall()]
 
 
+def _producer_team_emails(cur, producer_email: str) -> List[str]:
+    """Почты сотрудников, закреплённых за продюсером (модели и операторы)."""
+    cur.execute(
+        f"""SELECT DISTINCT LOWER(email) AS email FROM (
+                SELECT model_email AS email
+                FROM {SCHEMA}.producer_assignments
+                WHERE LOWER(producer_email) = LOWER(%s)
+                  AND model_email IS NOT NULL AND model_email <> ''
+                UNION
+                SELECT operator_email AS email
+                FROM {SCHEMA}.producer_assignments
+                WHERE LOWER(producer_email) = LOWER(%s)
+                  AND operator_email IS NOT NULL AND operator_email <> ''
+            ) t""",
+        (producer_email, producer_email),
+    )
+    return [r['email'] for r in cur.fetchall()]
+
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
@@ -105,6 +124,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return _resp(200, {'achievements': _list_user_achievements(cur, email)})
             if action == 'allowed_for_producer':
                 return _resp(200, {'allowed_ids': _list_allowed_ids(cur)})
+            if action == 'my_team':
+                if is_director:
+                    return _resp(200, {'team': None, 'unlimited': True})
+                if not is_producer:
+                    return _resp(403, {'error': 'forbidden'})
+                return _resp(200, {
+                    'team': _producer_team_emails(cur, actor.get('email') or ''),
+                    'unlimited': False,
+                })
             if action == 'unseen':
                 email = (params.get('email') or '').strip()
                 if not email:
@@ -232,6 +260,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     allowed = _list_allowed_ids(cur)
                     if int(type_id) not in allowed:
                         return _resp(403, {'error': 'this achievement is not allowed for producers'})
+                    team = _producer_team_emails(cur, actor.get('email') or '')
+                    if user_email not in team:
+                        return _resp(403, {'error': 'Можно награждать только своих сотрудников'})
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.user_achievements (user_email, achievement_type_id, granted_by_email, granted_by_name, comment) VALUES (%s, %s, %s, %s, %s) RETURNING id, granted_at",
                     (user_email, int(type_id), actor.get('email') or 'system', actor.get('full_name'), comment),

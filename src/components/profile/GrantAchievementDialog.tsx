@@ -73,6 +73,7 @@ export default function GrantAchievementDialog({
   const { toast } = useToast();
   const [types, setTypes] = useState<AchievementType[]>([]);
   const [allowedIds, setAllowedIds] = useState<number[]>([]);
+  const [teamEmails, setTeamEmails] = useState<string[] | null>(null);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedEmail, setSelectedEmail] = useState<string>('');
@@ -98,6 +99,9 @@ export default function GrantAchievementDialog({
       isProducer
         ? authenticatedFetchNoCreds(`${ACHIEVEMENTS_URL}?action=allowed_for_producer`).then((r) => r.json())
         : Promise.resolve({ allowed_ids: [] }),
+      isProducer
+        ? authenticatedFetchNoCreds(`${ACHIEVEMENTS_URL}?action=my_team`).then((r) => r.json())
+        : Promise.resolve({ team: null }),
     ];
     if (needsUserPicker) {
       requests.push(
@@ -114,8 +118,10 @@ export default function GrantAchievementDialog({
         const a = results[1] as { allowed_ids?: number[] };
         setTypes(Array.isArray(t.types) ? t.types.filter((x) => x.is_active) : []);
         setAllowedIds(Array.isArray(a.allowed_ids) ? a.allowed_ids : []);
+        const teamRes = results[2] as { team?: string[] | null };
+        setTeamEmails(Array.isArray(teamRes?.team) ? teamRes.team : null);
         if (needsUserPicker) {
-          const u = results[2] as UserOption[] | { error?: string };
+          const u = results[3] as UserOption[] | { error?: string };
           if (Array.isArray(u)) {
             const filtered = u
               .filter((x) => x.email && x.email.toLowerCase() !== actorEmail.toLowerCase())
@@ -137,6 +143,9 @@ export default function GrantAchievementDialog({
     let list = users;
     if (isProducer) {
       list = list.filter((u) => ['operator', 'content_maker', 'solo_maker', 'model'].includes(u.role));
+      if (teamEmails) {
+        list = list.filter((u) => teamEmails.includes(u.email.toLowerCase()));
+      }
     }
     if (!q) return list;
     return list.filter(
@@ -145,7 +154,7 @@ export default function GrantAchievementDialog({
         u.email.toLowerCase().includes(q) ||
         (ROLE_LABELS[u.role] || '').toLowerCase().includes(q),
     );
-  }, [users, search, isProducer]);
+  }, [users, search, isProducer, teamEmails]);
 
   const handleGrant = async () => {
     const finalEmail = (targetEmail || selectedEmail).trim();
