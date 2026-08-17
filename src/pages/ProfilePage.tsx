@@ -93,10 +93,6 @@ const MOCK_COMMENTS = [
   },
 ];
 
-const MOCK_PROGRESS = [
-  { label: "Посещаемость", value: 96, color: "bg-green-500" },
-];
-
 const MOCK_RATING = [
   { place: 1, name: "Анастасия Волкова", role: "Модель", score: 97, emoji: "🥇", achievements: 4 },
   { place: 2, name: "Иван Петров", role: "Продюсер", score: 91, emoji: "🥈", achievements: 3 },
@@ -155,6 +151,11 @@ export default function ProfilePage() {
     period.endDate,
     isShiftTracked || isProducer,
   );
+
+  const attendancePercent =
+    shiftData && shiftData.target > 0
+      ? Math.round((shiftData.shifts_count / shiftData.target) * 100)
+      : 0;
 
   useEffect(() => {
     if (!profileData?.success) return;
@@ -458,20 +459,37 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {MOCK_PROGRESS.slice(0, isShiftTracked ? (isProducer ? 0 : 1) : 2).map((item) => (
-                  <div key={item.label}>
+                {isShiftTracked && !isProducer && (
+                  <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-sm text-muted-foreground">{item.label}</span>
-                      <span className="text-sm font-semibold text-foreground">{item.value}%</span>
+                      <span className="text-sm text-muted-foreground">Посещаемость</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {loadingShifts ? (
+                          <Skeleton className="h-4 w-12 inline-block align-middle" />
+                        ) : (
+                          `${attendancePercent}%`
+                        )}
+                      </span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${item.color} transition-all duration-700`}
-                        style={{ width: `${item.value}%` }}
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          attendancePercent >= 100
+                            ? "bg-green-500"
+                            : attendancePercent >= 70
+                              ? "bg-primary"
+                              : "bg-orange-500"
+                        }`}
+                        style={{ width: `${Math.min(100, attendancePercent)}%` }}
                       />
                     </div>
+                    <p className="text-xs mt-2 text-muted-foreground/60">
+                      {shiftData
+                        ? `Отработано ${shiftData.shifts_count} из ${shiftData.target} смен за период`
+                        : "Нет данных за период"}
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
