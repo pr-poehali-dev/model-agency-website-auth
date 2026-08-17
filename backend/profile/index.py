@@ -126,10 +126,41 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return _resp(401, {'error': 'Требуется авторизация'})
 
         if action == 'get_profile':
+            target_email = (body.get('email') or '').strip()
+            if target_email and target_email.lower() != user['email'].lower():
+                cur.execute(
+                    """SELECT email, full_name, role, photo_url, cover_url, created_at
+                       FROM t_p35405502_model_agency_website.users
+                       WHERE LOWER(email) = LOWER(%s) AND is_active = true""",
+                    (target_email,),
+                )
+                target = cur.fetchone()
+                if not target:
+                    return _resp(404, {'error': 'Сотрудник не найден'})
+                return _resp(200, {
+                    'success': True,
+                    'email': target['email'],
+                    'full_name': target['full_name'],
+                    'role': target['role'],
+                    'photo_url': target['photo_url'],
+                    'cover_url': target['cover_url'],
+                    'created_at': target['created_at'].isoformat() if target['created_at'] else None,
+                })
+
+            cur.execute(
+                """SELECT full_name, role, created_at
+                   FROM t_p35405502_model_agency_website.users WHERE id = %s""",
+                (user['id'],),
+            )
+            me = cur.fetchone() or {}
             return _resp(200, {
                 'success': True,
+                'email': user['email'],
+                'full_name': me.get('full_name'),
+                'role': me.get('role'),
                 'photo_url': user['photo_url'],
                 'cover_url': user['cover_url'],
+                'created_at': me['created_at'].isoformat() if me.get('created_at') else None,
             })
 
         if action == 'upload_cover':

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import funcUrls from "../../backend/func2url.json";
+import { authenticatedFetch } from "@/lib/api";
 
 const PROFILE_URL = (funcUrls as Record<string, string>)["profile"];
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)["shift-progress"];
@@ -15,6 +16,10 @@ export type ProfileData = {
   success?: boolean;
   cover_url?: string;
   photo_url?: string;
+  email?: string;
+  full_name?: string;
+  role?: string;
+  created_at?: string;
 };
 
 export type ShiftData = {
@@ -37,7 +42,7 @@ export const useProfileData = (userEmail: string) => {
     queryKey: ["profile", userEmail],
     enabled: !!userEmail && !!PROFILE_URL,
     queryFn: async () => {
-      const r = await fetch(PROFILE_URL, {
+      const r = await authenticatedFetch(PROFILE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "get_profile", email: userEmail }),

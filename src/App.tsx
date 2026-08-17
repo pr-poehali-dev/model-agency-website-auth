@@ -60,6 +60,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/profile/:email"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

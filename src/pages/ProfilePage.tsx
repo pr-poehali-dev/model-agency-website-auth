@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useProfileData, useShiftProgress } from "@/hooks/useProfileQueries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,7 @@ import AchievementTypesManager from "@/components/profile/AchievementTypesManage
 import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog";
 import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
 import ProfileGallery from "@/components/profile/ProfileGallery";
+import TeamDirectory from "@/components/profile/TeamDirectory";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MOCK_USER = {
@@ -44,36 +45,50 @@ export default function ProfilePage() {
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
   const [coverUrl, setCoverUrl] = useState<string>(() => localStorage.getItem("userCoverUrl") || "");
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const userRole = localStorage.getItem("userRole") || "model";
-  const userName = localStorage.getItem("userName") || MOCK_USER.name;
-  const userEmail = localStorage.getItem("userEmail") || MOCK_USER.email;
-
-  const createdAtRaw = localStorage.getItem("userCreatedAt");
-  const joinedLabel = createdAtRaw
-    ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
-    : MOCK_USER.joinedAt;
+  const { email: emailParam } = useParams<{ email: string }>();
+  const viewedEmail = emailParam ? decodeURIComponent(emailParam) : "";
 
   const currentUserRole = localStorage.getItem("userRole") || "model";
   const currentUserEmail = localStorage.getItem("userEmail") || "";
+
+  const userEmail = viewedEmail || currentUserEmail || MOCK_USER.email;
+  const viewingOther = !!viewedEmail && viewedEmail.toLowerCase() !== currentUserEmail.toLowerCase();
+
+  const { data: profileData } = useProfileData(userEmail);
+
+  const userName = viewingOther
+    ? profileData?.full_name || userEmail
+    : localStorage.getItem("userName") || MOCK_USER.name;
+  const userRole = viewingOther
+    ? profileData?.role || "model"
+    : localStorage.getItem("userRole") || "model";
+
+  const createdAtRaw = viewingOther
+    ? profileData?.created_at
+    : localStorage.getItem("userCreatedAt");
+  const joinedLabel = createdAtRaw
+    ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
+    : MOCK_USER.joinedAt;
   const isProducer = userRole === "producer";
   const isShiftTracked = userRole === "operator" || userRole === "content_maker";
   const isDirectorProfile = userRole === "director";
   const viewerIsDirector = currentUserRole === "director";
   const viewerIsProducer = currentUserRole === "producer";
-  const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
+  const isOwnProfile =
+    !!currentUserEmail && currentUserEmail.toLowerCase() === userEmail.toLowerCase();
   const canEditProfile = isOwnProfile || viewerIsDirector;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
   const canGrantAchievement = viewerIsDirector || viewerIsProducer;
   const showTypesManager = viewerIsDirector && isOwnProfile;
+  const canSeeProgress = isOwnProfile || viewerIsDirector;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
 
-  const { data: profileData } = useProfileData(userEmail);
   const { data: shiftData = null, isFetching: loadingShifts } = useShiftProgress(
     userEmail,
     userRole,
     period.startDate,
     period.endDate,
-    isShiftTracked || isProducer || isDirectorProfile,
+    (isShiftTracked || isProducer || isDirectorProfile) && canSeeProgress,
   );
 
   const attendancePercent =
@@ -82,16 +97,21 @@ export default function ProfilePage() {
       : 0;
 
   useEffect(() => {
+    if (viewingOther) {
+      setCoverUrl(profileData?.cover_url || "");
+      setPhotoUrl(profileData?.photo_url || "");
+      return;
+    }
     if (!profileData?.success) return;
     if (profileData.cover_url) {
       setCoverUrl(profileData.cover_url);
-      if (isOwnProfile) localStorage.setItem("userCoverUrl", profileData.cover_url);
+      localStorage.setItem("userCoverUrl", profileData.cover_url);
     }
-    if (profileData.photo_url && isOwnProfile) {
+    if (profileData.photo_url) {
       setPhotoUrl(profileData.photo_url);
       localStorage.setItem("userPhotoUrl", profileData.photo_url);
     }
-  }, [profileData, isOwnProfile]);
+  }, [profileData, viewingOther]);
 
 
 
@@ -105,14 +125,19 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="text-muted-foreground hover:text-foreground -ml-2"
-        >
-          <Icon name="ArrowLeft" size={18} className="mr-2" />
-          Назад
-        </Button>
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(viewingOther ? "/profile" : "/dashboard")}
+            className="text-muted-foreground hover:text-foreground -ml-2"
+          >
+            <Icon name="ArrowLeft" size={18} className="mr-2" />
+            {viewingOther ? "К моему профилю" : "Назад"}
+          </Button>
+          {viewingOther && (
+            <span className="text-xs text-muted-foreground">Профиль сотрудника</span>
+          )}
+        </div>
 
         {/* Шапка профиля */}
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm overflow-hidden">
@@ -260,7 +285,8 @@ export default function ProfilePage() {
             />
           )}
 
-          {/* Прогресс */}
+          {/* Прогресс — только свой профиль или директор */}
+          {canSeeProgress && (
           <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm md:col-span-2">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -471,6 +497,10 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+          )}
+
+          {/* Список сотрудников — виден в своём профиле */}
+          {!viewingOther && <TeamDirectory currentUserEmail={currentUserEmail} />}
 
           {/* Блок управления планами продюсеров (только для директора в своём профиле) */}
           {showProducerPlansSection && (
