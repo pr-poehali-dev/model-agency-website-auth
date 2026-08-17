@@ -20,6 +20,7 @@ interface Props {
   targetEmail: string;
   actorEmail: string;
   actorRole: string;
+  readOnly?: boolean;
 }
 
 const MAX_PHOTOS = 6;
@@ -32,7 +33,7 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export default function ProfileGallery({ targetEmail, actorEmail, actorRole }: Props) {
+export default function ProfileGallery({ targetEmail, actorEmail, actorRole, readOnly }: Props) {
   const { toast } = useToast();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,9 @@ export default function ProfileGallery({ targetEmail, actorEmail, actorRole }: P
   const [editComment, setEditComment] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const canEdit = actorRole === "director" || actorEmail.toLowerCase() === targetEmail.toLowerCase();
+  const canEdit =
+    !readOnly &&
+    (actorRole === "director" || actorEmail.toLowerCase() === targetEmail.toLowerCase());
 
   const load = async () => {
     if (!targetEmail) return;

@@ -76,11 +76,11 @@ export default function ProfilePage() {
   const viewerIsProducer = currentUserRole === "producer";
   const isOwnProfile =
     !!currentUserEmail && currentUserEmail.toLowerCase() === userEmail.toLowerCase();
-  const canEditProfile = isOwnProfile || viewerIsDirector;
+  const canEditProfile = isOwnProfile;
   const showProducerPlansSection = viewerIsDirector && isOwnProfile;
   const canGrantAchievement = viewerIsDirector || viewerIsProducer;
   const showTypesManager = viewerIsDirector && isOwnProfile;
-  const canSeeProgress = isOwnProfile || viewerIsDirector;
+  const canSeeProgress = isOwnProfile;
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
 
   const { data: shiftData = null, isFetching: loadingShifts } = useShiftProgress(
@@ -226,6 +226,7 @@ export default function ProfilePage() {
           targetEmail={userEmail}
           actorEmail={currentUserEmail}
           actorRole={currentUserRole}
+          readOnly={viewingOther}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
