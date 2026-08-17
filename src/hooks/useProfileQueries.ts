@@ -28,6 +28,8 @@ export type ShiftData = {
   income_ready?: boolean;
   active_staff?: number;
   is_director?: boolean;
+  bonus_value?: number;
+  plan_type?: string;
 };
 
 export const useProfileData = (userEmail: string) => {
@@ -73,6 +75,8 @@ export const useShiftProgress = (
           income_ready: data.income_ready,
           active_staff: data.active_staff,
           is_director: data.is_director,
+          bonus_value: data.bonus_value,
+          plan_type: data.plan_type,
         };
       }
       return null;

@@ -5,26 +5,28 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import { authenticatedFetch } from '@/lib/api';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from '@/utils/periodUtils';
 import funcUrls from '../../backend/func2url.json';
 
-const USERS_API_URL = 'https://functions.poehali.dev/67fd6902-6170-487e-bb46-f6d14ec99066';
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)['shift-progress'];
-const PRODUCER_PLANS_URL = (funcUrls as Record<string, string>)['producer-plans'];
+const PLANS_URL = (funcUrls as Record<string, string>)['producer-plans'];
 
-interface User {
-  email: string;
-  role: string;
-  full_name?: string;
-}
+const DEFAULT_BONUS = 5000;
 
-interface ProducerRow {
+const ROLE_LABELS: Record<string, string> = {
+  producer: 'Продюсер',
+  operator: 'Оператор',
+  content_maker: 'Контент-мейкер',
+};
+
+interface EmployeeRow {
   email: string;
   name: string;
-  loading: boolean;
+  role: string;
   saving: boolean;
-  inputValue: string;
+  planType: 'income' | 'shifts';
+  planInput: string;
+  bonusInput: string;
   models_assigned: number;
   shifts_count: number;
   shifts_target: number;
@@ -49,7 +51,7 @@ interface Props {
 
 const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
   const [period, setPeriod] = useState<Period>(() => getCurrentPeriod());
-  const [rows, setRows] = useState<ProducerRow[]>([]);
+  const [rows, setRows] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -63,26 +65,32 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const usersResp = await authenticatedFetch(USERS_API_URL);
-      if (!usersResp.ok) {
-        toast({ title: 'Ошибка загрузки пользователей', variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-      const users: User[] = await usersResp.json();
-      const producers = users.filter((u) => u.role === 'producer');
-
       const periodStart = formatIsoDate(period.startDate);
       const periodEnd = formatIsoDate(period.endDate);
 
-      const results: ProducerRow[] = await Promise.all(
-        producers.map(async (p) => {
-          const row: ProducerRow = {
-            email: p.email,
-            name: p.full_name || p.email,
-            loading: false,
+      const plansResp = await fetch(
+        `${PLANS_URL}?period_start=${periodStart}&period_end=${periodEnd}`
+      );
+      if (!plansResp.ok) {
+        toast({ title: 'Не удалось загрузить сотрудников', variant: 'destructive' });
+        setRows([]);
+        return;
+      }
+      const plansData = await plansResp.json();
+      const employees = Array.isArray(plansData.employees) ? plansData.employees : [];
+
+      const results: EmployeeRow[] = await Promise.all(
+        employees.map(async (emp: Record<string, unknown>) => {
+          const email = String(emp.email);
+          const role = String(emp.role);
+          const row: EmployeeRow = {
+            email,
+            name: String(emp.full_name || email),
+            role,
             saving: false,
-            inputValue: '',
+            planType: (emp.plan_type as 'income' | 'shifts') || (role === 'producer' ? 'income' : 'shifts'),
+            planInput: Number(emp.plan_amount) > 0 ? String(Number(emp.plan_amount)) : '',
+            bonusInput: String(Number(emp.bonus_amount) || DEFAULT_BONUS),
             models_assigned: 0,
             shifts_count: 0,
             shifts_target: 0,
@@ -93,7 +101,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
             bonus_ready: false,
           };
           try {
-            const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(p.email)}&role=producer&period_start=${periodStart}&period_end=${periodEnd}`;
+            const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}&period_start=${periodStart}&period_end=${periodEnd}`;
             const r = await fetch(url);
             const data = await r.json();
             if (data && typeof data.shifts_count === 'number') {
@@ -105,10 +113,9 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
               row.income_plan = data.income_plan || 0;
               row.income_ready = !!data.income_ready;
               row.bonus_ready = !!data.bonus_ready;
-              row.inputValue = data.income_plan ? String(data.income_plan) : '';
             }
           } catch {
-            // ignore
+            // данные прогресса недоступны — строка останется с нулями
           }
           return row;
         })
@@ -120,26 +127,33 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     }
   };
 
-  const updateRow = (email: string, patch: Partial<ProducerRow>) => {
+  const updateRow = (email: string, patch: Partial<EmployeeRow>) => {
     setRows((prev) => prev.map((r) => (r.email === email ? { ...r, ...patch } : r)));
   };
 
-  const savePlan = async (row: ProducerRow) => {
-    const amount = parseFloat(row.inputValue);
+  const savePlan = async (row: EmployeeRow) => {
+    const amount = parseFloat(row.planInput);
+    const bonus = parseFloat(row.bonusInput);
     if (isNaN(amount) || amount < 0) {
-      toast({ title: 'Введите корректную сумму', variant: 'destructive' });
+      toast({ title: 'Введите корректный план', variant: 'destructive' });
+      return;
+    }
+    if (isNaN(bonus) || bonus < 0) {
+      toast({ title: 'Введите корректную премию', variant: 'destructive' });
       return;
     }
     updateRow(row.email, { saving: true });
     try {
-      const resp = await fetch(PRODUCER_PLANS_URL, {
+      const resp = await fetch(PLANS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          producer_email: row.email,
+          user_email: row.email,
           period_start: formatIsoDate(period.startDate),
           period_end: formatIsoDate(period.endDate),
+          plan_type: row.planType,
           plan_amount: amount,
+          bonus_amount: bonus,
           set_by_email: currentUserEmail,
           user_role: currentUserRole,
         }),
@@ -147,13 +161,8 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
       const data = await resp.json();
       if (resp.ok) {
         toast({ title: 'План сохранён' });
-        const incomeReady = amount > 0 && row.income_fact >= amount;
-        updateRow(row.email, {
-          income_plan: amount,
-          income_ready: incomeReady,
-          bonus_ready: incomeReady,
-          saving: false,
-        });
+        updateRow(row.email, { saving: false });
+        loadAll();
       } else {
         toast({ title: data.error || 'Ошибка сохранения', variant: 'destructive' });
         updateRow(row.email, { saving: false });
@@ -172,13 +181,18 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     );
   }
 
-  const pctIncome = (r: ProducerRow) =>
-    r.income_plan > 0 ? Math.min(100, (r.income_fact / r.income_plan) * 100) : 0;
+  const progressPct = (r: EmployeeRow) => {
+    if (r.planType === 'shifts') {
+      return r.shifts_target > 0 ? Math.min(100, (r.shifts_count / r.shifts_target) * 100) : 0;
+    }
+    return r.income_plan > 0 ? Math.min(100, (r.income_fact / r.income_plan) * 100) : 0;
+  };
 
-  const totalProducers = rows.length;
+  const totalEmployees = rows.length;
   const bonusReadyCount = rows.filter((r) => r.bonus_ready).length;
-  const incomeReadyCount = rows.filter((r) => r.income_ready).length;
-  const totalBonusRub = bonusReadyCount * 5000;
+  const totalBonusRub = rows
+    .filter((r) => r.bonus_ready)
+    .reduce((sum, r) => sum + (parseFloat(r.bonusInput) || 0), 0);
 
   return (
     <div className="animate-fade-in space-y-4">
@@ -187,7 +201,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-foreground font-heading">
               <Icon name="Target" size={20} className="text-primary" />
-              Планы продюсеров по доходу
+              Планы сотрудников и премии
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button
@@ -218,34 +232,29 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
               <div className="rounded-lg border border-border/50 bg-background/40 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Icon name="Users" size={14} />
-                  Всего продюсеров
+                  Всего сотрудников
                 </div>
-                <div className="text-2xl font-bold text-foreground">{totalProducers}</div>
+                <div className="text-2xl font-bold text-foreground">{totalEmployees}</div>
               </div>
 
               <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Icon name="TrendingUp" size={14} className="text-purple-500" />
-                  Выполнили план $
+                  Выполнили план
                 </div>
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {incomeReadyCount} / {totalProducers}
+                  {bonusReadyCount} / {totalEmployees}
                 </div>
               </div>
 
-              <div className="rounded-lg border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 p-3">
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Icon name="Award" size={14} className="text-amber-500" />
-                  Получили премию
+                  <Icon name="Gift" size={14} className="text-amber-500" />
+                  Премий к выплате
                 </div>
                 <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {bonusReadyCount} / {totalProducers}
+                  {totalBonusRub.toLocaleString('ru-RU')} ₽
                 </div>
-                {totalBonusRub > 0 && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Сумма: {totalBonusRub.toLocaleString('ru-RU')} ₽
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -253,7 +262,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
           {loading ? (
             <div className="py-10 text-center text-muted-foreground">Загрузка...</div>
           ) : rows.length === 0 ? (
-            <div className="py-10 text-center text-muted-foreground">Продюсеров нет</div>
+            <div className="py-10 text-center text-muted-foreground">Сотрудников нет</div>
           ) : (
             <div className="space-y-3">
               {rows.map((row) => (
@@ -265,29 +274,73 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                       : 'border-border/50 bg-background/40'
                   }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
+                  <div className="flex flex-col gap-3 mb-3">
                     <div className="min-w-0">
                       <div className="font-semibold text-foreground truncate">{row.name}</div>
                       <div className="text-xs text-muted-foreground truncate">
-                        {row.email} · {row.models_assigned} моделей
+                        {ROLE_LABELS[row.role] || row.role}
+                        {row.models_assigned > 0 && ` · ${row.models_assigned} моделей`}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm text-muted-foreground">План $</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={row.inputValue}
-                        onChange={(e) => updateRow(row.email, { inputValue: e.target.value })}
-                        className="w-32 h-9"
-                        placeholder="0"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => savePlan(row)}
-                        disabled={row.saving}
-                      >
+
+                    <div className="flex flex-wrap items-end gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">Тип плана</span>
+                        <div className="flex rounded-md border border-border/60 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => updateRow(row.email, { planType: 'income' })}
+                            className={`px-3 h-9 text-xs font-medium transition-colors ${
+                              row.planType === 'income'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-background text-muted-foreground hover:bg-muted'
+                            }`}
+                          >
+                            Доход $
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateRow(row.email, { planType: 'shifts' })}
+                            className={`px-3 h-9 text-xs font-medium transition-colors ${
+                              row.planType === 'shifts'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-background text-muted-foreground hover:bg-muted'
+                            }`}
+                          >
+                            Смены
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">
+                          {row.planType === 'income' ? 'План, $' : 'План, смен'}
+                        </span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={row.planInput}
+                          onChange={(e) => updateRow(row.email, { planInput: e.target.value })}
+                          className="w-28 h-9"
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">Премия, ₽</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={row.bonusInput}
+                          onChange={(e) => updateRow(row.email, { bonusInput: e.target.value })}
+                          className="w-28 h-9"
+                          placeholder="5000"
+                        />
+                      </div>
+
+                      <Button size="sm" className="h-9" onClick={() => savePlan(row)} disabled={row.saving}>
                         {row.saving ? '...' : 'Сохранить'}
                       </Button>
                     </div>
@@ -295,14 +348,18 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
 
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Доход на продакшн</span>
+                      <span className="text-muted-foreground">
+                        {row.planType === 'income' ? 'Доход за период' : 'Отработано смен'}
+                      </span>
                       <span className="font-semibold text-foreground">
-                        ${row.income_fact.toFixed(0)} / ${row.income_plan.toFixed(0)}
+                        {row.planType === 'income'
+                          ? `$${row.income_fact.toFixed(0)} / $${row.income_plan.toFixed(0)}`
+                          : `${row.shifts_count} / ${row.shifts_target}`}
                       </span>
                     </div>
                     <Progress
-                      value={pctIncome(row)}
-                      className={row.income_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
+                      value={progressPct(row)}
+                      className={row.bonus_ready ? '[&>div]:bg-green-500' : '[&>div]:bg-purple-500'}
                     />
                   </div>
 
@@ -311,7 +368,8 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
                       row.bonus_ready ? 'text-green-500' : 'text-muted-foreground/60'
                     }`}
                   >
-                    Премия 5000 руб.
+                    {row.bonus_ready ? 'Премия заработана: ' : 'Премия: '}
+                    {(parseFloat(row.bonusInput) || 0).toLocaleString('ru-RU')} ₽
                   </p>
                 </div>
               ))}

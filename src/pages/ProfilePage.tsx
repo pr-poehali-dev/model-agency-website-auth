@@ -389,7 +389,7 @@ export default function ProfilePage() {
                           shiftData?.bonus_ready ? "text-green-500" : "text-muted-foreground/60"
                         }`}
                       >
-                        Премия 5000 руб.
+                        Премия {(shiftData?.bonus_value ?? 5000).toLocaleString("ru-RU")} руб.
                       </p>
                     )}
                   </div>
@@ -432,7 +432,7 @@ export default function ProfilePage() {
                         shiftData?.bonus_ready ? "text-green-500" : "text-muted-foreground/60"
                       }`}
                     >
-                      Премия 5000 руб.
+                      Премия {(shiftData?.bonus_value ?? 5000).toLocaleString("ru-RU")} руб.
                     </p>
                   </div>
                 )}

@@ -59,6 +59,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         except Exception:
             conn.rollback()
 
+    def get_plan():
+        cur.execute(
+            f"""SELECT plan_type, plan_amount, bonus_amount
+                FROM {schema}.employee_plans
+                WHERE user_email = %s AND period_start = %s AND period_end = %s""",
+            (user_email, period_start, period_end)
+        )
+        r = cur.fetchone()
+        if not r:
+            return None, 0.0, 5000.0
+        return r['plan_type'], float(r['plan_amount'] or 0), float(r['bonus_amount'] or 5000)
+
     def check_locked(email: str) -> bool:
         cur.execute(
             f"""SELECT 1 FROM {schema}.earned_bonuses
@@ -214,25 +226,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
             income_fact = float(cur.fetchone()['total'] or 0.0)
 
-        cur.execute(
-            f"""SELECT plan_amount FROM {schema}.producer_income_plans
-                WHERE producer_email = %s AND period_start = %s AND period_end = %s""",
-            (user_email, period_start, period_end)
-        )
-        plan_row = cur.fetchone()
-        income_plan = float(plan_row['plan_amount']) if plan_row else 0.0
+        p_type, p_amount, p_bonus = get_plan()
+        if p_type is not None:
+            income_plan = p_amount if p_type == 'income' else 0.0
+        else:
+            cur.execute(
+                f"""SELECT plan_amount FROM {schema}.producer_income_plans
+                    WHERE producer_email = %s AND period_start = %s AND period_end = %s""",
+                (user_email, period_start, period_end)
+            )
+            plan_row = cur.fetchone()
+            income_plan = float(plan_row['plan_amount']) if plan_row else 0.0
 
-        target = 10 * models_assigned
+        if p_type == 'shifts' and p_amount > 0:
+            target = int(p_amount)
+        else:
+            target = 10 * models_assigned
         shifts_ready = shifts_count >= target
         income_ready = income_plan > 0 and income_fact >= income_plan
-        bonus_ready = income_ready
+        bonus_ready = shifts_ready if p_type == 'shifts' else income_ready
 
         bonus_locked = check_locked(user_email)
-        if not income_ready and bonus_locked:
+        if not bonus_ready and bonus_locked:
             unlock_bonus(user_email)
             bonus_locked = False
         if bonus_ready and not bonus_locked:
-            lock_bonus(user_email, 'producer', 5000, 'Премия продюсера за выполнение плана')
+            lock_bonus(user_email, 'producer', p_bonus, 'Премия продюсера за выполнение плана')
             bonus_locked = True
 
         cur.close()
@@ -251,7 +270,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'income_ready': income_ready,
                 'bonus_ready': bonus_ready or bonus_locked,
                 'bonus_locked': bonus_locked,
-                'bonus_amount': 5000 if bonus_locked else 0,
+                'bonus_amount': p_bonus if bonus_locked else 0,
+                'bonus_value': p_bonus,
+                'plan_type': p_type or 'income',
                 'supported': True
             })
         }
@@ -271,13 +292,60 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             })
         }
 
-    target = 10 * models_assigned
-    bonus_ready = shifts_count >= target
+    plan_type, plan_amount, bonus_value = get_plan()
+
+    if user_role == 'operator':
+        cur.execute(
+            f"""SELECT COALESCE(SUM(
+                    COALESCE(cb_income,0) + COALESCE(sp_income,0) + COALESCE(soda_income,0)
+                    + COALESCE(cam4_income,0) + COALESCE(transfers,0)
+                ), 0) AS total
+                FROM {schema}.model_finances
+                WHERE LOWER(operator_name) = LOWER(%s)
+                  AND date >= %s AND date <= %s""",
+            (user_email, period_start, period_end)
+        )
+        income_fact = float(cur.fetchone()['total'] or 0.0)
+    else:
+        income_fact = 0.0
+        if model_emails:
+            cur.execute(
+                f"""SELECT COALESCE(SUM(
+                        COALESCE(mf.cb_income,0) + COALESCE(mf.sp_income,0) + COALESCE(mf.soda_income,0)
+                        + COALESCE(mf.cam4_income,0) + COALESCE(mf.transfers,0)
+                    ), 0) AS total
+                    FROM {schema}.model_finances mf
+                    JOIN {schema}.users u ON u.id = mf.model_id
+                    WHERE u.email = ANY(%s)
+                      AND mf.date >= %s AND mf.date <= %s""",
+                (model_emails, period_start, period_end)
+            )
+            income_fact = float(cur.fetchone()['total'] or 0.0)
+
+    if plan_type == 'shifts' and plan_amount > 0:
+        target = int(plan_amount)
+    elif plan_type == 'income':
+        target = 10 * models_assigned
+    else:
+        target = 10 * models_assigned
+
+    shifts_ready = shifts_count >= target
+    income_plan = plan_amount if plan_type == 'income' else 0.0
+    income_ready = income_plan > 0 and income_fact >= income_plan
+
+    if plan_type == 'income':
+        bonus_ready = income_ready
+    else:
+        bonus_ready = shifts_ready
 
     bonus_locked = check_locked(user_email)
+    if not bonus_ready and bonus_locked:
+        unlock_bonus(user_email)
+        bonus_locked = False
     if bonus_ready and not bonus_locked:
-        reason = 'Премия оператора за смены' if user_role == 'operator' else 'Премия контент-мейкера за смены'
-        lock_bonus(user_email, user_role, 5000, reason)
+        who = 'оператора' if user_role == 'operator' else 'контент-мейкера'
+        basis = 'выполнение плана по доходу' if plan_type == 'income' else 'смены'
+        lock_bonus(user_email, user_role, bonus_value, f'Премия {who} за {basis}')
         bonus_locked = True
 
     cur.close()
@@ -290,9 +358,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'shifts_count': shifts_count,
             'target': target,
             'models_assigned': models_assigned,
+            'income_fact': round(income_fact, 2),
+            'income_plan': round(income_plan, 2),
+            'plan_type': plan_type or 'shifts',
+            'shifts_ready': shifts_ready,
+            'income_ready': income_ready,
             'bonus_ready': bonus_ready or bonus_locked,
             'bonus_locked': bonus_locked,
-            'bonus_amount': 5000 if bonus_locked else 0,
+            'bonus_amount': bonus_value if bonus_locked else 0,
+            'bonus_value': bonus_value,
             'supported': True
         })
     }
