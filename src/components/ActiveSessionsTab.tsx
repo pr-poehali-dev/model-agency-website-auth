@@ -1,57 +1,51 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { authenticatedFetch } from '@/lib/api';
 import { API_URLS } from '@/lib/apiUrls';
-import SessionsTable, {
-  SessionRecord,
-} from './active-sessions/SessionsTable';
+import EmployeeStatusList, {
+  type EmployeeStatus,
+} from './active-sessions/EmployeeStatusList';
+import SessionsDialog from './active-sessions/SessionsDialog';
 
 const ActiveSessionsTab = () => {
-  const [items, setItems] = useState<SessionRecord[]>([]);
+  const [employees, setEmployees] = useState<EmployeeStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [terminatingId, setTerminatingId] = useState<number | null>(null);
-  const [target, setTarget] = useState<SessionRecord | null>(null);
-  const [allDevices, setAllDevices] = useState(false);
+  const [selected, setSelected] = useState<EmployeeStatus | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [search, setSearch] = useState('');
 
   const { toast } = useToast();
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setIsLoading(true);
-    try {
-      const res = await authenticatedFetch(API_URLS.activeSessions);
-      const data = await res.json();
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) setIsLoading(true);
+      try {
+        const res = await authenticatedFetch(API_URLS.activeSessions);
+        const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Не удалось загрузить сессии');
-      }
+        if (!res.ok) {
+          throw new Error(data.error || 'Не удалось загрузить данные');
+        }
 
-      setItems(data.items || []);
-      setLastUpdated(new Date());
-    } catch (err) {
-      if (!silent) {
-        const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
-        toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
+        setEmployees(data.employees || []);
+        setLastUpdated(new Date());
+      } catch (err) {
+        if (!silent) {
+          const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
+          toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
+        }
+      } finally {
+        if (!silent) setIsLoading(false);
       }
-    } finally {
-      if (!silent) setIsLoading(false);
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   useEffect(() => {
     load();
@@ -61,61 +55,33 @@ const ActiveSessionsTab = () => {
     if (!autoRefresh) return;
 
     const timer = setInterval(() => {
-      if (document.visibilityState === 'visible' && !target) {
+      if (document.visibilityState === 'visible' && !selected) {
         load(true);
       }
     }, 60000);
 
     return () => clearInterval(timer);
-  }, [autoRefresh, load, target]);
+  }, [autoRefresh, load, selected]);
 
-  const handleConfirm = async () => {
-    if (!target) return;
+  const onlineCount = employees.filter((e) => e.online).length;
+  const totalSessions = employees.reduce((sum, e) => sum + e.sessionCount, 0);
 
-    setTerminatingId(target.id);
-    try {
-      const payload = allDevices
-        ? { action: 'terminate_user', userId: target.userId }
-        : { action: 'terminate_session', sessionId: target.id };
-
-      const res = await authenticatedFetch(API_URLS.activeSessions, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Не удалось завершить сессию');
-      }
-
-      toast({
-        title: 'Сессия завершена',
-        description: allDevices
-          ? `${target.fullName || target.email} вышел со всех устройств`
-          : `${target.fullName || target.email} вышел из системы`,
-      });
-
-      setTarget(null);
-      setAllDevices(false);
-      await load();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ошибка';
-      toast({ title: 'Ошибка', description: msg, variant: 'destructive' });
-    } finally {
-      setTerminatingId(null);
-    }
-  };
-
-  const uniqueUsers = new Set(items.map((i) => i.email)).size;
+  const visible = employees.filter((e) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (e.fullName || '').toLowerCase().includes(q) ||
+      e.email.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">Активные сессии</h2>
           <p className="text-sm text-muted-foreground">
-            Кто сейчас в системе и с какого устройства
+            Кто сейчас в системе
             {lastUpdated && (
               <span className="ml-1">
                 · обновлено в{' '}
@@ -139,63 +105,50 @@ const ActiveSessionsTab = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Активных сессий</div>
-          <div className="text-2xl font-bold">{items.length}</div>
+          <div className="text-sm text-muted-foreground">Сейчас в сети</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {onlineCount}
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Сотрудников в системе</div>
-          <div className="text-2xl font-bold">{uniqueUsers}</div>
+          <div className="text-sm text-muted-foreground">Всего сотрудников</div>
+          <div className="text-2xl font-bold">{employees.length}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Активных сессий</div>
+          <div className="text-2xl font-bold">{totalSessions}</div>
         </Card>
       </div>
 
-      <SessionsTable
-        items={items}
+      <div className="relative max-w-sm">
+        <Icon
+          name="Search"
+          size={15}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск сотрудника"
+          className="pl-8 h-9"
+        />
+      </div>
+
+      <EmployeeStatusList
+        employees={visible}
         isLoading={isLoading}
-        terminatingId={terminatingId}
-        onTerminate={(session) => {
-          setTarget(session);
-          setAllDevices(false);
-        }}
+        onSelect={setSelected}
       />
 
-      <AlertDialog
-        open={!!target}
+      <SessionsDialog
+        employee={selected}
         onOpenChange={(open) => {
-          if (!open) {
-            setTarget(null);
-            setAllDevices(false);
-          }
+          if (!open) setSelected(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Завершить сессию?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {target?.fullName || target?.email} будет принудительно разлогинен
-              и вернётся на страницу входа.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={allDevices}
-              onChange={(e) => setAllDevices(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Завершить на всех устройствах этого сотрудника
-          </label>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>
-              Завершить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onChanged={() => load(true)}
+      />
     </div>
   );
 };
