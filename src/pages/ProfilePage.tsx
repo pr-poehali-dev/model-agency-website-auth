@@ -60,7 +60,7 @@ export default function ProfilePage() {
     ? profileData?.full_name || userEmail
     : localStorage.getItem("userName") || MOCK_USER.name;
   const userRole = viewingOther
-    ? profileData?.role || "model"
+    ? profileData?.role || ""
     : localStorage.getItem("userRole") || "model";
 
   const createdAtRaw = viewingOther
@@ -68,7 +68,9 @@ export default function ProfilePage() {
     : localStorage.getItem("userCreatedAt");
   const joinedLabel = createdAtRaw
     ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
-    : MOCK_USER.joinedAt;
+    : viewingOther
+      ? null
+      : MOCK_USER.joinedAt;
   const isProducer = userRole === "producer";
   const isShiftTracked = userRole === "operator" || userRole === "content_maker";
   const isDirectorProfile = userRole === "director";
@@ -184,14 +186,18 @@ export default function ProfilePage() {
                   {userName}
                 </h1>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                    {ROLE_LABELS[userRole] || userRole}
-                  </Badge>
+                  {userRole && (
+                    <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                      {ROLE_LABELS[userRole] || userRole}
+                    </Badge>
+                  )}
 
-                  <span className="text-muted-foreground text-sm flex items-center gap-1">
-                    <Icon name="Calendar" size={13} />
-                    В компании с {joinedLabel}
-                  </span>
+                  {joinedLabel && (
+                    <span className="text-muted-foreground text-sm flex items-center gap-1">
+                      <Icon name="Calendar" size={13} />
+                      В компании с {joinedLabel}
+                    </span>
+                  )}
                 </div>
                 <p className="text-muted-foreground text-sm mt-1">{userEmail}</p>
               </div>
