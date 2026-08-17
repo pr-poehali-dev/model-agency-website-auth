@@ -10,6 +10,34 @@ PLAN_TYPES = ('income', 'shifts')
 DEFAULT_BONUS = 5000.0
 
 
+def _extract_token(headers: Dict[str, str]) -> str:
+    h = {k.lower(): v for k, v in (headers or {}).items()}
+    token = h.get('x-auth-token', '')
+    if token:
+        return token
+    cookie = h.get('x-cookie', '') or h.get('cookie', '')
+    if 'auth_token=' in cookie:
+        return cookie.split('auth_token=')[1].split(';')[0]
+    return ''
+
+
+def _get_actor(cur, headers: Dict[str, str]):
+    token = _extract_token(headers)
+    if not token:
+        return None
+    cur.execute(
+        f"""SELECT u.email, u.role
+            FROM {SCHEMA}.auth_tokens at
+            JOIN {SCHEMA}.users u ON at.user_id = u.id
+            WHERE at.token = %s
+              AND at.expires_at > NOW()
+              AND at.is_active = true
+              AND u.is_active = true""",
+        (token,),
+    )
+    return cur.fetchone()
+
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Business: Планы сотрудников на период (доход или смены) и размер премии. Директор задаёт, сотрудник читает.
@@ -111,8 +139,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if not user_email or not period_start or not period_end or plan_amount is None:
                 return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'Не все поля заполнены'})}
 
-            if user_role != 'director':
+            actor = _get_actor(cur, headers)
+            if not actor:
+                return {'statusCode': 401, 'headers': cors_headers, 'body': json.dumps({'error': 'Требуется авторизация'})}
+            if actor['role'] != 'director':
                 return {'statusCode': 403, 'headers': cors_headers, 'body': json.dumps({'error': 'Только директор может задавать план'})}
+            set_by_email = actor['email']
 
             if plan_type not in PLAN_TYPES:
                 return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'plan_type должен быть income или shifts'})}

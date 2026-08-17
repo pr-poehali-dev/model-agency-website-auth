@@ -13,17 +13,17 @@
       "expectedStatus": 400
     },
     {
-      "name": "POST without director role forbidden",
+      "name": "POST with forged director role is rejected",
       "method": "POST",
       "path": "/",
       "body": {
-        "producer_email": "test@test.com",
+        "user_email": "test@test.com",
         "period_start": "2025-01-01",
         "period_end": "2025-01-15",
         "plan_amount": 1000,
-        "user_role": "operator"
+        "user_role": "director"
       },
-      "expectedStatus": 403
+      "expectedStatus": 401
     }
   ]
 }

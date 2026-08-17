@@ -66,7 +66,7 @@ export const useShiftProgress = (
     enabled: enabled && !!userEmail && !!SHIFT_PROGRESS_URL,
     queryFn: async () => {
       const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userRole)}&period_start=${start}&period_end=${end}`;
-      const r = await fetch(url);
+      const r = await authenticatedFetchNoCreds(url);
       const data = await r.json();
       if (data && typeof data.shifts_count === "number") {
         return {

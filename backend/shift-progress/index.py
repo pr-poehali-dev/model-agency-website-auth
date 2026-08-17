@@ -47,6 +47,38 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
+    def _token_from(hdrs):
+        h = {k.lower(): v for k, v in (hdrs or {}).items()}
+        t = h.get('x-auth-token', '')
+        if t:
+            return t
+        cookie = h.get('x-cookie', '') or h.get('cookie', '')
+        if 'auth_token=' in cookie:
+            return cookie.split('auth_token=')[1].split(';')[0]
+        return ''
+
+    cur.execute(
+        f"""SELECT u.email, u.role
+            FROM {schema}.auth_tokens at
+            JOIN {schema}.users u ON at.user_id = u.id
+            WHERE at.token = %s
+              AND at.expires_at > NOW()
+              AND at.is_active = true
+              AND u.is_active = true""",
+        (_token_from(headers),)
+    )
+    actor = cur.fetchone()
+
+    if not actor:
+        cur.close()
+        conn.close()
+        return {'statusCode': 401, 'headers': cors_headers, 'body': json.dumps({'error': 'Требуется авторизация'})}
+
+    if actor['email'].lower() != user_email.lower() and actor['role'] != 'director':
+        cur.close()
+        conn.close()
+        return {'statusCode': 403, 'headers': cors_headers, 'body': json.dumps({'error': 'Нет доступа к данным другого сотрудника'})}
+
     def lock_bonus(email: str, role: str, amount: float, reason: str):
         try:
             cur.execute(

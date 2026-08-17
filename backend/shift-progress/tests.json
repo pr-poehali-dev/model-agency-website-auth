@@ -13,20 +13,17 @@
       "expectedStatus": 400
     },
     {
-      "name": "Director gets agency summary",
+      "name": "Foreign progress without token is denied",
       "method": "GET",
-      "path": "/?user_email=test@test.com&role=director&period_start=2025-01-01&period_end=2025-01-15",
-      "expectedStatus": 200,
-      "expectedBody": {"supported": true, "is_director": true},
-      "bodyMatcher": "partial"
+      "path": "/?user_email=Dir@mba.com&role=director&period_start=2025-01-01&period_end=2025-01-15",
+      "expectedStatus": 401
     },
     {
-      "name": "Unknown role returns zero",
+      "name": "Invalid token is denied",
       "method": "GET",
-      "path": "/?user_email=test@test.com&role=guest&period_start=2025-01-01&period_end=2025-01-15",
-      "expectedStatus": 200,
-      "expectedBody": {"supported": false},
-      "bodyMatcher": "partial"
+      "path": "/?user_email=Dir@mba.com&role=director&period_start=2025-01-01&period_end=2025-01-15",
+      "headers": {"X-Auth-Token": "invalid-token-value"},
+      "expectedStatus": 401
     }
   ]
 }

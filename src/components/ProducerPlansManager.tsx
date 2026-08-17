@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { getCurrentPeriod, getPreviousPeriod, getNextPeriod, type Period } from '@/utils/periodUtils';
+import { authenticatedFetchNoCreds } from '@/lib/api';
 import funcUrls from '../../backend/func2url.json';
 
 const SHIFT_PROGRESS_URL = (funcUrls as Record<string, string>)['shift-progress'];
@@ -68,7 +69,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
       const periodStart = formatIsoDate(period.startDate);
       const periodEnd = formatIsoDate(period.endDate);
 
-      const plansResp = await fetch(
+      const plansResp = await authenticatedFetchNoCreds(
         `${PLANS_URL}?period_start=${periodStart}&period_end=${periodEnd}`
       );
       if (!plansResp.ok) {
@@ -102,7 +103,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
           };
           try {
             const url = `${SHIFT_PROGRESS_URL}?user_email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}&period_start=${periodStart}&period_end=${periodEnd}`;
-            const r = await fetch(url);
+            const r = await authenticatedFetchNoCreds(url);
             const data = await r.json();
             if (data && typeof data.shifts_count === 'number') {
               row.models_assigned = data.models_assigned || 0;
@@ -144,7 +145,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
     }
     updateRow(row.email, { saving: true });
     try {
-      const resp = await fetch(PLANS_URL, {
+      const resp = await authenticatedFetchNoCreds(PLANS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
