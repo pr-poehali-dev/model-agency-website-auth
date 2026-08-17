@@ -20,6 +20,7 @@ export type ProfileData = {
   full_name?: string;
   role?: string;
   created_at?: string;
+  joined_at?: string;
 };
 
 export type ShiftData = {

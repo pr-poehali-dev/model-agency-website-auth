@@ -129,7 +129,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             target_email = (body.get('email') or '').strip()
             if target_email and target_email.lower() != user['email'].lower():
                 cur.execute(
-                    """SELECT email, full_name, role, photo_url, cover_url, created_at
+                    """SELECT email, full_name, role, photo_url, cover_url, created_at, joined_at
                        FROM t_p35405502_model_agency_website.users
                        WHERE LOWER(email) = LOWER(%s) AND is_active = true""",
                     (target_email,),
@@ -145,10 +145,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'photo_url': target['photo_url'],
                     'cover_url': target['cover_url'],
                     'created_at': target['created_at'].isoformat() if target['created_at'] else None,
+                    'joined_at': target['joined_at'].isoformat() if target['joined_at'] else None,
                 })
 
             cur.execute(
-                """SELECT full_name, role, created_at
+                """SELECT full_name, role, created_at, joined_at
                    FROM t_p35405502_model_agency_website.users WHERE id = %s""",
                 (user['id'],),
             )
@@ -161,7 +162,53 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'photo_url': user['photo_url'],
                 'cover_url': user['cover_url'],
                 'created_at': me['created_at'].isoformat() if me.get('created_at') else None,
+                'joined_at': me['joined_at'].isoformat() if me.get('joined_at') else None,
             })
+
+        if action == 'set_joined_at':
+            cur.execute(
+                "SELECT role FROM t_p35405502_model_agency_website.users WHERE id = %s",
+                (user['id'],),
+            )
+            actor_role = (cur.fetchone() or {}).get('role')
+            if actor_role != 'director':
+                return _resp(403, {'error': 'Изменять дату может только директор'})
+
+            target_email = (body.get('email') or '').strip() or user['email']
+            value = body.get('joined_at')
+
+            if value in (None, '', 'null'):
+                cur.execute(
+                    """UPDATE t_p35405502_model_agency_website.users
+                       SET joined_at = NULL, updated_at = CURRENT_TIMESTAMP
+                       WHERE LOWER(email) = LOWER(%s)""",
+                    (target_email,),
+                )
+                conn.commit()
+                return _resp(200, {'success': True, 'joined_at': None})
+
+            try:
+                year = int(str(value).split('-')[0])
+                month = int(str(value).split('-')[1])
+            except (ValueError, IndexError):
+                return _resp(400, {'error': 'Ожидается формат ГГГГ-ММ'})
+
+            if year < 2000 or year > 2100 or month < 1 or month > 12:
+                return _resp(400, {'error': 'Некорректный месяц или год'})
+
+            joined_value = f'{year:04d}-{month:02d}-01'
+            cur.execute(
+                """UPDATE t_p35405502_model_agency_website.users
+                   SET joined_at = %s, updated_at = CURRENT_TIMESTAMP
+                   WHERE LOWER(email) = LOWER(%s)
+                   RETURNING joined_at""",
+                (joined_value, target_email),
+            )
+            row = cur.fetchone()
+            if not row:
+                return _resp(404, {'error': 'Сотрудник не найден'})
+            conn.commit()
+            return _resp(200, {'success': True, 'joined_at': row['joined_at'].isoformat()})
 
         if action == 'upload_cover':
             image_b64 = body.get('image')

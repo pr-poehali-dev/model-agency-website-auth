@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProfileData, useShiftProgress } from "@/hooks/useProfileQueries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import GrantAchievementDialog from "@/components/profile/GrantAchievementDialog"
 import AchievementsHistoryDialog from "@/components/profile/AchievementsHistoryDialog";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 import TeamDirectory from "@/components/profile/TeamDirectory";
+import JoinedDateDialog from "@/components/profile/JoinedDateDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MOCK_USER = {
@@ -45,6 +47,8 @@ export default function ProfilePage() {
   const [photoUrl, setPhotoUrl] = useState<string>(() => localStorage.getItem("userPhotoUrl") || "");
   const [coverUrl, setCoverUrl] = useState<string>(() => localStorage.getItem("userCoverUrl") || "");
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [joinedOpen, setJoinedOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { email: emailParam } = useParams<{ email: string }>();
   const viewedEmail = emailParam ? decodeURIComponent(emailParam) : "";
 
@@ -63,9 +67,10 @@ export default function ProfilePage() {
     ? profileData?.role || ""
     : localStorage.getItem("userRole") || "model";
 
-  const createdAtRaw = viewingOther
-    ? profileData?.created_at
-    : localStorage.getItem("userCreatedAt");
+  const createdAtRaw =
+    profileData?.joined_at ||
+    profileData?.created_at ||
+    (viewingOther ? null : localStorage.getItem("userCreatedAt"));
   const joinedLabel = createdAtRaw
     ? new Date(createdAtRaw).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
     : viewingOther
@@ -196,6 +201,16 @@ export default function ProfilePage() {
                     <span className="text-muted-foreground text-sm flex items-center gap-1">
                       <Icon name="Calendar" size={13} />
                       В компании с {joinedLabel}
+                      {viewerIsDirector && (
+                        <button
+                          type="button"
+                          onClick={() => setJoinedOpen(true)}
+                          title="Изменить дату"
+                          className="ml-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Icon name="Pencil" size={12} />
+                        </button>
+                      )}
                     </span>
                   )}
                 </div>
@@ -226,6 +241,14 @@ export default function ProfilePage() {
           initials={initials}
           onPhotoUpdated={setPhotoUrl}
           onCoverUpdated={setCoverUrl}
+        />
+
+        <JoinedDateDialog
+          open={joinedOpen}
+          onOpenChange={setJoinedOpen}
+          targetEmail={userEmail}
+          currentValue={profileData?.joined_at || profileData?.created_at}
+          onSaved={() => queryClient.invalidateQueries({ queryKey: ["profile", userEmail] })}
         />
 
         <ProfileGallery
