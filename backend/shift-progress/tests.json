@@ -13,9 +13,17 @@
       "expectedStatus": 400
     },
     {
-      "name": "Unsupported role returns zero",
+      "name": "Director gets agency summary",
       "method": "GET",
       "path": "/?user_email=test@test.com&role=director&period_start=2025-01-01&period_end=2025-01-15",
+      "expectedStatus": 200,
+      "expectedBody": {"supported": true, "is_director": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unknown role returns zero",
+      "method": "GET",
+      "path": "/?user_email=test@test.com&role=guest&period_start=2025-01-01&period_end=2025-01-15",
       "expectedStatus": 200,
       "expectedBody": {"supported": false},
       "bodyMatcher": "partial"

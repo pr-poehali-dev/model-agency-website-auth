@@ -26,6 +26,8 @@ export type ShiftData = {
   income_plan?: number;
   shifts_ready?: boolean;
   income_ready?: boolean;
+  active_staff?: number;
+  is_director?: boolean;
 };
 
 export const useProfileData = (userEmail: string) => {
@@ -69,6 +71,8 @@ export const useShiftProgress = (
           income_plan: data.income_plan,
           shifts_ready: data.shifts_ready,
           income_ready: data.income_ready,
+          active_staff: data.active_staff,
+          is_director: data.is_director,
         };
       }
       return null;

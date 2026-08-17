@@ -122,6 +122,61 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
             shifts_count = int(cur.fetchone()['c'] or 0)
 
+    elif user_role == 'director':
+        cur.execute(
+            f"""SELECT COUNT(*) AS c
+                FROM {schema}.model_finances
+                WHERE has_shift = true
+                  AND date >= %s AND date <= %s""",
+            (period_start, period_end)
+        )
+        shifts_count = int(cur.fetchone()['c'] or 0)
+
+        cur.execute(
+            f"""SELECT COUNT(DISTINCT mf.model_id) AS c
+                FROM {schema}.model_finances mf
+                WHERE mf.date >= %s AND mf.date <= %s""",
+            (period_start, period_end)
+        )
+        models_assigned = int(cur.fetchone()['c'] or 0)
+
+        cur.execute(
+            f"""SELECT COALESCE(SUM(
+                    COALESCE(mf.cb_income,0) + COALESCE(mf.sp_income,0) + COALESCE(mf.soda_income,0)
+                    + COALESCE(mf.cam4_income,0) + COALESCE(mf.transfers,0)
+                ), 0) AS total
+                FROM {schema}.model_finances mf
+                WHERE mf.date >= %s AND mf.date <= %s""",
+            (period_start, period_end)
+        )
+        income_fact = float(cur.fetchone()['total'] or 0.0)
+
+        cur.execute(
+            f"""SELECT COUNT(*) AS c FROM {schema}.users
+                WHERE is_active = true AND role IN ('operator','content_maker','producer','solo_maker')"""
+        )
+        active_staff = int(cur.fetchone()['c'] or 0)
+
+        target = 10 * models_assigned if models_assigned > 0 else 0
+
+        cur.close()
+        conn.close()
+
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': json.dumps({
+                'shifts_count': shifts_count,
+                'target': target,
+                'models_assigned': models_assigned,
+                'income_fact': round(income_fact, 2),
+                'active_staff': active_staff,
+                'bonus_ready': False,
+                'is_director': True,
+                'supported': True
+            })
+        }
+
     elif user_role == 'producer':
         cur.execute(
             f"""SELECT DISTINCT model_email

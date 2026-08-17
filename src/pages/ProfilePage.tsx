@@ -134,6 +134,7 @@ export default function ProfilePage() {
   const currentUserEmail = localStorage.getItem("userEmail") || "";
   const isProducer = userRole === "producer";
   const isShiftTracked = userRole === "operator" || userRole === "content_maker";
+  const isDirectorProfile = userRole === "director";
   const viewerIsDirector = currentUserRole === "director";
   const viewerIsProducer = currentUserRole === "producer";
   const isOwnProfile = !!currentUserEmail && currentUserEmail === userEmail;
@@ -149,7 +150,7 @@ export default function ProfilePage() {
     userRole,
     period.startDate,
     period.endDate,
-    isShiftTracked || isProducer,
+    isShiftTracked || isProducer || isDirectorProfile,
   );
 
   const attendancePercent =
@@ -344,7 +345,7 @@ export default function ProfilePage() {
                   <Icon name="TrendingUp" size={20} className="text-primary" />
                   Прогресс
                 </CardTitle>
-                {isShiftTracked && (
+                {(isShiftTracked || isProducer || isDirectorProfile) && (
                   <div className="flex items-center gap-1 bg-background/50 rounded-lg px-2 py-1 border border-border/50">
                     <Button
                       variant="ghost"
@@ -369,6 +370,60 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Сводка по агентству (для директора) */}
+                {isDirectorProfile && (
+                  <>
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm text-muted-foreground">Отработано смен</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {loadingShifts ? (
+                            <Skeleton className="h-4 w-16 inline-block align-middle" />
+                          ) : (
+                            `${shiftData?.shifts_count ?? 0} / ${shiftData?.target ?? 0}`
+                          )}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${
+                            attendancePercent >= 100
+                              ? "bg-green-500"
+                              : attendancePercent >= 70
+                                ? "bg-primary"
+                                : "bg-orange-500"
+                          }`}
+                          style={{ width: `${Math.min(100, attendancePercent)}%` }}
+                        />
+                      </div>
+                      <p className="text-xs mt-2 text-muted-foreground/60">
+                        {shiftData && shiftData.models_assigned > 0
+                          ? `${attendancePercent}% нормы · ${shiftData.models_assigned} моделей работали`
+                          : "Нет данных за период"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm text-muted-foreground">Доход агентства</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {loadingShifts ? (
+                            <Skeleton className="h-4 w-20 inline-block align-middle" />
+                          ) : (
+                            `$${(shiftData?.income_fact || 0).toFixed(0)}`
+                          )}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-purple-500 transition-all duration-700 w-full" />
+                      </div>
+                      <p className="text-xs mt-2 text-muted-foreground/60">
+                        Активных сотрудников: {shiftData?.active_staff ?? 0}
+                      </p>
+                    </div>
+                  </>
+                )}
+
                 {/* Посещаемость смен (для оператора/мейкера/продюсера) */}
                 {isShiftTracked && (
                   <div>
