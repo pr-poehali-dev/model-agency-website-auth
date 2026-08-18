@@ -549,14 +549,20 @@ export default function ProfilePage() {
           )}
 
           {/* Список сотрудников — виден в своём профиле */}
-          {!viewingOther && <TeamDirectory currentUserEmail={currentUserEmail} />}
+          {!viewingOther && (
+            <div className="md:col-span-2">
+              <TeamDirectory currentUserEmail={currentUserEmail} />
+            </div>
+          )}
 
           {/* Блок управления планами продюсеров (только для директора в своём профиле) */}
           {showProducerPlansSection && (
-            <ProducerPlansManager
-              currentUserEmail={currentUserEmail}
-              currentUserRole={currentUserRole}
-            />
+            <div className="md:col-span-2">
+              <ProducerPlansManager
+                currentUserEmail={currentUserEmail}
+                currentUserRole={currentUserRole}
+              />
+            </div>
           )}
 
         </div>

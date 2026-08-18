@@ -322,7 +322,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
         </CardHeader>
         <CardContent>
           {!loading && list.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <div className="rounded-lg border border-border/50 bg-background/40 p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Icon name="Users" size={14} />
@@ -358,7 +358,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
           ) : list.length === 0 ? (
             <div className="py-10 text-center text-muted-foreground">{emptyText}</div>
           ) : (
-            <div className="space-y-3">{list.map(renderCard)}</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">{list.map(renderCard)}</div>
           )}
         </CardContent>
       </Card>
@@ -392,7 +392,7 @@ const ProducerPlansManager = ({ currentUserEmail, currentUserRole }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+      <div className="space-y-4">
         {renderSection(
           'Планы продюсеров и премии',
           'Target',
