@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetchNoCreds } from '@/lib/api';
+import SaveBar from './SaveBar';
 import funcUrls from '../../../backend/func2url.json';
 
 const STAFF_URL = (funcUrls as Record<string, string>)['production-staff'];
@@ -94,7 +95,8 @@ const StaffTable = ({ owner }: StaffTableProps) => {
   const [operators, setOperators] = useState<StaffRow[]>([]);
   const [models, setModels] = useState<StaffRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [dirty, setDirty] = useState<Record<number, StaffRow>>({});
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +105,7 @@ const StaffTable = ({ owner }: StaffTableProps) => {
       const data = await res.json();
       setOperators(Array.isArray(data.operators) ? data.operators : []);
       setModels(Array.isArray(data.models) ? data.models : []);
+      setDirty({});
     } catch {
       toast({ title: 'Не удалось загрузить штат', variant: 'destructive' });
     } finally {
@@ -116,25 +119,35 @@ const StaffTable = ({ owner }: StaffTableProps) => {
 
   const updateLocal = (kind: StaffRow['kind'], id: number, patch: Partial<StaffRow>) => {
     const setter = kind === 'operator' ? setOperators : setModels;
-    setter((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setter((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const next = { ...r, ...patch };
+        setDirty((d) => ({ ...d, [id]: next }));
+        return next;
+      }),
+    );
   };
 
-  const saveRow = async (row: StaffRow) => {
-    setSavingId(row.id);
+  const saveAll = async () => {
+    const rows = Object.values(dirty);
+    if (rows.length === 0) return;
+    setSaving(true);
     try {
-      const res = await authenticatedFetchNoCreds(STAFF_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save', owner, ...row }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Ошибка');
-      toast({ title: 'Сохранено' });
+      for (const row of rows) {
+        const res = await authenticatedFetchNoCreds(STAFF_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'save', owner, ...row }),
+        });
+        if (!res.ok) throw new Error('Ошибка');
+      }
+      toast({ title: `Сохранено строк: ${rows.length}` });
       await load();
     } catch {
       toast({ title: 'Не удалось сохранить', variant: 'destructive' });
     } finally {
-      setSavingId(null);
+      setSaving(false);
     }
   };
 
@@ -218,7 +231,6 @@ const StaffTable = ({ owner }: StaffTableProps) => {
                           value={row[col.key] || ''}
                           placeholder={col.placeholder}
                           onChange={(e) => updateLocal(kind, row.id, { [col.key]: e.target.value })}
-                          onBlur={() => saveRow(row)}
                           className="h-10 rounded-none border-0 bg-transparent text-center focus-visible:ring-1 focus-visible:ring-primary/40"
                         />
                       </td>
@@ -228,7 +240,6 @@ const StaffTable = ({ owner }: StaffTableProps) => {
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                        disabled={savingId === row.id}
                         onClick={() => deleteRow(row)}
                       >
                         <Icon name="Trash2" size={14} />
@@ -245,9 +256,18 @@ const StaffTable = ({ owner }: StaffTableProps) => {
   );
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 items-start">
-      {renderTable('Операторы', 'operator', OPERATOR_COLUMNS, operators)}
-      {renderTable('Модели', 'model', MODEL_COLUMNS, models)}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4 items-start">
+        {renderTable('Операторы', 'operator', OPERATOR_COLUMNS, operators)}
+        {renderTable('Модели', 'model', MODEL_COLUMNS, models)}
+      </div>
+
+      <SaveBar
+        dirtyCount={Object.keys(dirty).length}
+        saving={saving}
+        onSave={saveAll}
+        onReset={load}
+      />
     </div>
   );
 };

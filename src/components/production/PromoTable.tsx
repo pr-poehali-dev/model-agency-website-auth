@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetchNoCreds } from '@/lib/api';
+import SaveBar from './SaveBar';
 import funcUrls from '../../../backend/func2url.json';
 
 const PROMO_URL = (funcUrls as Record<string, string>)['production-staff'];
@@ -72,6 +73,8 @@ const PromoTable = ({ owner }: PromoTableProps) => {
   const { toast } = useToast();
   const [rows, setRows] = useState<PromoRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dirty, setDirty] = useState<Record<number, PromoRow>>({});
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,6 +82,7 @@ const PromoTable = ({ owner }: PromoTableProps) => {
       const res = await authenticatedFetchNoCreds(`${PROMO_URL}?table=promo&owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setRows(Array.isArray(data.rows) ? data.rows : []);
+      setDirty({});
     } catch {
       toast({ title: 'Не удалось загрузить', variant: 'destructive' });
     } finally {
@@ -100,16 +104,30 @@ const PromoTable = ({ owner }: PromoTableProps) => {
   };
 
   const updateLocal = (id: number, patch: Partial<PromoRow>) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const next = { ...r, ...patch };
+        setDirty((d) => ({ ...d, [id]: next }));
+        return next;
+      }),
+    );
   };
 
-  const saveRow = async (row: PromoRow) => {
+  const saveAll = async () => {
+    const list = Object.values(dirty);
+    if (list.length === 0) return;
+    setSaving(true);
     try {
-      await send({ action: 'save', ...row });
-      toast({ title: 'Сохранено' });
+      for (const row of list) {
+        await send({ action: 'save', ...row });
+      }
+      toast({ title: `Сохранено строк: ${list.length}` });
       await load();
     } catch {
       toast({ title: 'Не удалось сохранить', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -132,6 +150,7 @@ const PromoTable = ({ owner }: PromoTableProps) => {
   };
 
   return (
+    <div className="space-y-4">
     <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
@@ -178,7 +197,6 @@ const PromoTable = ({ owner }: PromoTableProps) => {
                           value={row[col.key] || ''}
                           placeholder={col.placeholder}
                           onChange={(e) => updateLocal(row.id, { [col.key]: e.target.value })}
-                          onBlur={() => saveRow(row)}
                           className="h-10 rounded-none border-0 bg-transparent text-center focus-visible:ring-1 focus-visible:ring-primary/40"
                         />
                       </td>
@@ -201,6 +219,14 @@ const PromoTable = ({ owner }: PromoTableProps) => {
         )}
       </CardContent>
     </Card>
+
+      <SaveBar
+        dirtyCount={Object.keys(dirty).length}
+        saving={saving}
+        onSave={saveAll}
+        onReset={load}
+      />
+    </div>
   );
 };
 

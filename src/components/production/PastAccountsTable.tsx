@@ -12,6 +12,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetchNoCreds } from '@/lib/api';
+import SaveBar from './SaveBar';
 import funcUrls from '../../../backend/func2url.json';
 
 const PAST_URL = (funcUrls as Record<string, string>)['production-past'];
@@ -51,6 +52,9 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
   const { toast } = useToast();
   const [persons, setPersons] = useState<PastPerson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dirtyPersons, setDirtyPersons] = useState<Record<number, string>>({});
+  const [dirtyAccounts, setDirtyAccounts] = useState<Record<number, PastAccount>>({});
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,6 +62,8 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
       const res = await authenticatedFetchNoCreds(`${PAST_URL}?owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setPersons(Array.isArray(data.persons) ? data.persons : []);
+      setDirtyPersons({});
+      setDirtyAccounts({});
     } catch {
       toast({ title: 'Не удалось загрузить', variant: 'destructive' });
     } finally {
@@ -88,17 +94,48 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
     }
   };
 
-  const updatePersonLocal = (id: number, name: string) =>
+  const updatePersonLocal = (id: number, name: string) => {
     setPersons((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+    setDirtyPersons((d) => ({ ...d, [id]: name }));
+  };
 
   const updateAccountLocal = (personId: number, accountId: number, patch: Partial<PastAccount>) =>
     setPersons((prev) =>
       prev.map((p) =>
         p.id === personId
-          ? { ...p, accounts: p.accounts.map((a) => (a.id === accountId ? { ...a, ...patch } : a)) }
+          ? {
+              ...p,
+              accounts: p.accounts.map((a) => {
+                if (a.id !== accountId) return a;
+                const next = { ...a, ...patch };
+                setDirtyAccounts((d) => ({ ...d, [accountId]: next }));
+                return next;
+              }),
+            }
           : p,
       ),
     );
+
+  const dirtyCount = Object.keys(dirtyPersons).length + Object.keys(dirtyAccounts).length;
+
+  const saveAll = async () => {
+    if (dirtyCount === 0) return;
+    setSaving(true);
+    try {
+      for (const [id, name] of Object.entries(dirtyPersons)) {
+        await send({ action: 'save_person', id: Number(id), name });
+      }
+      for (const account of Object.values(dirtyAccounts)) {
+        await send({ action: 'save_account', ...account });
+      }
+      toast({ title: `Сохранено: ${dirtyCount}` });
+      await load();
+    } catch {
+      toast({ title: 'Не удалось сохранить', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -129,9 +166,6 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
                     value={person.name || ''}
                     placeholder="Имя модели"
                     onChange={(e) => updatePersonLocal(person.id, e.target.value)}
-                    onBlur={() =>
-                      run({ action: 'save_person', id: person.id, name: person.name }, 'Не удалось сохранить')
-                    }
                     className="h-9 border-0 bg-transparent text-center text-base font-semibold focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                   <Button
@@ -154,13 +188,9 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
                     <div className="flex items-center gap-1 pr-1">
                       <Select
                         value={account.platform || ''}
-                        onValueChange={(value) => {
-                          updateAccountLocal(person.id, account.id, { platform: value });
-                          run(
-                            { action: 'save_account', ...account, platform: value },
-                            'Не удалось сохранить',
-                          );
-                        }}
+                        onValueChange={(value) =>
+                          updateAccountLocal(person.id, account.id, { platform: value })
+                        }
                       >
                         <SelectTrigger
                           className={`h-9 flex-1 rounded-none border-0 border-b font-medium italic justify-center gap-2 focus:ring-1 focus:ring-primary/40 ${platformStyle(account.platform)}`}
@@ -188,7 +218,6 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
                       value={account.login || ''}
                       placeholder="логин"
                       onChange={(e) => updateAccountLocal(person.id, account.id, { login: e.target.value })}
-                      onBlur={() => run({ action: 'save_account', ...account }, 'Не удалось сохранить')}
                       className="h-9 rounded-none border-0 border-b border-border/40 bg-transparent text-center text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                     <Input
@@ -197,7 +226,6 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
                       onChange={(e) =>
                         updateAccountLocal(person.id, account.id, { password: e.target.value })
                       }
-                      onBlur={() => run({ action: 'save_account', ...account }, 'Не удалось сохранить')}
                       className="h-9 rounded-none border-0 bg-transparent text-center text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                   </div>
@@ -219,6 +247,8 @@ const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
           ))}
         </div>
       )}
+
+      <SaveBar dirtyCount={dirtyCount} saving={saving} onSave={saveAll} onReset={load} />
     </div>
   );
 };

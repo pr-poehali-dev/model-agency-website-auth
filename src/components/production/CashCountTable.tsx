@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { authenticatedFetchNoCreds } from '@/lib/api';
+import SaveBar from './SaveBar';
 import { useCashEmployees } from './useCashEmployees';
 import funcUrls from '../../../backend/func2url.json';
 
@@ -45,6 +46,8 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
   const { employees } = useCashEmployees(viewerEmail, viewerRole);
   const [rows, setRows] = useState<CashRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dirty, setDirty] = useState<Record<number, CashRow>>({});
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +55,7 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
       const res = await authenticatedFetchNoCreds(`${CASH_URL}?table=cash&owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setRows(Array.isArray(data.rows) ? data.rows : []);
+      setDirty({});
     } catch {
       toast({ title: 'Не удалось загрузить', variant: 'destructive' });
     } finally {
@@ -73,15 +77,30 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
   };
 
   const updateLocal = (id: number, patch: Partial<CashRow>) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const next = { ...r, ...patch };
+        setDirty((d) => ({ ...d, [id]: next }));
+        return next;
+      }),
+    );
   };
 
-  const saveRow = async (row: CashRow) => {
+  const saveAll = async () => {
+    const list = Object.values(dirty);
+    if (list.length === 0) return;
+    setSaving(true);
     try {
-      await send({ action: 'save', ...row });
+      for (const row of list) {
+        await send({ action: 'save', ...row });
+      }
+      toast({ title: `Сохранено строк: ${list.length}` });
       await load();
     } catch {
       toast({ title: 'Не удалось сохранить', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -125,12 +144,12 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
       value={row[key] === 0 ? '' : String(row[key] ?? '')}
       placeholder="0"
       onChange={(e) => updateLocal(row.id, { [key]: Number(e.target.value) || 0 })}
-      onBlur={() => saveRow(row)}
       className="h-10 rounded-none border-0 bg-transparent text-right focus-visible:ring-1 focus-visible:ring-primary/40"
     />
   );
 
   return (
+    <div className="space-y-4">
     <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
@@ -190,7 +209,6 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                             salary: picked ? picked.salary : row.salary,
                           };
                           updateLocal(row.id, patch);
-                          saveRow({ ...row, ...patch });
                         }}
                       >
                         <SelectTrigger className="h-10 rounded-none border-0 bg-transparent focus:ring-1 focus:ring-primary/40">
@@ -276,6 +294,14 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
         )}
       </CardContent>
     </Card>
+
+      <SaveBar
+        dirtyCount={Object.keys(dirty).length}
+        saving={saving}
+        onSave={saveAll}
+        onReset={load}
+      />
+    </div>
   );
 };
 
