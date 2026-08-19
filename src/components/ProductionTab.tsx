@@ -7,7 +7,6 @@ import StaffTable from '@/components/production/StaffTable';
 import PromoTable from '@/components/production/PromoTable';
 import CashCountTable from '@/components/production/CashCountTable';
 import PastAccountsTable from '@/components/production/PastAccountsTable';
-import EquipmentTable from '@/components/production/EquipmentTable';
 import ProducerPicker, { type ProducerOption } from '@/components/production/ProducerPicker';
 import { confirmLeave } from '@/components/production/unsavedGuard';
 
@@ -38,13 +37,6 @@ const SECTIONS: ProductionSection[] = [
     icon: 'Megaphone',
     description: 'Продвижение и рекламные активности',
     accent: 'from-blue-500/20 to-cyan-500/10 border-blue-500/30 text-blue-400',
-  },
-  {
-    id: 'equipment',
-    label: 'Оборудование',
-    icon: 'Video',
-    description: 'Учёт техники: что свободно, что на руках',
-    accent: 'from-amber-500/20 to-orange-500/10 border-amber-500/30 text-amber-400',
   },
   {
     id: 'cash-count',
@@ -108,8 +100,7 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
           <CashCountTable viewerEmail={owner} viewerRole={isDirector && picked ? 'producer' : userRole || ''} owner={owner} />
         ) : activeSection.id === 'past-accounts' ? (
           <PastAccountsTable owner={owner} />
-        ) : activeSection.id === 'equipment' ? (
-          <EquipmentTable owner={owner} />
+
         ) : (
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
           <CardContent>
