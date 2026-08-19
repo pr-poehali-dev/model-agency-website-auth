@@ -1,6 +1,6 @@
 '''
 Продакшн: таблицы штата (операторы, модели) и промо-аккаунтов.
-GET: table=staff|promo|cash, owner=email продюсера (директор может смотреть чужой раздел)
+GET: table=staff|promo|cash|equipment, owner=email продюсера (директор смотрит чужой раздел)
 POST: save (создать/обновить строку) | delete (удалить строку), поле table как в GET
 Returns: JSON со списками строк или статусом операции.
 '''
@@ -61,6 +61,17 @@ def _resolve_owner(actor: Dict[str, Any], requested: str) -> str:
     if role == 'director' and asked:
         return asked
     return own
+
+
+def _list_equipment(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
+    cur.execute(
+        f"""SELECT id, title, kind, serial_number, status, holder, sort_order
+            FROM {SCHEMA}.production_equipment
+            WHERE LOWER(owner_email) = %s
+            ORDER BY sort_order ASC, id ASC""",
+        (owner,),
+    )
+    return {'rows': [dict(r) for r in cur.fetchall()]}
 
 
 def _list_cash(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
@@ -129,6 +140,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 return _resp(200, _list_promo(cur, owner))
             if table == 'cash':
                 return _resp(200, _list_cash(cur, owner))
+            if table == 'equipment':
+                return _resp(200, _list_equipment(cur, owner))
             return _resp(200, _list_rows(cur, owner))
 
         if method == 'POST':
@@ -136,6 +149,60 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             action = body.get('action') or 'save'
             table = (body.get('table') or 'staff').strip().lower()
             owner = _resolve_owner(actor, body.get('owner') or '')
+
+            if table == 'equipment':
+                if action == 'save':
+                    status = (body.get('status') or 'free').strip().lower()
+                    if status not in ('free', 'busy'):
+                        status = 'free'
+                    values = (
+                        (body.get('title') or '').strip(),
+                        (body.get('kind') or '').strip(),
+                        (body.get('serial_number') or '').strip(),
+                        status,
+                        (body.get('holder') or '').strip(),
+                    )
+                    row_id = body.get('id')
+                    if row_id:
+                        cur.execute(
+                            f"""UPDATE {SCHEMA}.production_equipment
+                                SET title = %s, kind = %s, serial_number = %s,
+                                    status = %s, holder = %s, updated_at = NOW()
+                                WHERE id = %s AND LOWER(owner_email) = %s RETURNING id""",
+                            (*values, int(row_id), owner),
+                        )
+                        saved = cur.fetchone()
+                        if not saved:
+                            return _resp(404, {'error': 'row not found'})
+                        conn.commit()
+                        return _resp(200, {'success': True, 'id': saved['id']})
+
+                    cur.execute(
+                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_equipment WHERE LOWER(owner_email) = %s",
+                        (owner,),
+                    )
+                    next_order = cur.fetchone()['next']
+                    cur.execute(
+                        f"""INSERT INTO {SCHEMA}.production_equipment
+                            (title, kind, serial_number, status, holder, sort_order, created_by, owner_email)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                        (*values, next_order, actor.get('email') or '', owner),
+                    )
+                    conn.commit()
+                    return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
+
+                if action == 'delete':
+                    row_id = body.get('id')
+                    if not row_id:
+                        return _resp(400, {'error': 'id required'})
+                    cur.execute(
+                        f"DELETE FROM {SCHEMA}.production_equipment WHERE id = %s AND LOWER(owner_email) = %s",
+                        (int(row_id), owner),
+                    )
+                    conn.commit()
+                    return _resp(200, {'success': True})
+
+                return _resp(400, {'error': 'unknown action'})
 
             if table == 'cash':
                 if action == 'save':
