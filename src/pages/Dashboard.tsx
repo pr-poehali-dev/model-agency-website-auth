@@ -25,6 +25,7 @@ import PairFinances from '@/components/PairFinances';
 import SettingsTab from '@/components/SettingsTab';
 import TasksTab from '@/components/TasksTab';
 import ProductionTab from '@/components/ProductionTab';
+import { confirmLeave } from '@/components/production/unsavedGuard';
 import { TasksProvider } from '@/context/TasksContext';
 
 const models = [
@@ -332,6 +333,7 @@ const Dashboard = () => {
   });
 
   const handleTabChange = (tabId: string) => {
+    if (activeTab === 'production' && tabId !== 'production' && !confirmLeave()) return;
     setActiveTab(tabId);
   };
 

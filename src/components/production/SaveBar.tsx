@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import { setPendingChanges } from './unsavedGuard';
 
 interface SaveBarProps {
   dirtyCount: number;
@@ -9,6 +11,21 @@ interface SaveBarProps {
 }
 
 const SaveBar = ({ dirtyCount, saving, onSave, onReset }: SaveBarProps) => {
+  useEffect(() => {
+    setPendingChanges(dirtyCount);
+    return () => setPendingChanges(0);
+  }, [dirtyCount]);
+
+  useEffect(() => {
+    if (dirtyCount === 0) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirtyCount]);
+
   if (dirtyCount === 0) return null;
 
   return (

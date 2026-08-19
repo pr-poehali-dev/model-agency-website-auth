@@ -8,6 +8,7 @@ import PromoTable from '@/components/production/PromoTable';
 import CashCountTable from '@/components/production/CashCountTable';
 import PastAccountsTable from '@/components/production/PastAccountsTable';
 import ProducerPicker, { type ProducerOption } from '@/components/production/ProducerPicker';
+import { confirmLeave } from '@/components/production/unsavedGuard';
 
 interface ProductionTabProps {
   userRole?: UserRole;
@@ -85,7 +86,7 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
     return (
       <div className="animate-fade-in space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setActiveSection(null)}>
+          <Button variant="ghost" size="sm" onClick={() => confirmLeave() && setActiveSection(null)}>
             <Icon name="ArrowLeft" size={16} className="mr-2" />
             Продакшн
           </Button>
@@ -126,7 +127,7 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
   return (
     <div className="animate-fade-in space-y-6">
       {isDirector && (
-        <Button variant="ghost" size="sm" onClick={() => setPicked(null)}>
+        <Button variant="ghost" size="sm" onClick={() => confirmLeave() && setPicked(null)}>
           <Icon name="ArrowLeft" size={16} className="mr-2" />
           Все продюсеры
         </Button>
