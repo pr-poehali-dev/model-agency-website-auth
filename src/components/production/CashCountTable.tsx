@@ -198,7 +198,14 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-background/40">
+                  <tr
+                    key={row.id}
+                    className={
+                      employees.find((e) => e.name === row.employee_name)?.role === 'producer'
+                        ? 'bg-primary/10 hover:bg-primary/15'
+                        : 'hover:bg-background/40'
+                    }
+                  >
                     <td className="border border-border/40 p-0">
                       <Select
                         value={row.employee_name || ''}
@@ -223,6 +230,9 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                             employees.map((emp) => (
                               <SelectItem key={emp.email} value={emp.name}>
                                 {emp.name}
+                                {emp.role === 'producer' && (
+                                  <span className="ml-2 text-xs text-primary">продюсер</span>
+                                )}
                               </SelectItem>
                             ))
                           )}
