@@ -164,18 +164,6 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
           </button>
         ))}
       </div>
-
-      <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-foreground font-heading">
-            <Icon name="Clapperboard" size={20} className="text-primary" />
-            Раздел в работе
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground"></p>
-        </CardContent>
-      </Card>
     </div>
   );
 };
