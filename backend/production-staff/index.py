@@ -1,0 +1,146 @@
+'''
+Штат продакшна: таблицы операторов и моделей с контактами.
+GET: action=list — все строки, сгруппированные по типу (operators/models)
+POST: save (создать/обновить строку) | delete (удалить строку)
+Returns: JSON со списками строк или статусом операции.
+'''
+
+import json
+from typing import Dict, Any, List
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+SCHEMA = 't_p35405502_model_agency_website'
+KINDS = ('operator', 'model')
+
+CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, X-User-Email, X-User-Id',
+    'Access-Control-Max-Age': '86400',
+}
+
+
+def _resp(status: int, body: Any) -> Dict[str, Any]:
+    return {
+        'statusCode': status,
+        'headers': {**CORS_HEADERS, 'Content-Type': 'application/json'},
+        'body': json.dumps(body, default=str, ensure_ascii=False),
+    }
+
+
+def _get_actor(headers: Dict[str, Any], conn) -> Dict[str, Any]:
+    email = (headers.get('X-User-Email') or headers.get('x-user-email') or '').strip().lower()
+    token = headers.get('X-Auth-Token') or headers.get('x-auth-token') or ''
+    cur = conn.cursor()
+    user = None
+    if token:
+        cur.execute(
+            f"""SELECT u.id, u.email, u.role, u.full_name FROM {SCHEMA}.auth_tokens at
+                JOIN {SCHEMA}.users u ON at.user_id = u.id
+                WHERE at.token = %s AND at.expires_at > NOW() AND at.is_active = TRUE AND u.is_active = TRUE""",
+            (token,),
+        )
+        user = cur.fetchone()
+    if not user and email:
+        cur.execute(
+            f"SELECT id, email, role, full_name FROM {SCHEMA}.users WHERE LOWER(email) = %s AND is_active = TRUE",
+            (email,),
+        )
+        user = cur.fetchone()
+    cur.close()
+    return dict(user) if user else {}
+
+
+def _list_rows(cur) -> Dict[str, List[Dict[str, Any]]]:
+    cur.execute(
+        f"""SELECT id, kind, full_name, birth_date, phone, telegram, google_account, sort_order
+            FROM {SCHEMA}.production_staff
+            ORDER BY sort_order ASC, id ASC"""
+    )
+    rows = [dict(r) for r in cur.fetchall()]
+    return {
+        'operators': [r for r in rows if r['kind'] == 'operator'],
+        'models': [r for r in rows if r['kind'] == 'model'],
+    }
+
+
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    method = event.get('httpMethod', 'GET')
+    if method == 'OPTIONS':
+        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
+
+    headers = event.get('headers') or {}
+    conn = psycopg2.connect(os.environ['DATABASE_URL'], cursor_factory=RealDictCursor)
+    try:
+        actor = _get_actor(headers, conn)
+        role = (actor.get('role') or '').lower()
+        if role not in ('director', 'producer'):
+            return _resp(403, {'error': 'forbidden'})
+
+        cur = conn.cursor()
+
+        if method == 'GET':
+            return _resp(200, _list_rows(cur))
+
+        if method == 'POST':
+            body = json.loads(event.get('body') or '{}')
+            action = body.get('action') or 'save'
+
+            if action == 'save':
+                kind = (body.get('kind') or '').strip().lower()
+                if kind not in KINDS:
+                    return _resp(400, {'error': 'kind must be operator or model'})
+                row_id = body.get('id')
+                values = (
+                    (body.get('full_name') or '').strip(),
+                    (body.get('birth_date') or '').strip(),
+                    (body.get('phone') or '').strip(),
+                    (body.get('telegram') or '').strip(),
+                    (body.get('google_account') or '').strip(),
+                )
+                if row_id:
+                    cur.execute(
+                        f"""UPDATE {SCHEMA}.production_staff
+                            SET full_name = %s, birth_date = %s, phone = %s,
+                                telegram = %s, google_account = %s, updated_at = NOW()
+                            WHERE id = %s RETURNING id""",
+                        (*values, int(row_id)),
+                    )
+                    saved = cur.fetchone()
+                    if not saved:
+                        return _resp(404, {'error': 'row not found'})
+                    conn.commit()
+                    return _resp(200, {'success': True, 'id': saved['id']})
+
+                cur.execute(
+                    f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_staff WHERE kind = %s",
+                    (kind,),
+                )
+                next_order = cur.fetchone()['next']
+                cur.execute(
+                    f"""INSERT INTO {SCHEMA}.production_staff
+                        (kind, full_name, birth_date, phone, telegram, google_account, sort_order, created_by)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                    (kind, *values, next_order, actor.get('email') or ''),
+                )
+                conn.commit()
+                return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
+
+            if action == 'delete':
+                row_id = body.get('id')
+                if not row_id:
+                    return _resp(400, {'error': 'id required'})
+                cur.execute(
+                    f"DELETE FROM {SCHEMA}.production_staff WHERE id = %s",
+                    (int(row_id),),
+                )
+                conn.commit()
+                return _resp(200, {'success': True})
+
+            return _resp(400, {'error': 'unknown action'})
+
+        return _resp(405, {'error': 'method not allowed'})
+    finally:
+        conn.close()

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import type { UserRole } from '@/lib/permissions';
+import StaffTable from '@/components/production/StaffTable';
 
 interface ProductionTabProps {
   userRole?: UserRole;
@@ -76,6 +77,9 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
           <p className="text-sm text-muted-foreground mt-1">{activeSection.description}</p>
         </div>
 
+        {activeSection.id === 'staff' ? (
+          <StaffTable />
+        ) : (
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
           <CardContent>
             <div className="flex flex-col items-center justify-center py-14 text-center">
@@ -90,6 +94,7 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
     );
   }
