@@ -2,6 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 import { authenticatedFetchNoCreds } from '@/lib/api';
@@ -30,6 +37,8 @@ const PLATFORM_STYLES: Record<string, string> = {
   camsoda: 'bg-sky-500/20 border-sky-500/40 text-sky-200',
   cam4: 'bg-orange-500/20 border-orange-500/40 text-orange-200',
 };
+
+const PLATFORMS = ['Mail', 'Chaturbate', 'Stripchat', 'CamSoda', 'Cam4', 'BongaCams', 'MyFreeCams'];
 
 const platformStyle = (platform: string) =>
   PLATFORM_STYLES[platform.trim().toLowerCase()] || 'bg-secondary/60 border-border/50 text-foreground';
@@ -139,15 +148,29 @@ const PastAccountsTable = () => {
                 {person.accounts.map((account) => (
                   <div key={account.id} className="rounded-lg border border-border/50 overflow-hidden">
                     <div className="flex items-center gap-1 pr-1">
-                      <Input
+                      <Select
                         value={account.platform || ''}
-                        placeholder="Площадка"
-                        onChange={(e) =>
-                          updateAccountLocal(person.id, account.id, { platform: e.target.value })
-                        }
-                        onBlur={() => run({ action: 'save_account', ...account }, 'Не удалось сохранить')}
-                        className={`h-9 rounded-none border-0 border-b text-center font-medium italic focus-visible:ring-1 focus-visible:ring-primary/40 ${platformStyle(account.platform)}`}
-                      />
+                        onValueChange={(value) => {
+                          updateAccountLocal(person.id, account.id, { platform: value });
+                          run(
+                            { action: 'save_account', ...account, platform: value },
+                            'Не удалось сохранить',
+                          );
+                        }}
+                      >
+                        <SelectTrigger
+                          className={`h-9 flex-1 rounded-none border-0 border-b font-medium italic justify-center gap-2 focus:ring-1 focus:ring-primary/40 ${platformStyle(account.platform)}`}
+                        >
+                          <SelectValue placeholder="Площадка" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PLATFORMS.map((name) => (
+                            <SelectItem key={name} value={name}>
+                              {name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button
                         variant="ghost"
                         size="sm"
