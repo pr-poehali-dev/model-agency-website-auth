@@ -59,7 +59,7 @@ const SECTIONS: ProductionSection[] = [
   },
 ];
 
-const ProductionTab = ({ userRole }: ProductionTabProps) => {
+const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
   const isDirector = userRole === 'director';
   const [activeSection, setActiveSection] = useState<ProductionSection | null>(null);
 
@@ -85,7 +85,7 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
         ) : activeSection.id === 'promo' ? (
           <PromoTable />
         ) : activeSection.id === 'cash-count' ? (
-          <CashCountTable />
+          <CashCountTable viewerEmail={userEmail || ''} viewerRole={userRole || ''} />
         ) : activeSection.id === 'past-accounts' ? (
           <PastAccountsTable />
         ) : (

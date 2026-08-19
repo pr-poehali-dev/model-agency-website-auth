@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { authenticatedFetchNoCreds } from '@/lib/api';
+import { useCashEmployees } from './useCashEmployees';
 import funcUrls from '../../../backend/func2url.json';
 
 const CASH_URL = (funcUrls as Record<string, string>)['production-staff'];
@@ -26,8 +34,14 @@ const NOMINALS = [
 
 const rub = (n: number) => `${n.toLocaleString('ru-RU')} ₽`;
 
-const CashCountTable = () => {
+interface CashCountTableProps {
+  viewerEmail: string;
+  viewerRole: string;
+}
+
+const CashCountTable = ({ viewerEmail, viewerRole }: CashCountTableProps) => {
   const { toast } = useToast();
+  const { employees } = useCashEmployees(viewerEmail, viewerRole);
   const [rows, setRows] = useState<CashRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -166,13 +180,35 @@ const CashCountTable = () => {
                 {rows.map((row) => (
                   <tr key={row.id} className="hover:bg-background/40">
                     <td className="border border-border/40 p-0">
-                      <Input
+                      <Select
                         value={row.employee_name || ''}
-                        placeholder="Имя"
-                        onChange={(e) => updateLocal(row.id, { employee_name: e.target.value })}
-                        onBlur={() => saveRow(row)}
-                        className="h-10 rounded-none border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/40"
-                      />
+                        onValueChange={(value) => {
+                          const picked = employees.find((e) => e.name === value);
+                          const patch = {
+                            employee_name: value,
+                            salary: picked ? picked.salary : row.salary,
+                          };
+                          updateLocal(row.id, patch);
+                          saveRow({ ...row, ...patch });
+                        }}
+                      >
+                        <SelectTrigger className="h-10 rounded-none border-0 bg-transparent focus:ring-1 focus:ring-primary/40">
+                          <SelectValue placeholder="Выбери сотрудника" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees.length === 0 ? (
+                            <div className="px-2 py-3 text-sm text-muted-foreground">
+                              Нет сотрудников
+                            </div>
+                          ) : (
+                            employees.map((emp) => (
+                              <SelectItem key={emp.email} value={emp.name}>
+                                {emp.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     </td>
                     {NOMINALS.map((n) => (
                       <td key={n.key} className="border border-border/40 p-0">
@@ -182,8 +218,8 @@ const CashCountTable = () => {
                     <td className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground">
                       {rub(rowTotal(row))}
                     </td>
-                    <td className="border border-border/40 bg-emerald-500/5 p-0">
-                      {numberCell(row, 'salary')}
+                    <td className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground">
+                      {rub(Number(row.salary) || 0)}
                     </td>
                     <td className="border border-border/40 text-center">
                       <Button
