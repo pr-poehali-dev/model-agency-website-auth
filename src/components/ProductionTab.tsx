@@ -19,17 +19,17 @@ interface ProductionSection {
 
 const SECTIONS: ProductionSection[] = [
   {
-    id: 'shootings',
-    label: 'Съёмки',
-    icon: 'Camera',
-    description: 'График съёмок: дата, модель, оператор, локация',
+    id: 'staff',
+    label: 'Штат',
+    icon: 'Users',
+    description: 'Состав команды: модели, операторы, контент-мейкеры',
     accent: 'from-purple-500/20 to-fuchsia-500/10 border-purple-500/30 text-purple-400',
   },
   {
-    id: 'content-plan',
-    label: 'Контент-план',
-    icon: 'CalendarRange',
-    description: 'Что снимаем и публикуем по периодам',
+    id: 'promo',
+    label: 'Промо',
+    icon: 'Megaphone',
+    description: 'Продвижение и рекламные активности',
     accent: 'from-blue-500/20 to-cyan-500/10 border-blue-500/30 text-blue-400',
   },
   {
@@ -40,17 +40,17 @@ const SECTIONS: ProductionSection[] = [
     accent: 'from-amber-500/20 to-orange-500/10 border-amber-500/30 text-amber-400',
   },
   {
-    id: 'locations',
-    label: 'Локации',
-    icon: 'MapPin',
-    description: 'Студии и площадки, занятость по датам',
+    id: 'cash-count',
+    label: 'Подсчёт купюр',
+    icon: 'Banknote',
+    description: 'Пересчёт наличных и сверка сумм',
     accent: 'from-emerald-500/20 to-green-500/10 border-emerald-500/30 text-emerald-400',
   },
   {
-    id: 'archive',
-    label: 'Архив материалов',
-    icon: 'FolderOpen',
-    description: 'Готовый отснятый и смонтированный контент',
+    id: 'past-accounts',
+    label: 'Прошлые аккаунты',
+    icon: 'Archive',
+    description: 'История ранее использованных аккаунтов',
     accent: 'from-rose-500/20 to-pink-500/10 border-rose-500/30 text-rose-400',
   },
 ];
