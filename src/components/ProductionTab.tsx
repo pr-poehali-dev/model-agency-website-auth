@@ -136,10 +136,7 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Меню подразделов готово. Выбери любой пункт и скажи, что должно быть внутри —
-            наполню данными.
-          </p>
+          <p className="text-sm text-muted-foreground"></p>
         </CardContent>
       </Card>
     </div>
