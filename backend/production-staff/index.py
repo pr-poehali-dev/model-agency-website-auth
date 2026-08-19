@@ -1,7 +1,7 @@
 '''
-Штат продакшна: таблицы операторов и моделей с контактами.
-GET: action=list — все строки, сгруппированные по типу (operators/models)
-POST: save (создать/обновить строку) | delete (удалить строку)
+Продакшн: таблицы штата (операторы, модели) и промо-аккаунтов.
+GET: table=staff (по умолчанию) — операторы и модели; table=promo — промо-аккаунты
+POST: save (создать/обновить строку) | delete (удалить строку), поле table как в GET
 Returns: JSON со списками строк или статусом операции.
 '''
 
@@ -53,6 +53,15 @@ def _get_actor(headers: Dict[str, Any], conn) -> Dict[str, Any]:
     return dict(user) if user else {}
 
 
+def _list_promo(cur) -> Dict[str, List[Dict[str, Any]]]:
+    cur.execute(
+        f"""SELECT id, login, password, sign_name, sign_date, model_name, sort_order
+            FROM {SCHEMA}.production_promo
+            ORDER BY sort_order ASC, id ASC"""
+    )
+    return {'rows': [dict(r) for r in cur.fetchall()]}
+
+
 def _list_rows(cur) -> Dict[str, List[Dict[str, Any]]]:
     cur.execute(
         f"""SELECT id, kind, full_name, birth_date, phone, telegram, google_account, sort_order
@@ -81,12 +90,67 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         cur = conn.cursor()
 
+        params = event.get('queryStringParameters') or {}
+
         if method == 'GET':
+            if (params.get('table') or 'staff') == 'promo':
+                return _resp(200, _list_promo(cur))
             return _resp(200, _list_rows(cur))
 
         if method == 'POST':
             body = json.loads(event.get('body') or '{}')
             action = body.get('action') or 'save'
+            table = (body.get('table') or 'staff').strip().lower()
+
+            if table == 'promo':
+                if action == 'save':
+                    values = (
+                        (body.get('login') or '').strip(),
+                        (body.get('password') or '').strip(),
+                        (body.get('sign_name') or '').strip(),
+                        (body.get('sign_date') or '').strip(),
+                        (body.get('model_name') or '').strip(),
+                    )
+                    row_id = body.get('id')
+                    if row_id:
+                        cur.execute(
+                            f"""UPDATE {SCHEMA}.production_promo
+                                SET login = %s, password = %s, sign_name = %s,
+                                    sign_date = %s, model_name = %s, updated_at = NOW()
+                                WHERE id = %s RETURNING id""",
+                            (*values, int(row_id)),
+                        )
+                        saved = cur.fetchone()
+                        if not saved:
+                            return _resp(404, {'error': 'row not found'})
+                        conn.commit()
+                        return _resp(200, {'success': True, 'id': saved['id']})
+
+                    cur.execute(
+                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_promo"
+                    )
+                    next_order = cur.fetchone()['next']
+                    cur.execute(
+                        f"""INSERT INTO {SCHEMA}.production_promo
+                            (login, password, sign_name, sign_date, model_name, sort_order, created_by)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                        (*values, next_order, actor.get('email') or ''),
+                    )
+                    conn.commit()
+                    return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
+
+                if action == 'delete':
+                    row_id = body.get('id')
+                    if not row_id:
+                        return _resp(400, {'error': 'id required'})
+                    cur.execute(
+                        f"DELETE FROM {SCHEMA}.production_promo WHERE id = %s",
+                        (int(row_id),),
+                    )
+                    conn.commit()
+                    return _resp(200, {'success': True})
+
+                return _resp(400, {'error': 'unknown action'})
 
             if action == 'save':
                 kind = (body.get('kind') or '').strip().lower()
