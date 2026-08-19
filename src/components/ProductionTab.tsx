@@ -6,6 +6,7 @@ import type { UserRole } from '@/lib/permissions';
 import StaffTable from '@/components/production/StaffTable';
 import PromoTable from '@/components/production/PromoTable';
 import CashCountTable from '@/components/production/CashCountTable';
+import PastAccountsTable from '@/components/production/PastAccountsTable';
 
 interface ProductionTabProps {
   userRole?: UserRole;
@@ -85,6 +86,8 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
           <PromoTable />
         ) : activeSection.id === 'cash-count' ? (
           <CashCountTable />
+        ) : activeSection.id === 'past-accounts' ? (
+          <PastAccountsTable />
         ) : (
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
           <CardContent>
