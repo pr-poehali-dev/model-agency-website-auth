@@ -5,6 +5,7 @@ import Icon from '@/components/ui/icon';
 import type { UserRole } from '@/lib/permissions';
 import StaffTable from '@/components/production/StaffTable';
 import PromoTable from '@/components/production/PromoTable';
+import CashCountTable from '@/components/production/CashCountTable';
 
 interface ProductionTabProps {
   userRole?: UserRole;
@@ -82,6 +83,8 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
           <StaffTable />
         ) : activeSection.id === 'promo' ? (
           <PromoTable />
+        ) : activeSection.id === 'cash-count' ? (
+          <CashCountTable />
         ) : (
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
           <CardContent>
