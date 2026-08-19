@@ -67,6 +67,8 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string) => {
       const rateData = await rateRes.json();
       const rate = (rateData?.rate || 0) - RATE_OFFSET;
 
+      const self = (viewerEmail || '').toLowerCase();
+
       let allowed: string[] | null = null;
       if (isProducer && assignRes) {
         const assignments: Assignment[] = await assignRes.json();
@@ -76,6 +78,7 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string) => {
               .filter((e): e is string => Boolean(e))
               .map((e) => e.toLowerCase())
           : [];
+        allowed.push(self);
       }
 
       const salaryOf = (email: string, role: string): number => {
@@ -94,7 +97,11 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string) => {
 
       const list = (Array.isArray(users) ? users : [])
         .filter((u) => u.isActive !== false)
-        .filter((u) => ['operator', 'content_maker', 'solo_maker', 'model'].includes(u.role))
+        .filter(
+          (u) =>
+            ['operator', 'content_maker', 'solo_maker', 'model'].includes(u.role) ||
+            u.email.toLowerCase() === self,
+        )
         .filter((u) => !allowed || allowed.includes(u.email.toLowerCase()))
         .map((u) => ({
           email: u.email,
