@@ -24,6 +24,7 @@ import ModelFinances from '@/components/ModelFinances';
 import PairFinances from '@/components/PairFinances';
 import SettingsTab from '@/components/SettingsTab';
 import TasksTab from '@/components/TasksTab';
+import ProductionTab from '@/components/ProductionTab';
 import { TasksProvider } from '@/context/TasksContext';
 
 const models = [
@@ -341,6 +342,7 @@ const Dashboard = () => {
     { id: 'checks', label: 'Чеки', icon: 'Receipt', permission: PERMISSIONS.VIEW_CHECKS },
     { id: 'schedule', label: 'Расписание', icon: 'Calendar', permission: PERMISSIONS.VIEW_SCHEDULE },
     { id: 'tasks', label: 'Задачи', icon: 'ClipboardList', permission: PERMISSIONS.VIEW_TASKS },
+    { id: 'production', label: 'Продакшн', icon: 'Clapperboard', permission: PERMISSIONS.VIEW_PRODUCTION },
     { id: 'settings', label: 'Настройки', icon: 'Settings', permission: PERMISSIONS.MANAGE_USERS },
 
     { id: 'users', label: 'Пользователи', icon: 'UserCog', permission: PERMISSIONS.MANAGE_USERS },
@@ -433,6 +435,8 @@ const Dashboard = () => {
         />;
       case 'tasks':
         return <TasksTab userRole={userRole || undefined} userEmail={userEmail} />;
+      case 'production':
+        return <ProductionTab userRole={userRole || undefined} userEmail={userEmail} />;
       case 'settings':
         return <SettingsTab userEmail={userEmail} userRole={userRole || undefined} />;
 
