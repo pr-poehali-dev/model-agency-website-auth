@@ -114,10 +114,7 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
                 <Icon name={activeSection.icon} size={36} className="text-primary" />
               </div>
               <p className="text-foreground font-medium mb-1">Подраздел в работе</p>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Расскажи, что нужно внутри «{activeSection.label}» — соберу таблицы, карточки
-                и нужные поля.
-              </p>
+              <p className="text-sm text-muted-foreground max-w-md"></p>
             </div>
           </CardContent>
         </Card>
