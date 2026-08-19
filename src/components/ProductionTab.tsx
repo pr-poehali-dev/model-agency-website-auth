@@ -123,8 +123,7 @@ const ProductionTab = ({ userRole }: ProductionTabProps) => {
                 className="mt-1 opacity-50 transition-transform group-hover:translate-x-1 group-hover:opacity-100"
               />
             </div>
-            <div className="text-base font-semibold text-foreground mb-1">{section.label}</div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{section.description}</p>
+            <div className="text-base font-semibold text-foreground">{section.label}</div>
           </button>
         ))}
       </div>
