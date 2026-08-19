@@ -38,7 +38,7 @@ const PLATFORM_STYLES: Record<string, string> = {
   cam4: 'bg-orange-500/20 border-orange-500/40 text-orange-200',
 };
 
-const PLATFORMS = ['Mail', 'Chaturbate', 'Stripchat', 'CamSoda', 'Cam4', 'BongaCams', 'MyFreeCams'];
+const PLATFORMS = ['Mail', 'Chaturbate', 'Stripchat', 'CamSoda', 'Cam4', 'MyFreeCams'];
 
 const platformStyle = (platform: string) =>
   PLATFORM_STYLES[platform.trim().toLowerCase()] || 'bg-secondary/60 border-border/50 text-foreground';
