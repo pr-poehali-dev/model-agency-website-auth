@@ -64,7 +64,11 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const PromoTable = () => {
+interface PromoTableProps {
+  owner: string;
+}
+
+const PromoTable = ({ owner }: PromoTableProps) => {
   const { toast } = useToast();
   const [rows, setRows] = useState<PromoRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +76,7 @@ const PromoTable = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authenticatedFetchNoCreds(`${PROMO_URL}?table=promo`);
+      const res = await authenticatedFetchNoCreds(`${PROMO_URL}?table=promo&owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setRows(Array.isArray(data.rows) ? data.rows : []);
     } catch {
@@ -80,7 +84,7 @@ const PromoTable = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, owner]);
 
   useEffect(() => {
     load();
@@ -90,7 +94,7 @@ const PromoTable = () => {
     const res = await authenticatedFetchNoCreds(PROMO_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ table: 'promo', ...payload }),
+      body: JSON.stringify({ table: 'promo', owner, ...payload }),
     });
     if (!res.ok) throw new Error('Ошибка');
   };

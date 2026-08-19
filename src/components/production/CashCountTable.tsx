@@ -37,9 +37,10 @@ const rub = (n: number) => `${n.toLocaleString('ru-RU')} ₽`;
 interface CashCountTableProps {
   viewerEmail: string;
   viewerRole: string;
+  owner: string;
 }
 
-const CashCountTable = ({ viewerEmail, viewerRole }: CashCountTableProps) => {
+const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps) => {
   const { toast } = useToast();
   const { employees } = useCashEmployees(viewerEmail, viewerRole);
   const [rows, setRows] = useState<CashRow[]>([]);
@@ -48,7 +49,7 @@ const CashCountTable = ({ viewerEmail, viewerRole }: CashCountTableProps) => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authenticatedFetchNoCreds(`${CASH_URL}?table=cash`);
+      const res = await authenticatedFetchNoCreds(`${CASH_URL}?table=cash&owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setRows(Array.isArray(data.rows) ? data.rows : []);
     } catch {
@@ -56,7 +57,7 @@ const CashCountTable = ({ viewerEmail, viewerRole }: CashCountTableProps) => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, owner]);
 
   useEffect(() => {
     load();
@@ -66,7 +67,7 @@ const CashCountTable = ({ viewerEmail, viewerRole }: CashCountTableProps) => {
     const res = await authenticatedFetchNoCreds(CASH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ table: 'cash', ...payload }),
+      body: JSON.stringify({ table: 'cash', owner, ...payload }),
     });
     if (!res.ok) throw new Error('Ошибка');
   };

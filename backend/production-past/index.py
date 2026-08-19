@@ -1,6 +1,6 @@
 '''
 Прошлые аккаунты продакшна: карточки моделей и их аккаунты на площадках.
-GET: список моделей с вложенными аккаунтами
+GET: список моделей с вложенными аккаунтами, owner=email продюсера (директор смотрит любой)
 POST: save_person | delete_person | save_account | delete_account
 Returns: JSON со списком моделей или статусом операции.
 '''
@@ -52,9 +52,21 @@ def _get_actor(headers: Dict[str, Any], conn) -> Dict[str, Any]:
     return dict(user) if user else {}
 
 
-def _list_persons(cur) -> Dict[str, List[Dict[str, Any]]]:
+def _resolve_owner(actor: Dict[str, Any], requested: str) -> str:
+    """Чей раздел открываем: продюсер видит только свой, директор — любой."""
+    own = (actor.get('email') or '').strip().lower()
+    role = (actor.get('role') or '').lower()
+    asked = (requested or '').strip().lower()
+    if role == 'director' and asked:
+        return asked
+    return own
+
+
+def _list_persons(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
     cur.execute(
-        f"SELECT id, name, sort_order FROM {SCHEMA}.production_past_persons ORDER BY sort_order ASC, id ASC"
+        f"""SELECT id, name, sort_order FROM {SCHEMA}.production_past_persons
+            WHERE LOWER(owner_email) = %s ORDER BY sort_order ASC, id ASC""",
+        (owner,),
     )
     persons = [dict(r) for r in cur.fetchall()]
     cur.execute(
@@ -82,20 +94,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         cur = conn.cursor()
 
+        params = event.get('queryStringParameters') or {}
+
         if method == 'GET':
-            return _resp(200, _list_persons(cur))
+            owner = _resolve_owner(actor, params.get('owner') or '')
+            return _resp(200, _list_persons(cur, owner))
 
         if method == 'POST':
             body = json.loads(event.get('body') or '{}')
             action = body.get('action') or ''
+            owner = _resolve_owner(actor, body.get('owner') or '')
 
             if action == 'save_person':
                 name = (body.get('name') or '').strip()
                 person_id = body.get('id')
                 if person_id:
                     cur.execute(
-                        f"UPDATE {SCHEMA}.production_past_persons SET name = %s, updated_at = NOW() WHERE id = %s RETURNING id",
-                        (name, int(person_id)),
+                        f"UPDATE {SCHEMA}.production_past_persons SET name = %s, updated_at = NOW() WHERE id = %s AND LOWER(owner_email) = %s RETURNING id",
+                        (name, int(person_id), owner),
                     )
                     saved = cur.fetchone()
                     if not saved:
@@ -104,12 +120,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return _resp(200, {'success': True, 'id': saved['id']})
 
                 cur.execute(
-                    f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_past_persons"
+                    f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_past_persons WHERE LOWER(owner_email) = %s",
+                    (owner,),
                 )
                 next_order = cur.fetchone()['next']
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.production_past_persons (name, sort_order, created_by) VALUES (%s, %s, %s) RETURNING id",
-                    (name, next_order, actor.get('email') or ''),
+                    f"INSERT INTO {SCHEMA}.production_past_persons (name, sort_order, created_by, owner_email) VALUES (%s, %s, %s, %s) RETURNING id",
+                    (name, next_order, actor.get('email') or '', owner),
                 )
                 conn.commit()
                 return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
@@ -126,8 +143,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cur.execute(
                         f"""UPDATE {SCHEMA}.production_past_accounts
                             SET platform = %s, login = %s, password = %s, updated_at = NOW()
-                            WHERE id = %s RETURNING id""",
-                        (*values, int(account_id)),
+                            WHERE id = %s AND person_id IN (
+                                SELECT id FROM {SCHEMA}.production_past_persons WHERE LOWER(owner_email) = %s
+                            ) RETURNING id""",
+                        (*values, int(account_id), owner),
                     )
                     saved = cur.fetchone()
                     if not saved:
@@ -137,6 +156,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
                 if not person_id:
                     return _resp(400, {'error': 'person_id required'})
+                cur.execute(
+                    f"SELECT id FROM {SCHEMA}.production_past_persons WHERE id = %s AND LOWER(owner_email) = %s",
+                    (int(person_id), owner),
+                )
+                if not cur.fetchone():
+                    return _resp(403, {'error': 'forbidden'})
                 cur.execute(
                     f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_past_accounts WHERE person_id = %s",
                     (int(person_id),),
@@ -157,6 +182,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return _resp(400, {'error': 'id required'})
                 if action == 'delete_person':
                     cur.execute(
+                        f"SELECT id FROM {SCHEMA}.production_past_persons WHERE id = %s AND LOWER(owner_email) = %s",
+                        (int(row_id), owner),
+                    )
+                    if not cur.fetchone():
+                        return _resp(403, {'error': 'forbidden'})
+                    cur.execute(
                         f"DELETE FROM {SCHEMA}.production_past_accounts WHERE person_id = %s",
                         (int(row_id),),
                     )
@@ -166,8 +197,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     )
                 else:
                     cur.execute(
-                        f"DELETE FROM {SCHEMA}.production_past_accounts WHERE id = %s",
-                        (int(row_id),),
+                        f"""DELETE FROM {SCHEMA}.production_past_accounts
+                            WHERE id = %s AND person_id IN (
+                                SELECT id FROM {SCHEMA}.production_past_persons WHERE LOWER(owner_email) = %s
+                            )""",
+                        (int(row_id), owner),
                     )
                 conn.commit()
                 return _resp(200, {'success': True})

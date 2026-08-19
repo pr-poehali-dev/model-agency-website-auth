@@ -7,6 +7,7 @@ import StaffTable from '@/components/production/StaffTable';
 import PromoTable from '@/components/production/PromoTable';
 import CashCountTable from '@/components/production/CashCountTable';
 import PastAccountsTable from '@/components/production/PastAccountsTable';
+import ProducerPicker, { type ProducerOption } from '@/components/production/ProducerPicker';
 
 interface ProductionTabProps {
   userRole?: UserRole;
@@ -62,6 +63,23 @@ const SECTIONS: ProductionSection[] = [
 const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
   const isDirector = userRole === 'director';
   const [activeSection, setActiveSection] = useState<ProductionSection | null>(null);
+  const [picked, setPicked] = useState<ProducerOption | null>(null);
+
+  const owner = isDirector ? picked?.email || '' : userEmail || '';
+
+  if (isDirector && !picked) {
+    return (
+      <div className="animate-fade-in space-y-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Продакшн</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Выбери, чей продакшн открыть
+          </p>
+        </div>
+        <ProducerPicker directorEmail={userEmail || ''} onPick={setPicked} />
+      </div>
+    );
+  }
 
   if (activeSection) {
     return (
@@ -81,13 +99,13 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
         </div>
 
         {activeSection.id === 'staff' ? (
-          <StaffTable />
+          <StaffTable owner={owner} />
         ) : activeSection.id === 'promo' ? (
-          <PromoTable />
+          <PromoTable owner={owner} />
         ) : activeSection.id === 'cash-count' ? (
-          <CashCountTable viewerEmail={userEmail || ''} viewerRole={userRole || ''} />
+          <CashCountTable viewerEmail={owner} viewerRole={isDirector && picked ? 'producer' : userRole || ''} owner={owner} />
         ) : activeSection.id === 'past-accounts' ? (
-          <PastAccountsTable />
+          <PastAccountsTable owner={owner} />
         ) : (
         <Card className="border-border/50 bg-secondary/30 backdrop-blur-sm">
           <CardContent>
@@ -110,11 +128,18 @@ const ProductionTab = ({ userRole, userEmail }: ProductionTabProps) => {
 
   return (
     <div className="animate-fade-in space-y-6">
+      {isDirector && (
+        <Button variant="ghost" size="sm" onClick={() => setPicked(null)}>
+          <Icon name="ArrowLeft" size={16} className="mr-2" />
+          Все продюсеры
+        </Button>
+      )}
+
       <div>
         <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Продакшн</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {isDirector
-            ? 'Управление производством контента'
+          {isDirector && picked
+            ? `Раздел: ${picked.name}`
             : 'Производство контента по твоим сотрудникам'}
         </p>
       </div>

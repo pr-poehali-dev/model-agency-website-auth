@@ -1,6 +1,6 @@
 '''
 Продакшн: таблицы штата (операторы, модели) и промо-аккаунтов.
-GET: table=staff (по умолчанию) — операторы и модели; table=promo — промо; table=cash — подсчёт купюр
+GET: table=staff|promo|cash, owner=email продюсера (директор может смотреть чужой раздел)
 POST: save (создать/обновить строку) | delete (удалить строку), поле table как в GET
 Returns: JSON со списками строк или статусом операции.
 '''
@@ -53,11 +53,23 @@ def _get_actor(headers: Dict[str, Any], conn) -> Dict[str, Any]:
     return dict(user) if user else {}
 
 
-def _list_cash(cur) -> Dict[str, List[Dict[str, Any]]]:
+def _resolve_owner(actor: Dict[str, Any], requested: str) -> str:
+    """Чей раздел открываем: продюсер видит только свой, директор — любой."""
+    own = (actor.get('email') or '').strip().lower()
+    role = (actor.get('role') or '').lower()
+    asked = (requested or '').strip().lower()
+    if role == 'director' and asked:
+        return asked
+    return own
+
+
+def _list_cash(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
     cur.execute(
         f"""SELECT id, employee_name, n5000, n1000, n500, salary, sort_order
             FROM {SCHEMA}.production_cash
-            ORDER BY sort_order ASC, id ASC"""
+            WHERE LOWER(owner_email) = %s
+            ORDER BY sort_order ASC, id ASC""",
+        (owner,),
     )
     rows = []
     for r in cur.fetchall():
@@ -67,20 +79,24 @@ def _list_cash(cur) -> Dict[str, List[Dict[str, Any]]]:
     return {'rows': rows}
 
 
-def _list_promo(cur) -> Dict[str, List[Dict[str, Any]]]:
+def _list_promo(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
     cur.execute(
         f"""SELECT id, login, password, sign_name, sign_date, model_name, sort_order
             FROM {SCHEMA}.production_promo
-            ORDER BY sort_order ASC, id ASC"""
+            WHERE LOWER(owner_email) = %s
+            ORDER BY sort_order ASC, id ASC""",
+        (owner,),
     )
     return {'rows': [dict(r) for r in cur.fetchall()]}
 
 
-def _list_rows(cur) -> Dict[str, List[Dict[str, Any]]]:
+def _list_rows(cur, owner: str) -> Dict[str, List[Dict[str, Any]]]:
     cur.execute(
         f"""SELECT id, kind, full_name, birth_date, phone, telegram, google_account, sort_order
             FROM {SCHEMA}.production_staff
-            ORDER BY sort_order ASC, id ASC"""
+            WHERE LOWER(owner_email) = %s
+            ORDER BY sort_order ASC, id ASC""",
+        (owner,),
     )
     rows = [dict(r) for r in cur.fetchall()]
     return {
@@ -108,16 +124,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         if method == 'GET':
             table = (params.get('table') or 'staff').lower()
+            owner = _resolve_owner(actor, params.get('owner') or '')
             if table == 'promo':
-                return _resp(200, _list_promo(cur))
+                return _resp(200, _list_promo(cur, owner))
             if table == 'cash':
-                return _resp(200, _list_cash(cur))
-            return _resp(200, _list_rows(cur))
+                return _resp(200, _list_cash(cur, owner))
+            return _resp(200, _list_rows(cur, owner))
 
         if method == 'POST':
             body = json.loads(event.get('body') or '{}')
             action = body.get('action') or 'save'
             table = (body.get('table') or 'staff').strip().lower()
+            owner = _resolve_owner(actor, body.get('owner') or '')
 
             if table == 'cash':
                 if action == 'save':
@@ -145,8 +163,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             f"""UPDATE {SCHEMA}.production_cash
                                 SET employee_name = %s, n5000 = %s, n1000 = %s,
                                     n500 = %s, salary = %s, updated_at = NOW()
-                                WHERE id = %s RETURNING id""",
-                            (*values, int(row_id)),
+                                WHERE id = %s AND LOWER(owner_email) = %s RETURNING id""",
+                            (*values, int(row_id), owner),
                         )
                         saved = cur.fetchone()
                         if not saved:
@@ -155,14 +173,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         return _resp(200, {'success': True, 'id': saved['id']})
 
                     cur.execute(
-                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_cash"
+                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_cash WHERE LOWER(owner_email) = %s",
+                        (owner,),
                     )
                     next_order = cur.fetchone()['next']
                     cur.execute(
                         f"""INSERT INTO {SCHEMA}.production_cash
-                            (employee_name, n5000, n1000, n500, salary, sort_order, created_by)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-                        (*values, next_order, actor.get('email') or ''),
+                            (employee_name, n5000, n1000, n500, salary, sort_order, created_by, owner_email)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                        (*values, next_order, actor.get('email') or '', owner),
                     )
                     conn.commit()
                     return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
@@ -172,8 +191,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     if not row_id:
                         return _resp(400, {'error': 'id required'})
                     cur.execute(
-                        f"DELETE FROM {SCHEMA}.production_cash WHERE id = %s",
-                        (int(row_id),),
+                        f"DELETE FROM {SCHEMA}.production_cash WHERE id = %s AND LOWER(owner_email) = %s",
+                        (int(row_id), owner),
                     )
                     conn.commit()
                     return _resp(200, {'success': True})
@@ -195,8 +214,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             f"""UPDATE {SCHEMA}.production_promo
                                 SET login = %s, password = %s, sign_name = %s,
                                     sign_date = %s, model_name = %s, updated_at = NOW()
-                                WHERE id = %s RETURNING id""",
-                            (*values, int(row_id)),
+                                WHERE id = %s AND LOWER(owner_email) = %s RETURNING id""",
+                            (*values, int(row_id), owner),
                         )
                         saved = cur.fetchone()
                         if not saved:
@@ -205,14 +224,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         return _resp(200, {'success': True, 'id': saved['id']})
 
                     cur.execute(
-                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_promo"
+                        f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_promo WHERE LOWER(owner_email) = %s",
+                        (owner,),
                     )
                     next_order = cur.fetchone()['next']
                     cur.execute(
                         f"""INSERT INTO {SCHEMA}.production_promo
-                            (login, password, sign_name, sign_date, model_name, sort_order, created_by)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-                        (*values, next_order, actor.get('email') or ''),
+                            (login, password, sign_name, sign_date, model_name, sort_order, created_by, owner_email)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                        (*values, next_order, actor.get('email') or '', owner),
                     )
                     conn.commit()
                     return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
@@ -222,8 +242,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     if not row_id:
                         return _resp(400, {'error': 'id required'})
                     cur.execute(
-                        f"DELETE FROM {SCHEMA}.production_promo WHERE id = %s",
-                        (int(row_id),),
+                        f"DELETE FROM {SCHEMA}.production_promo WHERE id = %s AND LOWER(owner_email) = %s",
+                        (int(row_id), owner),
                     )
                     conn.commit()
                     return _resp(200, {'success': True})
@@ -247,8 +267,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         f"""UPDATE {SCHEMA}.production_staff
                             SET full_name = %s, birth_date = %s, phone = %s,
                                 telegram = %s, google_account = %s, updated_at = NOW()
-                            WHERE id = %s RETURNING id""",
-                        (*values, int(row_id)),
+                            WHERE id = %s AND LOWER(owner_email) = %s RETURNING id""",
+                        (*values, int(row_id), owner),
                     )
                     saved = cur.fetchone()
                     if not saved:
@@ -257,15 +277,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return _resp(200, {'success': True, 'id': saved['id']})
 
                 cur.execute(
-                    f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_staff WHERE kind = %s",
-                    (kind,),
+                    f"SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM {SCHEMA}.production_staff WHERE kind = %s AND LOWER(owner_email) = %s",
+                    (kind, owner),
                 )
                 next_order = cur.fetchone()['next']
                 cur.execute(
                     f"""INSERT INTO {SCHEMA}.production_staff
-                        (kind, full_name, birth_date, phone, telegram, google_account, sort_order, created_by)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-                    (kind, *values, next_order, actor.get('email') or ''),
+                        (kind, full_name, birth_date, phone, telegram, google_account, sort_order, created_by, owner_email)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                    (kind, *values, next_order, actor.get('email') or '', owner),
                 )
                 conn.commit()
                 return _resp(200, {'success': True, 'id': cur.fetchone()['id']})
@@ -275,8 +295,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 if not row_id:
                     return _resp(400, {'error': 'id required'})
                 cur.execute(
-                    f"DELETE FROM {SCHEMA}.production_staff WHERE id = %s",
-                    (int(row_id),),
+                    f"DELETE FROM {SCHEMA}.production_staff WHERE id = %s AND LOWER(owner_email) = %s",
+                    (int(row_id), owner),
                 )
                 conn.commit()
                 return _resp(200, {'success': True})

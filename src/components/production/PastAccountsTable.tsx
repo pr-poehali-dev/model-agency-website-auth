@@ -43,7 +43,11 @@ const PLATFORMS = ['Mail', 'Chaturbate', 'Stripchat', 'CamSoda', 'Cam4', 'MyFree
 const platformStyle = (platform: string) =>
   PLATFORM_STYLES[platform.trim().toLowerCase()] || 'bg-secondary/60 border-border/50 text-foreground';
 
-const PastAccountsTable = () => {
+interface PastAccountsTableProps {
+  owner: string;
+}
+
+const PastAccountsTable = ({ owner }: PastAccountsTableProps) => {
   const { toast } = useToast();
   const [persons, setPersons] = useState<PastPerson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +55,7 @@ const PastAccountsTable = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authenticatedFetchNoCreds(PAST_URL);
+      const res = await authenticatedFetchNoCreds(`${PAST_URL}?owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setPersons(Array.isArray(data.persons) ? data.persons : []);
     } catch {
@@ -59,7 +63,7 @@ const PastAccountsTable = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, owner]);
 
   useEffect(() => {
     load();
@@ -69,7 +73,7 @@ const PastAccountsTable = () => {
     const res = await authenticatedFetchNoCreds(PAST_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ owner, ...payload }),
     });
     if (!res.ok) throw new Error('Ошибка');
     return res.json();

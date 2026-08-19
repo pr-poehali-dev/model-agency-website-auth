@@ -85,7 +85,11 @@ const emptyRow = (kind: StaffRow['kind']): StaffRow => ({
   google_account: '',
 });
 
-const StaffTable = () => {
+interface StaffTableProps {
+  owner: string;
+}
+
+const StaffTable = ({ owner }: StaffTableProps) => {
   const { toast } = useToast();
   const [operators, setOperators] = useState<StaffRow[]>([]);
   const [models, setModels] = useState<StaffRow[]>([]);
@@ -95,7 +99,7 @@ const StaffTable = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authenticatedFetchNoCreds(STAFF_URL);
+      const res = await authenticatedFetchNoCreds(`${STAFF_URL}?owner=${encodeURIComponent(owner)}`);
       const data = await res.json();
       setOperators(Array.isArray(data.operators) ? data.operators : []);
       setModels(Array.isArray(data.models) ? data.models : []);
@@ -104,7 +108,7 @@ const StaffTable = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, owner]);
 
   useEffect(() => {
     load();
@@ -121,7 +125,7 @@ const StaffTable = () => {
       const res = await authenticatedFetchNoCreds(STAFF_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save', ...row }),
+        body: JSON.stringify({ action: 'save', owner, ...row }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Ошибка');
@@ -139,7 +143,7 @@ const StaffTable = () => {
       const res = await authenticatedFetchNoCreds(STAFF_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save', ...emptyRow(kind) }),
+        body: JSON.stringify({ action: 'save', owner, ...emptyRow(kind) }),
       });
       if (!res.ok) throw new Error('Ошибка');
       await load();
@@ -153,7 +157,7 @@ const StaffTable = () => {
       const res = await authenticatedFetchNoCreds(STAFF_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', id: row.id }),
+        body: JSON.stringify({ action: 'delete', owner, id: row.id }),
       });
       if (!res.ok) throw new Error('Ошибка');
       await load();
