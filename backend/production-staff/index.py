@@ -150,14 +150,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     except (TypeError, ValueError):
                         salary = 0.0
 
+                    employee_name = (body.get('employee_name') or '').strip()
                     values = (
-                        (body.get('employee_name') or '').strip(),
+                        employee_name,
                         _int('n5000'),
                         _int('n1000'),
                         _int('n500'),
                         salary,
                     )
                     row_id = body.get('id')
+                    if employee_name:
+                        cur.execute(
+                            f"""SELECT id FROM {SCHEMA}.production_cash
+                                WHERE LOWER(owner_email) = %s
+                                  AND LOWER(employee_name) = LOWER(%s)
+                                  AND id <> %s""",
+                            (owner, employee_name, int(row_id or 0)),
+                        )
+                        if cur.fetchone():
+                            return _resp(409, {'error': 'Этот сотрудник уже есть в таблице'})
                     if row_id:
                         cur.execute(
                             f"""UPDATE {SCHEMA}.production_cash

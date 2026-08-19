@@ -125,6 +125,11 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
   const rowTotal = (row: CashRow) =>
     NOMINALS.reduce((sum, n) => sum + (Number(row[n.key]) || 0) * n.value, 0);
 
+  const takenNames = useMemo(
+    () => new Set(rows.map((r) => (r.employee_name || '').trim()).filter(Boolean)),
+    [rows],
+  );
+
   const totals = useMemo(() => {
     const counts = NOMINALS.map((n) =>
       rows.reduce((sum, r) => sum + (Number(r[n.key]) || 0), 0),
@@ -210,6 +215,13 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                       <Select
                         value={row.employee_name || ''}
                         onValueChange={(value) => {
+                          if (value !== row.employee_name && takenNames.has(value)) {
+                            toast({
+                              title: 'Этот сотрудник уже есть в таблице',
+                              variant: 'destructive',
+                            });
+                            return;
+                          }
                           const picked = employees.find((e) => e.name === value);
                           const patch = {
                             employee_name: value,
@@ -228,7 +240,11 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                             </div>
                           ) : (
                             employees.map((emp) => (
-                              <SelectItem key={emp.email} value={emp.name}>
+                              <SelectItem
+                                key={emp.email}
+                                value={emp.name}
+                                disabled={emp.name !== row.employee_name && takenNames.has(emp.name)}
+                              >
                                 {emp.name}
                                 {emp.role === 'producer' && (
                                   <span className="ml-2 text-xs text-primary">продюсер</span>
