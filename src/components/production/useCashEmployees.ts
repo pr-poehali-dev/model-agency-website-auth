@@ -11,6 +11,17 @@ export interface CashEmployee {
   name: string;
   role: string;
   salary: number;
+  base: number;
+  expenses: number;
+  advance: number;
+  penalty: number;
+  bonus: number;
+}
+
+interface Adjustment {
+  advance?: number;
+  penalty?: number;
+  expenses?: number;
 }
 
 const formatDate = (date: Date) => {
@@ -49,7 +60,7 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string, period
       const end = formatDate(range.endDate);
       const isProducer = viewerRole === 'producer';
 
-      const [usersRes, salariesRes, rateRes, assignRes] = await Promise.all([
+      const [usersRes, salariesRes, rateRes, assignRes, adjRes] = await Promise.all([
         authenticatedFetchNoCreds(urls['auth']),
         authenticatedFetchNoCreds(
           `${urls['calculate-salaries']}?period_start=${start}&period_end=${end}`,
@@ -60,12 +71,16 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string, period
               `${urls['producer-assignments']}?producer=${encodeURIComponent(viewerEmail)}`,
             )
           : Promise.resolve(null),
+        authenticatedFetchNoCreds(
+          `${urls['salary-adjustments']}?period_start=${start}&period_end=${end}`,
+        ).catch(() => null),
       ]);
 
       const users: ApiUser[] = await usersRes.json();
       const salaries = await salariesRes.json();
       const rateData = await rateRes.json();
       const rate = (rateData?.rate || 0) - RATE_OFFSET;
+      const adjustments: Record<string, Adjustment> = adjRes ? await adjRes.json() : {};
 
       const self = (viewerEmail || '').toLowerCase();
 
@@ -103,13 +118,38 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string, period
             u.email.toLowerCase() === self,
         )
         .filter((u) => !allowed || allowed.includes(u.email.toLowerCase()))
-        .map((u) => ({
-          email: u.email,
-          name: u.fullName || u.email,
-          role: u.role,
-          salary: salaryOf(u.email, u.role),
-        }))
+        .map((u) => {
+          const base = salaryOf(u.email, u.role);
+          const adj = adjustments[u.email] || {};
+          return {
+            email: u.email,
+            name: u.fullName || u.email,
+            role: u.role,
+            base,
+            expenses: Number(adj.expenses || 0),
+            advance: Number(adj.advance || 0),
+            penalty: Number(adj.penalty || 0),
+            bonus: 0,
+            salary: 0,
+          };
+        })
         .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+      const bonuses = await Promise.all(
+        list.map((e) =>
+          authenticatedFetchNoCreds(
+            `${urls['earned-bonuses']}?user_email=${encodeURIComponent(e.email)}&period_start=${start}&period_end=${end}`,
+          )
+            .then((r) => r.json())
+            .then((d) => Number(d?.total || 0))
+            .catch(() => 0),
+        ),
+      );
+
+      list.forEach((e, i) => {
+        e.bonus = bonuses[i];
+        e.salary = Math.round(e.base + e.expenses - e.advance - e.penalty + e.bonus);
+      });
 
       setEmployees(list);
     } catch {

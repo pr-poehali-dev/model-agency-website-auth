@@ -302,7 +302,22 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                     <td className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground">
                       {rub(rowTotal(row))}
                     </td>
-                    <td className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground">
+                    <td
+                      className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground"
+                      title={(() => {
+                        const e = employees.find((x) => x.name === row.employee_name);
+                        if (!e) return '';
+                        return [
+                          `Начислено: ${rub(e.base)}`,
+                          e.expenses ? `Расходы: +${rub(e.expenses)}` : '',
+                          e.bonus ? `Премия: +${rub(e.bonus)}` : '',
+                          e.advance ? `Аванс: −${rub(e.advance)}` : '',
+                          e.penalty ? `Штраф: −${rub(e.penalty)}` : '',
+                        ]
+                          .filter(Boolean)
+                          .join('\n');
+                      })()}
+                    >
                       {rub(
                         employees.find((e) => e.name === row.employee_name)?.salary ??
                           (Number(row.salary) || 0),
