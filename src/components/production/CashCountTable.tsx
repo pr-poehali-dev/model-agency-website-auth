@@ -14,6 +14,7 @@ import {
 import { authenticatedFetchNoCreds } from '@/lib/api';
 import SaveBar from './SaveBar';
 import { useCashEmployees } from './useCashEmployees';
+import { getCurrentPeriod, getPreviousPeriod, type Period } from '@/utils/periodUtils';
 import funcUrls from '../../../backend/func2url.json';
 
 const CASH_URL = (funcUrls as Record<string, string>)['production-staff'];
@@ -43,7 +44,12 @@ interface CashCountTableProps {
 
 const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps) => {
   const { toast } = useToast();
-  const { employees } = useCashEmployees(viewerEmail, viewerRole);
+  const [periodMode, setPeriodMode] = useState<'current' | 'previous'>('current');
+  const period: Period = useMemo(
+    () => (periodMode === 'current' ? getCurrentPeriod() : getPreviousPeriod(getCurrentPeriod())),
+    [periodMode],
+  );
+  const { employees } = useCashEmployees(viewerEmail, viewerRole, period);
   const [rows, setRows] = useState<CashRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dirty, setDirty] = useState<Record<number, CashRow>>({});
@@ -138,9 +144,14 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
       counts,
       sums: NOMINALS.map((n, i) => counts[i] * n.value),
       grand: rows.reduce((sum, r) => sum + rowTotal(r), 0),
-      salary: rows.reduce((sum, r) => sum + (Number(r.salary) || 0), 0),
+      salary: rows.reduce(
+        (sum, r) =>
+          sum +
+          (employees.find((e) => e.name === r.employee_name)?.salary ?? (Number(r.salary) || 0)),
+        0,
+      ),
     };
-  }, [rows]);
+  }, [rows, employees]);
 
   const numberCell = (row: CashRow, key: keyof CashRow) => (
     <Input
@@ -163,10 +174,23 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
             Production
             <span className="text-sm font-normal text-muted-foreground">({rows.length})</span>
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={addRow}>
-            <Icon name="Plus" size={14} className="mr-1.5" />
-            Строка
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as 'current' | 'previous')}>
+              <SelectTrigger className="h-9 w-[210px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="current">Текущий период ({getCurrentPeriod().label})</SelectItem>
+                <SelectItem value="previous">
+                  Прошлый период ({getPreviousPeriod(getCurrentPeriod()).label})
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={addRow}>
+              <Icon name="Plus" size={14} className="mr-1.5" />
+              Строка
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -264,7 +288,10 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
                       {rub(rowTotal(row))}
                     </td>
                     <td className="border border-border/40 bg-emerald-500/5 px-3 text-right font-semibold text-foreground">
-                      {rub(Number(row.salary) || 0)}
+                      {rub(
+                        employees.find((e) => e.name === row.employee_name)?.salary ??
+                          (Number(row.salary) || 0),
+                      )}
                     </td>
                     <td className="border border-border/40 text-center">
                       <Button

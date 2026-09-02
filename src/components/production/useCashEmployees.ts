@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { authenticatedFetchNoCreds } from '@/lib/api';
-import { getCurrentPeriod } from '@/utils/periodUtils';
+import { getCurrentPeriod, type Period } from '@/utils/periodUtils';
 import { RATE_OFFSET } from '@/lib/constants';
 import funcUrls from '../../../backend/func2url.json';
 
@@ -37,16 +37,16 @@ interface SalaryEntry {
   total?: number;
 }
 
-export const useCashEmployees = (viewerEmail: string, viewerRole: string) => {
+export const useCashEmployees = (viewerEmail: string, viewerRole: string, period?: Period) => {
   const [employees, setEmployees] = useState<CashEmployee[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const period = getCurrentPeriod();
-      const start = formatDate(period.startDate);
-      const end = formatDate(period.endDate);
+      const range = period || getCurrentPeriod();
+      const start = formatDate(range.startDate);
+      const end = formatDate(range.endDate);
       const isProducer = viewerRole === 'producer';
 
       const [usersRes, salariesRes, rateRes, assignRes] = await Promise.all([
@@ -117,7 +117,7 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string) => {
     } finally {
       setLoading(false);
     }
-  }, [viewerEmail, viewerRole]);
+  }, [viewerEmail, viewerRole, period?.startDate?.getTime(), period?.endDate?.getTime()]);
 
   useEffect(() => {
     load();
