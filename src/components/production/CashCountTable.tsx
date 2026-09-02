@@ -44,7 +44,22 @@ interface CashCountTableProps {
 
 const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps) => {
   const { toast } = useToast();
-  const [periodMode, setPeriodMode] = useState<'current' | 'previous'>('current');
+  const storageKey = `cash-period:${owner}`;
+  const [periodMode, setPeriodMode] = useState<'current' | 'previous'>(() => {
+    const saved = localStorage.getItem(`cash-period:${owner}`);
+    return saved === 'previous' ? 'previous' : 'current';
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    setPeriodMode(saved === 'previous' ? 'previous' : 'current');
+  }, [storageKey]);
+
+  const changePeriod = (mode: 'current' | 'previous') => {
+    setPeriodMode(mode);
+    localStorage.setItem(storageKey, mode);
+  };
+
   const period: Period = useMemo(
     () => (periodMode === 'current' ? getCurrentPeriod() : getPreviousPeriod(getCurrentPeriod())),
     [periodMode],
@@ -175,7 +190,7 @@ const CashCountTable = ({ viewerEmail, viewerRole, owner }: CashCountTableProps)
             <span className="text-sm font-normal text-muted-foreground">({rows.length})</span>
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Select value={periodMode} onValueChange={(v) => setPeriodMode(v as 'current' | 'previous')}>
+            <Select value={periodMode} onValueChange={(v) => changePeriod(v as 'current' | 'previous')}>
               <SelectTrigger className="h-9 w-[210px]">
                 <SelectValue />
               </SelectTrigger>
