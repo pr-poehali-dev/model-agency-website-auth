@@ -6,11 +6,21 @@ Returns: HTTP response со списком входов и списком пол
 
 import json
 import os
+from datetime import timezone
 from typing import Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p35405502_model_agency_website'
+
+def iso_utc(value) -> Any:
+    """Отдаёт время как UTC, чтобы браузер верно перевёл его в местное"""
+    if not value:
+        return None
+    if getattr(value, 'tzinfo', None) is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.isoformat()
+
 
 def cors_headers(event: Dict[str, Any]) -> Dict[str, str]:
     headers = event.get('headers') or {}
@@ -147,7 +157,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'device': r['device'],
             'browser': r['browser'],
             'success': r['success'],
-            'createdAt': r['created_at'].isoformat() if r['created_at'] else None,
+            'createdAt': iso_utc(r['created_at']),
         } for r in rows]
 
         cur.execute(f"""

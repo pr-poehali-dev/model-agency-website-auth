@@ -6,11 +6,21 @@ Returns: HTTP response со списком активных сессий или 
 
 import json
 import os
+from datetime import timezone
 from typing import Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p35405502_model_agency_website'
+
+def iso_utc(value) -> Any:
+    """Отдаёт время как UTC, чтобы браузер верно перевёл его в местное"""
+    if not value:
+        return None
+    if getattr(value, 'tzinfo', None) is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.isoformat()
+
 
 def cors_headers(event: Dict[str, Any]) -> Dict[str, str]:
     headers = event.get('headers') or {}
@@ -112,9 +122,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'ip': r['ip_address'],
                     'device': r['device'],
                     'browser': r['browser'],
-                    'createdAt': r['created_at'].isoformat() if r['created_at'] else None,
-                    'expiresAt': r['expires_at'].isoformat() if r['expires_at'] else None,
-                    'lastSeenAt': r['last_seen_at'].isoformat() if r['last_seen_at'] else None,
+                    'createdAt': iso_utc(r['created_at']),
+                    'expiresAt': iso_utc(r['expires_at']),
+                    'lastSeenAt': iso_utc(r['last_seen_at']),
                     'isCurrent': r['id'] == current['token_id'],
                 } for r in rows]
 
@@ -160,7 +170,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'photoUrl': r['photo_url'],
                     'sessionCount': int(r['session_count'] or 0),
                     'online': online,
-                    'lastSeenAt': last_seen.isoformat() if last_seen else None,
+                    'lastSeenAt': iso_utc(last_seen),
                 })
 
             online_count = sum(1 for e in employees if e['online'])
