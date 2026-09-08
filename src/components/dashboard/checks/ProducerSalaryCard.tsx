@@ -5,7 +5,6 @@ import Icon from '@/components/ui/icon';
 import { ProducerData } from './types';
 import { Period } from '@/utils/periodUtils';
 import { useState, useEffect } from 'react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useEarnedBonus } from '@/hooks/useEarnedBonus';
 import { useEmployeePhoto } from '@/hooks/useEmployeePhotos';
 
@@ -24,27 +23,10 @@ interface ProducerSalaryCardProps {
   }>;
 }
 
-const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate, salaryDetails = [] }: ProducerSalaryCardProps) => {
+const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }: ProducerSalaryCardProps) => {
   const [expenses, setExpenses] = useState(producerData.expenses);
   const [advance, setAdvance] = useState(producerData.advance);
   const [penalty, setPenalty] = useState(producerData.penalty);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-  const prodSum = salaryDetails.reduce((sum, detail) => {
-    if (detail.note?.includes('operator') || detail.note === 'already_paid_as_operator') {
-      return sum;
-    }
-    return sum + detail.check * 0.1;
-  }, 0);
-
-  const operSum = salaryDetails.reduce((sum, detail) => {
-    if (detail.note?.includes('operator')) {
-      const match = detail.note.match(/operator_(\d+)%/);
-      const operatorPercentage = match ? parseInt(match[1]) : 20;
-      return sum + detail.check * (operatorPercentage / 100);
-    }
-    return sum;
-  }, 0);
 
   useEffect(() => {
     setExpenses(producerData.expenses);
@@ -155,31 +137,6 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate, s
             <span className="font-bold text-xl text-red-600 dark:text-red-400">{penalty.toLocaleString()}₽</span>
           )}
         </div>
-        
-        <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex justify-between items-center py-3 px-4 bg-blue-500/10 rounded-lg border border-blue-500/20 hover:bg-blue-500/20 transition-colors cursor-pointer">
-              <span className="font-medium">Детализация заработка</span>
-              <Icon name={isDetailsOpen ? 'ChevronUp' : 'ChevronDown'} size={20} />
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2 space-y-2">
-            <div className="flex justify-between items-center py-2 px-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
-              <div className="flex items-center gap-2">
-                <Icon name="Star" size={16} className="text-purple-500" />
-                <span className="font-medium">Prod (10%)</span>
-              </div>
-              <span className="font-bold text-lg text-purple-600 dark:text-purple-400">${prodSum.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 px-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <div className="flex items-center gap-2">
-                <Icon name="Users" size={16} className="text-blue-500" />
-                <span className="font-medium">Oper (20-30%)</span>
-              </div>
-              <span className="font-bold text-lg text-blue-600 dark:text-blue-400">${operSum.toFixed(2)}</span>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
         
         {bonus && (
           <div className="flex justify-between items-center py-2 px-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
