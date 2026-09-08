@@ -60,7 +60,7 @@ interface ModelPair {
 interface ModelsTabProps {
   models: Model[];
   operatorAssignments?: number[];
-  producerAssignments?: number[];
+  producerAssignments?: string[];
   assignedProducer?: string;
   onViewFinances?: (modelId: number, modelName: string) => void;
   onViewPairFinances?: (model1Id: number, model1Name: string, model2Id: number, model2Name: string) => void;
@@ -480,7 +480,7 @@ const ModelsTab = ({
     ? models.filter(m => m.email === currentUserEmail)
     : userRole === 'operator'
     ? models.filter(m => operatorAssignments.includes(m.id))
-    : producerAssignments.length > 0
+    : userRole === 'producer'
     ? models.filter(m => producerAssignments.includes(m.email))
     : models;
 

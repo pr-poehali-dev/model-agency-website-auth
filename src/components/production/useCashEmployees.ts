@@ -117,7 +117,7 @@ export const useCashEmployees = (viewerEmail: string, viewerRole: string, period
             ['operator', 'content_maker', 'solo_maker', 'model'].includes(u.role) ||
             u.email.toLowerCase() === self,
         )
-        .filter((u) => !allowed || allowed.includes(u.email.toLowerCase()))
+        .filter((u) => allowed === null || allowed.includes(u.email.toLowerCase()))
         .map((u) => {
           const base = salaryOf(u.email, u.role);
           const adj = adjustments[u.email] || {};

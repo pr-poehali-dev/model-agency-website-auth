@@ -115,7 +115,7 @@ const Dashboard = () => {
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [userPhotoUrl, setUserPhotoUrl] = useState(() => localStorage.getItem('userPhotoUrl') || '');
   const [operatorAssignments, setOperatorAssignments] = useState<number[]>([]);
-  const [producerAssignments, setProducerAssignments] = useState<number[]>([]);
+  const [producerAssignments, setProducerAssignments] = useState<string[]>([]);
   const [assignedProducer, setAssignedProducer] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modelsData, setModelsData] = useState(models);
