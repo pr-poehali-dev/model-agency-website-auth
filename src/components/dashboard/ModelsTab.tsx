@@ -785,8 +785,16 @@ const ModelsTab = ({
       {userRole === 'operator' && operatorAssignments.length === 0 && (
         <Card className="p-8 text-center">
           <Icon name="UserX" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
-          <p className="text-foreground font-medium mb-1">Вам ещё не назначили контент-мейкера</p>
-          <p className="text-muted-foreground text-sm">Обратитесь к вашему продюсеру или директору</p>
+          <p className="text-foreground font-medium mb-1">Вам пока не назначено ни одной модели</p>
+          <p className="text-muted-foreground text-sm">Обратитесь к директору, чтобы он назначил вам моделей</p>
+        </Card>
+      )}
+
+      {userRole === 'producer' && producerAssignments.length === 0 && (
+        <Card className="p-8 text-center">
+          <Icon name="UserX" size={48} className="mx-auto mb-4 text-muted-foreground opacity-30" />
+          <p className="text-foreground font-medium mb-1">Вам пока не назначено ни одной модели</p>
+          <p className="text-muted-foreground text-sm">Обратитесь к директору, чтобы он назначил вам моделей</p>
         </Card>
       )}
 
