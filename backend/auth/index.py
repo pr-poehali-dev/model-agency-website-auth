@@ -57,11 +57,29 @@ def parse_user_agent(ua: str) -> tuple:
 
     return device, browser
 
+def get_client_ip(event: Dict[str, Any]) -> str:
+    """Достаёт реальный IP посетителя из заголовков прокси"""
+    headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
+
+    for name in ('ddg-connecting-ip', 'x-real-ip', 'cf-connecting-ip'):
+        value = (headers.get(name) or '').strip()
+        if value:
+            return value[:45]
+
+    for name in ('x-original-forwarded-for', 'x-forwarded-for'):
+        chain = headers.get(name) or ''
+        first = chain.split(',')[0].strip()
+        if first:
+            return first[:45]
+
+    fallback = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp', '')
+    return (fallback or '')[:45]
+
 def log_login(conn, event: Dict[str, Any], user_id: int, email: str, success: bool) -> None:
     """Записывает попытку входа в историю"""
     headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
     ua = headers.get('user-agent', '')
-    ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp', '')
+    ip = get_client_ip(event)
     device, browser = parse_user_agent(ua)
 
     cur = conn.cursor()
@@ -192,7 +210,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 login_headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
                 login_ua = login_headers.get('user-agent', '')
-                login_ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp', '')
+                login_ip = get_client_ip(event)
                 login_device, login_browser = parse_user_agent(login_ua)
 
                 cur.execute(
