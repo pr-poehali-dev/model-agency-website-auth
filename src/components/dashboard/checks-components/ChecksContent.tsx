@@ -17,6 +17,16 @@ interface Producer {
   penalty: number;
   total: number;
   averageProducerPercentage: number;
+  salaryDetails?: Array<{
+    date: string;
+    model_id: number;
+    model_email: string;
+    amount: number;
+    check: number;
+    note?: string;
+    source?: 'solo' | 'pair' | 'model';
+    percentage?: number;
+  }>;
 }
 
 interface Operator {
@@ -128,7 +138,8 @@ const ChecksContent = ({
               advance: adj.advance,
               penalty: adj.penalty,
               total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty),
-              employees: []
+              employees: [],
+              salaryDetails: salary.details || []
             }} 
             period={currentPeriod}
             canEdit={true}

@@ -291,7 +291,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             'model_email': model_email,
                             'amount': pair_prod_salary,
                             'check': pair_total_check,
-                            'note': f'pair_producer_{pair_producer_pct}%'
+                            'note': f'pair_producer_{pair_producer_pct}%',
+                            'source': 'pair',
+                            'percentage': pair_producer_pct
                         })
 
                     # Pay operator
@@ -404,7 +406,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'model_email': model_email,
                         'amount': combined_salary,
                         'check': total_check,
-                        'note': f'operator_{operator_percentage}%_+_producer_{producer_percentage}%'
+                        'note': f'operator_{operator_percentage}%_+_producer_{producer_percentage}%',
+                        'source': 'model',
+                        'percentage': producer_percentage
                     })
                 elif operator_email:
                     op_sal = total_check * (operator_percentage / 100)
@@ -479,7 +483,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                                 'model_id': model_id,
                                 'model_email': model_email,
                                 'amount': producer_salary_amount,
-                                'check': total_check
+                                'check': total_check,
+                                'source': 'solo' if is_solo_maker else 'model',
+                                'percentage': producer_percentage
                             })
         
         director_salaries = {}

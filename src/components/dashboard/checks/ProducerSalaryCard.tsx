@@ -20,6 +20,8 @@ interface ProducerSalaryCardProps {
     amount: number;
     check: number;
     note?: string;
+    source?: 'solo' | 'pair' | 'model';
+    percentage?: number;
   }>;
 }
 
@@ -39,6 +41,15 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
       onUpdate(producerData.email, field, value);
     }
   };
+
+  const details = producerData.salaryDetails || [];
+  const soloDollars = details
+    .filter((d) => d.source === 'solo')
+    .reduce((sum, d) => sum + (d.amount || 0), 0);
+  const soloModelsCount = new Set(
+    details.filter((d) => d.source === 'solo').map((d) => d.model_email),
+  ).size;
+  const soloRubles = Math.round(soloDollars * (producerData.rate || 0));
 
   const { bonus } = useEarnedBonus(producerData.email, period.startDate, period.endDate);
   const bonusAmount = bonus?.amount || 0;
@@ -83,6 +94,26 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
           <span className="font-semibold text-lg">${producerData.sumDollars.toFixed(2)}</span>
         </div>
         
+        {soloDollars > 0 && (
+          <div className="flex justify-between items-center py-2 px-3 border-b bg-primary/5 rounded">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon name="User" size={16} className="text-primary shrink-0" />
+              <span className="text-muted-foreground truncate">
+                в т.ч. с соло-моделей
+                {soloModelsCount > 0 && ` (${soloModelsCount})`}
+              </span>
+            </div>
+            <span className="font-semibold text-primary shrink-0">
+              ${soloDollars.toFixed(2)}
+              {soloRubles > 0 && (
+                <span className="text-muted-foreground font-normal text-sm">
+                  {' '}· {soloRubles.toLocaleString()}₽
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center py-2 border-b">
           <span className="text-muted-foreground">Курс</span>
           <span className="font-semibold text-lg">{producerData.rate}</span>

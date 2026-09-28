@@ -104,7 +104,8 @@ const ChecksTab = () => {
       advance: adj.advance,
       penalty: adj.penalty,
       total: Math.round(sumRubles + adj.expenses - adj.advance - adj.penalty),
-      averageProducerPercentage
+      averageProducerPercentage,
+      salaryDetails: salary.details || []
     };
   }) : [];
   

@@ -38,5 +38,7 @@ export interface ProducerData {
     amount: number;
     check: number;
     note?: string;
+    source?: 'solo' | 'pair' | 'model';
+    percentage?: number;
   }>;
 }
