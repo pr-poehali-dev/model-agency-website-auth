@@ -7,6 +7,10 @@ from datetime import datetime
 
 MAX_COMBINED_PCT = 35.0
 
+SOLO_PRODUCER_MIN_PCT = 10.0
+SOLO_PRODUCER_MAX_PCT = 15.0
+SOLO_PRODUCER_DEFAULT_PCT = 10.0
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Business: Calculate salaries for operators, models, and producers based on financial data
@@ -210,6 +214,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if model_producer_assignment and model_producer_assignment.get('producer_percentage') is not None:
                 custom_producer_pct = float(model_producer_assignment['producer_percentage'])
 
+            is_solo_maker = bool(model_user and model_user.get('role') == 'solo_maker')
+            solo_producer_pct = 0.0
+
             # Продюсер сам сидит оператором на этой модели?
             producer_works_as_operator = False
             if operator_name:
@@ -318,11 +325,25 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     print(f"DEBUG PAIR skip: pair_id={pair['pair_id']}, date={finance['date']}, already paid op/prod for this pair today")
 
             elif model_user and model_user.get('role') == 'solo_maker':
-                # For solo makers, use their percentage from profile
+                # Соло-модель получает свой процент, назначенный директором.
+                # Оператора у неё нет. Если назначен продюсер — он получает 10-15%,
+                # эта доля вычитается из доли директоров.
                 solo_percentage = int(model_user.get('solo_percentage', '50'))
                 model_salary = total_check * (solo_percentage / 100)
-                director_amount = total_check * ((100 - solo_percentage) / 100)
-                print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}% = ${model_salary}, directors get {100 - solo_percentage}% = ${director_amount}")
+
+                if model_producer_assignment:
+                    solo_producer_pct = (
+                        custom_producer_pct
+                        if custom_producer_pct is not None
+                        else SOLO_PRODUCER_DEFAULT_PCT
+                    )
+                    solo_producer_pct = min(
+                        max(solo_producer_pct, SOLO_PRODUCER_MIN_PCT), SOLO_PRODUCER_MAX_PCT
+                    )
+                    solo_producer_pct = min(solo_producer_pct, max(0.0, 100.0 - solo_percentage))
+
+                director_amount = total_check * ((100 - solo_percentage - solo_producer_pct) / 100)
+                print(f"DEBUG: Solo maker {model_email} gets {solo_percentage}%, producer {solo_producer_pct}%, directors {100 - solo_percentage - solo_producer_pct}%")
             else:
                 # For regular content makers, use 30%; directors get the rest
                 model_salary = total_check * 0.3
@@ -419,7 +440,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     if producer_assignment:
                         producer_email = producer_assignment['producer_email']
 
-                        if effective_producer_pct is not None:
+                        if is_solo_maker:
+                            producer_percentage = solo_producer_pct
+                            print(f"DEBUG: Solo maker {model_email}, producer gets {producer_percentage}%")
+                        elif effective_producer_pct is not None:
                             producer_percentage = float(effective_producer_pct)
                             print(f"DEBUG: Custom producer percentage for model_id={model_id}: {producer_percentage}%")
                         elif operator_email or producer_operator_email:

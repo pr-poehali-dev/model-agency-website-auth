@@ -255,6 +255,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'body': json.dumps({'error': 'Процент продюсера должен быть от 0 до 15'})
                     }
 
+                cur.execute("""
+                    SELECT role FROM t_p35405502_model_agency_website.users
+                    WHERE email = %s
+                """, (model_email,))
+                model_row = cur.fetchone()
+                if model_row and model_row[0] == 'solo_maker' and percentage < 10:
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': origin,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
+                        'body': json.dumps({'error': 'Для соло-модели процент продюсера должен быть от 10 до 15'})
+                    }
+
             cur.execute("""
                 UPDATE t_p35405502_model_agency_website.producer_assignments
                 SET producer_percentage = %s

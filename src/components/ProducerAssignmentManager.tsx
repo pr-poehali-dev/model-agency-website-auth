@@ -62,7 +62,7 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
       
       setProducers(users.filter((u: User) => u.role === 'producer'));
       setOperators(users.filter((u: User) => u.role === 'operator'));
-      setModels(users.filter((u: User) => u.role === 'content_maker'));
+      setModels(users.filter((u: User) => u.role === 'content_maker' || u.role === 'solo_maker'));
     } catch (err) {
       console.error('Failed to load users', err);
     }
@@ -329,6 +329,11 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
                     <div key={`${model.email}-${refreshKey}`} className="flex items-center justify-between gap-4 p-4 border border-border rounded-lg bg-card/50">
                       <div className="min-w-0">
                         <span className="text-foreground font-medium block truncate">{model.email}</span>
+                        {model.role === 'solo_maker' && (
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium">
+                            Соло-модель
+                          </span>
+                        )}
                         {assigned && currentUserRole === 'director' && (
                           <div className="mt-2">
                             <label className="text-xs text-muted-foreground mb-1 block">
@@ -345,13 +350,29 @@ const ProducerAssignmentManager = ({ currentUserEmail, currentUserRole }: { curr
                               }
                               className="px-3 py-1.5 border border-border rounded-lg bg-background text-foreground text-sm font-medium"
                             >
-                              <option value="auto">По умолчанию</option>
-                              <option value="5">5%</option>
-                              <option value="7.5">7,5%</option>
-                              <option value="10">10%</option>
-                              <option value="12.5">12,5%</option>
-                              <option value="15">15%</option>
+                              {model.role === 'solo_maker' ? (
+                                <>
+                                  <option value="auto">По умолчанию (10%)</option>
+                                  <option value="10">10%</option>
+                                  <option value="12.5">12,5%</option>
+                                  <option value="15">15%</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="auto">По умолчанию</option>
+                                  <option value="5">5%</option>
+                                  <option value="7.5">7,5%</option>
+                                  <option value="10">10%</option>
+                                  <option value="12.5">12,5%</option>
+                                  <option value="15">15%</option>
+                                </>
+                              )}
                             </select>
+                            {model.role === 'solo_maker' && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Оператор не назначается
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>
