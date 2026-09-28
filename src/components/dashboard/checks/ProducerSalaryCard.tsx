@@ -46,9 +46,6 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
   const soloDollars = details
     .filter((d) => d.source === 'solo')
     .reduce((sum, d) => sum + (d.amount || 0), 0);
-  const soloModelsCount = new Set(
-    details.filter((d) => d.source === 'solo').map((d) => d.model_email),
-  ).size;
   const soloRubles = Math.round(soloDollars * (producerData.rate || 0));
 
   const { bonus } = useEarnedBonus(producerData.email, period.startDate, period.endDate);
@@ -96,20 +93,9 @@ const ProducerSalaryCard = ({ producerData, period, canEdit = false, onUpdate }:
         
         {soloDollars > 0 && (
           <div className="flex justify-between items-center py-2 px-3 border-b bg-primary/5 rounded">
-            <div className="flex items-center gap-2 min-w-0">
-              <Icon name="User" size={16} className="text-primary shrink-0" />
-              <span className="text-muted-foreground truncate">
-                в т.ч. с соло-моделей
-                {soloModelsCount > 0 && ` (${soloModelsCount})`}
-              </span>
-            </div>
+            <span className="text-muted-foreground truncate">solo incam</span>
             <span className="font-semibold text-primary shrink-0">
-              ${soloDollars.toFixed(2)}
-              {soloRubles > 0 && (
-                <span className="text-muted-foreground font-normal text-sm">
-                  {' '}· {soloRubles.toLocaleString()}₽
-                </span>
-              )}
+              {soloDollars.toFixed(2)}$ {soloRubles.toLocaleString()} руб.
             </span>
           </div>
         )}
