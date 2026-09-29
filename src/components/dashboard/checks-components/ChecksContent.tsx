@@ -169,7 +169,7 @@ const ChecksContent = ({
           canEdit={true}
           onUpdate={onUpdateEmployee}
         />
-        {userRole === 'director' && soloMakers.length > 0 && (
+        {soloMakers.length > 0 && (
           <SoloMakersSection 
             soloMakers={soloMakers} 
             period={currentPeriod} 

@@ -257,6 +257,30 @@ const ChecksTab = () => {
         pairModelPercentage: pair ? pair.model_percentage : undefined
       };
     });
+
+    const soloMakerUsers = users.filter(
+      u => u.role === 'solo_maker' && assignedModelEmails.includes(u.email)
+    );
+    soloMakers = soloMakerUsers.map(sm => {
+      const salary = salaries.models[sm.email] || { total: 0, details: [] };
+      const adj = adjustments[sm.email] || { advance: 0, penalty: 0 };
+      const sumDollars = salary.total;
+      const sumRubles = sumDollars * exchangeRate;
+      return {
+        name: sm.fullName || sm.email,
+        email: sm.email,
+        week: 0,
+        model: '',
+        sumDollars: Math.round(sumDollars * 100) / 100,
+        rate: exchangeRate,
+        sumRubles: Math.round(sumRubles),
+        advance: adj.advance,
+        penalty: adj.penalty,
+        total: Math.round(sumRubles - adj.advance - adj.penalty),
+        role: 'solo_maker',
+        soloPercentage: sm.soloPercentage || '50'
+      };
+    });
   }
 
   const totalModelSum = Math.round(contentMakers.reduce((sum, e) => sum + (e.total || 0), 0));

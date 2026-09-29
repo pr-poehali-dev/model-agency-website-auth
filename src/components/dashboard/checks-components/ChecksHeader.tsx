@@ -19,7 +19,6 @@ const ChecksHeader = ({
   totalModelSum,
   totalOperatorSum,
   totalSoloMakerSum,
-  userRole,
   soloMakersCount
 }: ChecksHeaderProps) => {
   const handlePreviousPeriod = () => {
@@ -73,7 +72,7 @@ const ChecksHeader = ({
           <div className="text-2xl font-bold text-green-600">{totalOperatorSum.toLocaleString()}₽</div>
         </Card>
 
-        {userRole === 'director' && soloMakersCount > 0 && (
+        {soloMakersCount > 0 && (
           <Card className="p-4 bg-purple-500/10 border-purple-500/20">
             <div className="text-sm text-muted-foreground mb-1">Сумма соло-мейкеров</div>
             <div className="text-2xl font-bold text-purple-600">{totalSoloMakerSum.toLocaleString()}₽</div>
